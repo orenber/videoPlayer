@@ -1,5 +1,5 @@
 from tkinter import*
-from GUI.VideoPlayer import VideoPlayer
+
 
 
 root = Tk()
