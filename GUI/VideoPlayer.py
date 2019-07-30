@@ -158,10 +158,31 @@ class VideoPlayer(ttk.Frame):
                                        command=lambda: self.load_image())
             button_load_image.pack(side='left')
 
+        if setup['algo']:
+            # load image button button_load_image
+            #self.icon_algo = PhotoImage( file=os.path.join( icons_path, 'algo.PNG' ) )
+            self.button_run_algo = Button( control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
+                                        text="Run algo", bg="black", height=1,
+                                        width=8,
+                                        command= lambda:self.extract())
+            self.button_run_algo.pack( side='left' )
+
+
+
         # edit box
         self.frame_counter = Label(control_frame, height=2, width=15, padx=10, pady=10, bd=8,
                              bg='black',fg="gray", font=('arial', 10, 'bold'))
         self.frame_counter.pack(side='left')
+
+    def extract(self):
+      if self.algo:
+
+          self.algo = False
+          self.button_run_algo.config(text="Run algo")
+      else :
+
+          self.algo = True
+          self.button_run_algo.config(text="Stop algo")
 
     def resize(self, event):
 
@@ -316,8 +337,14 @@ class VideoPlayer(ttk.Frame):
 
 
 def main():
-    vid = VideoPlayer()
+    vid = VideoPlayer(algo=True,camera=True, image=True)
+    vid.command = lambda frame: extract_image(frame)
     vid.mainloop()
+
+def extract_image(matrix_image):
+    #apply algo
+    resize_image = cv2.resize( matrix_image, dsize=(640, 480), interpolation=cv2.INTER_CUBIC )
+    cv2.imshow( 'frame', resize_image )
 
 
 if __name__ == "__main__":
