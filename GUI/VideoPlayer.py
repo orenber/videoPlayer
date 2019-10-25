@@ -116,7 +116,7 @@ class VideoPlayer(ttk.Frame):
         control_frame = Frame(self.main_panel, bg="black", relief=SUNKEN)
         control_frame.pack(side=BOTTOM, fill=X, padx=20)
 
-        icons_path = os.path.abspath(os.path.join(os.pardir, 'GUI', 'Icons'))
+        icons_path = os.path.abspath(os.path.join(os.pardir, 'Icons'))
         if setup['play']:
             # play video button button_live_video
             self.icon_play = PhotoImage(file=os.path.join(icons_path, 'play2.PNG'))

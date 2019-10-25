@@ -32,7 +32,7 @@ MainPanel = Frame(root, width=500, height=2000, bg="gray24", relief=SUNKEN)
 MainPanel.pack(side=TOP)
 MainPanel.place(relx=0.1, rely=0.1, relwidth=0.8, relheight=0.8)
 
-title = Label(MainPanel, font=('arial', 12, 'bold'), text='example how to embedded video player in ur application ',
+title = Label(MainPanel, font=('arial', 12, 'bold'), text='example how to embedded video player in your application ',
               bg="gray24", fg="snow", bd=10)
 title.pack()
 
