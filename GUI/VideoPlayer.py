@@ -23,6 +23,8 @@ class VideoPlayer(ttk.Frame):
         self.__play = False
         self.__algo = False
         self.__frame = np.array
+        self.__initialdir = "/"
+        self.__initialdir_movie = "/"
 
         # protected
         self._command = []
@@ -201,9 +203,9 @@ class VideoPlayer(ttk.Frame):
 
     def load_image(self):
 
-        filename = filedialog.askopenfilename(initialdir="/", title="Select the RGB image",
+        filename = filedialog.askopenfilename(initialdir=self.__initialdir, title="Select the RGB image",
                                               filetypes=(("jpeg files", "*.jpg"), ("all files", "*.*")))
-
+        self.__initialdir = os.path.dirname(os.path.abspath(filename))
         if len(filename) != 0:
             self.frame = Image.open(filename)
             image = self.frame
@@ -226,11 +228,13 @@ class VideoPlayer(ttk.Frame):
 
     def load_movie(self):
         
-        movie_filename = filedialog.askopenfilename(initialdir="/", title="Select the movie to play",
+        movie_filename = filedialog.askopenfilename(initialdir=self.__initialdir_movie,
+                                                    title="Select the movie to play",
                                                     filetypes=(("AVI files", "*.AVI"),
                                                                ("MP4 files", "*.MP4"),
                                                                ("all files", "*.*")))
         if len(movie_filename) != 0:
+            self.__initialdir_movie = os.path.dirname(os.path.abspath(movie_filename))
             self.play_movie(movie_filename)
 
         pass
@@ -277,7 +281,8 @@ class VideoPlayer(ttk.Frame):
 
         cv2.destroyAllWindows()
 
-    def matrix_to_pillow(self, frame: np.array):
+    @staticmethod
+    def matrix_to_pillow(frame: np.array):
 
         # convert to BGR
         frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
