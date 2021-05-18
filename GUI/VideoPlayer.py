@@ -23,6 +23,7 @@ class VideoPlayer(ttk.Frame):
         self.__frame = np.array
         self.__initialdir = "/"
         self.__initialdir_movie = "/"
+        self.__camera_port = 0
 
         # protected
         self._cap = object
@@ -32,7 +33,7 @@ class VideoPlayer(ttk.Frame):
         self._size = (640, 480)
         self._image_ratio = 480 / 640
         self._command = []
-        self._frame_rate = 20
+        self._frame_rate = 20.0
         # public
         self.frame = np.array
         # build widget
@@ -128,7 +129,7 @@ class VideoPlayer(ttk.Frame):
         self.control_frame = Frame(self.main_panel, bg="black", relief=SUNKEN)
         self.control_frame.pack(side=BOTTOM, fill=X, padx=20)
 
-        icons_path = os.path.abspath(os.path.join(os.pardir, 'Icons'))
+        icons_path = os.path.abspath(os.path.join(os.getcwd(), 'Icons'))
         if setup['play']:
             # play video button button_live_video
             self.icon_play = PhotoImage(file=os.path.join(icons_path, 'play2.PNG'))
@@ -196,9 +197,13 @@ class VideoPlayer(ttk.Frame):
 
     def camera_recording(self, file: str = 'output.avi'):
 
-        self._source = cv2.VideoWriter_fourcc(*'XVID')
-        self._out = cv2.VideoWriter(file, self._source, self._frame_rate,  self._size)
-        self.__record = not self.__record
+        self.__record = True if self.__play == True else False
+        if  self.__record :
+   
+            self._source = cv2.VideoWriter_fourcc(*'XVID')
+            self._out = cv2.VideoWriter(file, self._source, self._frame_rate,  self._size)
+        
+        self.run_frames()    
 
     def save_frame(self, frame):
 
@@ -270,7 +275,7 @@ class VideoPlayer(ttk.Frame):
     def play_movie(self, movie_filename: str):
 
         self._cap = cv2.VideoCapture(movie_filename)
-        self.__frames_numbers = int(self.__cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        self.__frames_numbers = int(self._cap.get(cv2.CAP_PROP_FRAME_COUNT))
         self._image_ratio = self._cap.get(cv2.CAP_PROP_FRAME_HEIGHT) / self._cap.get(cv2.CAP_PROP_FRAME_WIDTH)
 
         self.progressbar["maximum"] = self.__frames_numbers
@@ -279,11 +284,13 @@ class VideoPlayer(ttk.Frame):
         self.run_frames()
 
     def camera_capture(self):
-
-        self._cap = cv2.VideoCapture(0)
-        self.__frames_numbers = 1
+        
         self.__play = not self.__play
-        self.run_frames()
+        self._cap = cv2.VideoCapture(self.__camera_port,cv2.CAP_DSHOW)
+        self.__frames_numbers = 1
+     
+        if self.__play:
+            self.run_frames()
 
     def run_frames(self):
         frame_pass = 0
@@ -301,13 +308,14 @@ class VideoPlayer(ttk.Frame):
                         self.save_frame(image_matrix)
 
                     # convert matrix image to pillow image object
-                    self.frame = self.matrix_to_pillow(image_matrix)
-                    self.show_image(self.frame)
+                    self.__frame = self.matrix_to_pillow(image_matrix)
+                    self.show_image(self.__frame)
 
                 # refresh image display
             self.board.update()
 
         self._cap.release()
+        self._out.release()
 
         cv2.destroyAllWindows()
 
@@ -326,7 +334,9 @@ class VideoPlayer(ttk.Frame):
         self.pause_movie()
         self._cap.release()
         if self.__record:
+
             self._out.release()
+            self.__record = False
 
         cv2.destroyAllWindows()
         self.update_progress(0, 0)
