@@ -16,23 +16,31 @@ class VideoPlayer(ttk.Frame):
         ttk.Frame.__init__(self, parent)
 
         # private
-        self.__cap = object
-        self.__size = (640, 480)
-        self.__image_ratio = 480/640
         self.__frames_numbers = 0
         self.__play = False
+        self.__record = False
         self.__algo = False
         self.__frame = np.array
         self.__initialdir = "/"
         self.__initialdir_movie = "/"
 
         # protected
-        self._command = []
+        self._cap = object
 
+        self._source = object
+        self._out = object
+        self._size = (640, 480)
+        self._image_ratio = 480 / 640
+        self._command = []
+        self._frame_rate = 20
         # public
         self.frame = np.array
         # build widget
         self._build_widget(parent, setup)
+
+    @property
+    def record(self)->bool:
+        return self.__record
 
     @property
     def frame(self)->np.array:
@@ -45,6 +53,10 @@ class VideoPlayer(ttk.Frame):
     @property
     def algo(self)->bool:
         return self.__algo
+
+    @record.setter
+    def record(self, record: bool):
+        self.__record = record
 
     @frame.setter
     def frame(self, frame: np.array):
@@ -69,7 +81,7 @@ class VideoPlayer(ttk.Frame):
 
     def set_setup(self, prop: dict)->dict:
 
-        default = {'play':  True, 'camera': False, 'pause': True, 'stop': True, 'image': False, 'algo': False}
+        default = {'play': True, 'camera': False, 'pause': True, 'stop': True, 'record': False, 'image': False, 'algo': False}
         setup = default.copy()
         setup.update(prop)
         self.algo = setup['algo']
@@ -113,14 +125,14 @@ class VideoPlayer(ttk.Frame):
         self.progressbar.pack(fill=X, padx=10, pady=10, expand=True)
 
         # control panel
-        control_frame = Frame(self.main_panel, bg="black", relief=SUNKEN)
-        control_frame.pack(side=BOTTOM, fill=X, padx=20)
+        self.control_frame = Frame(self.main_panel, bg="black", relief=SUNKEN)
+        self.control_frame.pack(side=BOTTOM, fill=X, padx=20)
 
         icons_path = os.path.abspath(os.path.join(os.pardir, 'Icons'))
         if setup['play']:
             # play video button button_live_video
             self.icon_play = PhotoImage(file=os.path.join(icons_path, 'play2.PNG'))
-            button_live_video = Button(control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
+            button_live_video = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
                                        text="> Load Video", bg='black', image=self.icon_play, height=icon_height,
                                        width=icon_width, command=lambda: self.load_movie())
             button_live_video.pack(side='left')
@@ -128,7 +140,7 @@ class VideoPlayer(ttk.Frame):
         # play camera
         if setup['camera']:
             self.icon_camera = PhotoImage(file=os.path.join(icons_path, 'camera.PNG'))
-            button_camera = Button(control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
+            button_camera = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
                                    text="camera", bg='black', image=self.icon_camera, height=icon_height,
                                    width=icon_width, command=lambda: self.camera_capture())
             button_camera.pack(side='left')
@@ -137,7 +149,7 @@ class VideoPlayer(ttk.Frame):
             # pause video button button_live_video
             self.icon_pause = PhotoImage(file=os.path.join(icons_path, 'pause2.PNG'))
 
-            self.button_pause_video = Button(control_frame, padx=10, pady=10, bd=8, fg="white",
+            self.button_pause_video = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white",
                                              font=('arial', 12, 'bold'),
                                              text="Pause", bg='black', image=self.icon_pause,
                                              height=icon_height, width=icon_width,
@@ -147,16 +159,23 @@ class VideoPlayer(ttk.Frame):
         if setup['stop']:
             # stop video button button_live_video
             self.icon_stop = PhotoImage(file=os.path.join(icons_path, 'stop.PNG'))
-            button_stop_video = Button(control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
+            button_stop_video = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
                                        text="stop", bg='black', height=icon_height, width=icon_width,
                                        image=self.icon_stop,
                                        command=lambda: self.stop_movie())
             button_stop_video.pack(side='left')
 
+        if setup['record']:
+            # record video
+            self.button_record = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
+                                        text="record", bg="black", height=1, width=8,
+                                        command=lambda: self.camera_recording())
+            self.button_record.pack(side='left')
+
         if setup['image']:
             # load image button button_load_image
             self.icon_image = PhotoImage(file=os.path.join(icons_path, 'image.PNG'))
-            button_load_image = Button(control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
+            button_load_image = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
                                        text="Load Image", bg="black", image=self.icon_image,
                                        height=icon_height, width=icon_width,
                                        command=lambda: self.load_image())
@@ -165,15 +184,25 @@ class VideoPlayer(ttk.Frame):
         if setup['algo']:
             # load image button button_load_image
             # self.icon_algo = PhotoImage( file=os.path.join( icons_path, 'algo.PNG' ) )
-            self.button_run_algo = Button(control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
+            self.button_run_algo = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
                                           text="Run algo", bg="black", height=1, width=8,
                                           command=lambda: self.extract())
             self.button_run_algo.pack(side='left')
 
         # edit box
-        self.frame_counter = Label(control_frame, height=2, width=15, padx=10, pady=10, bd=8,
+        self.frame_counter = Label(self.control_frame, height=2, width=15, padx=10, pady=10, bd=8,
                                    bg='black', fg="gray", font=('arial', 10, 'bold'))
         self.frame_counter.pack(side='left')
+
+    def camera_recording(self, file: str = 'output.avi'):
+
+        self._source = cv2.VideoWriter_fourcc(*'XVID')
+        self._out = cv2.VideoWriter(file, self._source, self._frame_rate,  self._size)
+        self.__record = not self.__record
+
+    def save_frame(self, frame):
+
+        self._out.write(frame)
 
     def extract(self):
         if self.algo:
@@ -188,15 +217,15 @@ class VideoPlayer(ttk.Frame):
 
         w, h = event.width, event.height
 
-        width = h/self.__image_ratio
+        width = h/self._image_ratio
         height = h
 
         if width > w:
 
             width = w
-            height = w*self.__image_ratio
+            height = w*self._image_ratio
 
-        self.__size = (int(width), int(height))
+        self._size = (int(width), int(height))
         if Image.isImageType(self.frame):
             image = copy.deepcopy(self.frame)
             self.show_image(image)
@@ -217,8 +246,7 @@ class VideoPlayer(ttk.Frame):
     def show_image(self, image):
 
         # resize image
-        image.thumbnail(self.__size)
-        #
+        image.thumbnail(self._size)
         self.photo = ImageTk.PhotoImage(image=image)
         # The Label widget is a standard Tkinter widget used to display a text or image on the screen.
         self.board.config(image=self.photo)
@@ -241,9 +269,9 @@ class VideoPlayer(ttk.Frame):
 
     def play_movie(self, movie_filename: str):
 
-        self.__cap = cv2.VideoCapture(movie_filename)
+        self._cap = cv2.VideoCapture(movie_filename)
         self.__frames_numbers = int(self.__cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        self.__image_ratio = self.__cap.get(cv2.CAP_PROP_FRAME_HEIGHT) / self.__cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+        self._image_ratio = self._cap.get(cv2.CAP_PROP_FRAME_HEIGHT) / self._cap.get(cv2.CAP_PROP_FRAME_WIDTH)
 
         self.progressbar["maximum"] = self.__frames_numbers
         self.__play = True
@@ -252,7 +280,7 @@ class VideoPlayer(ttk.Frame):
 
     def camera_capture(self):
 
-        self.__cap = cv2.VideoCapture(0)
+        self._cap = cv2.VideoCapture(0)
         self.__frames_numbers = 1
         self.__play = not self.__play
         self.run_frames()
@@ -260,15 +288,17 @@ class VideoPlayer(ttk.Frame):
     def run_frames(self):
         frame_pass = 0
 
-        while self.__cap.isOpened():
+        while self._cap.isOpened():
 
             if self.__play:
                 # update the frame number
-                ret, image_matrix = self.__cap.read()
+                ret, image_matrix = self._cap.read()
                 # self.frame = image_matrix
                 if ret:
                     frame_pass += 1
                     self.update_progress(frame_pass)
+                    if self.__record:
+                        self.save_frame(image_matrix)
 
                     # convert matrix image to pillow image object
                     self.frame = self.matrix_to_pillow(image_matrix)
@@ -277,9 +307,10 @@ class VideoPlayer(ttk.Frame):
                 # refresh image display
             self.board.update()
 
-        self.__cap.release()
+        self._cap.release()
 
         cv2.destroyAllWindows()
+
 
     @staticmethod
     def matrix_to_pillow(frame: np.array):
@@ -293,14 +324,16 @@ class VideoPlayer(ttk.Frame):
     def stop_movie(self):
 
         self.pause_movie()
-        self.__cap.release()
+        self._cap.release()
+        if self.__record:
+            self._out.release()
 
         cv2.destroyAllWindows()
         self.update_progress(0, 0)
 
     def pause_movie(self):
 
-        if self.__cap.isOpened():
+        if self._cap.isOpened():
             self.__play = not self.__play
 
         else:
@@ -323,7 +356,7 @@ class VideoPlayer(ttk.Frame):
 
 
 def main():
-    vid = VideoPlayer(image=True, play=True, camera=True, algo=True)
+    vid = VideoPlayer(image=True, play=True, camera=True, record = True)
     vid.command = lambda frame: extract_image(frame)
     vid.mainloop()
 
