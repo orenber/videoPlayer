@@ -12,8 +12,9 @@ cap = cv2.VideoCapture(0)
 
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
 movie_filename = 'output.avi'
-out = cv2.VideoWriter(movie_filename, fourcc, 24.0, (640,480))
-
+out = cv2.VideoWriter(movie_filename, fourcc, 24.0, (640,480),0)
+record  = False
+frame_take = 0
 while(cap.isOpened()):
     ret, frame_rgb = cap.read()
     if ret==True:
@@ -30,13 +31,35 @@ while(cap.isOpened()):
         # save the last frame
         pri_frame = frame
 
+        # label image
+        label_image = morphology.label(blackAndWhiteImage)
+
         # remove noise
-        image_clear = morphology.remove_small_objects(blackAndWhiteImage, min_size=200, connectivity=1)
+        image_clear = morphology.remove_small_objects(label_image, min_size=100, connectivity=1)
+
+        # check how much blob thar is in the image
+        cc = measure.regionprops(image_clear)
+
+        # in the case thar is blob above the threshold ->  trigger record function
+        if len(cc)>1 and frame_take<150:
+
+          print(frame_take)
+          record  = True
+          frame_take += 5
+
+        if frame_take>0:
+            out.write(frame)
+            frame_take -= 1
+            cv2.imshow('record',frame)
+
+        # return to binary image
+        binary_image = image_clear.astype(np.float)
+
 
         # Output
         cv2.imshow( 'sub', sub )
 
-        cv2.imshow( 'binary', image_clear )
+        cv2.imshow( 'binary', binary_image )
 
         cv2.imshow( 'frame', frame_rgb )
 

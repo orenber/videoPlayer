@@ -7,6 +7,7 @@ import os
 import copy
 
 
+
 class VideoPlayer(ttk.Frame):
 
     def __init__(self, parent: ttk.Frame=None, **prop: dict):
@@ -19,6 +20,7 @@ class VideoPlayer(ttk.Frame):
         self.__frames_numbers = 0
         self.__play = False
         self.__record = False
+        self.__camera = False
         self.__algo = False
         self.__frame = np.array
         self.__initialdir = "/"
@@ -33,7 +35,7 @@ class VideoPlayer(ttk.Frame):
         self._size = (640, 480)
         self._image_ratio = 480 / 640
         self._command = []
-        self._frame_rate = 20.0
+        self._frame_rate = 24.0
         # public
         self.frame = np.array
         # build widget
@@ -55,9 +57,27 @@ class VideoPlayer(ttk.Frame):
     def algo(self)->bool:
         return self.__algo
 
+    @property
+    def camera(self):
+
+        return self.__camera
+
+    @camera.setter
+    def camera(self,capture:bool):
+
+        if capture:
+            self._cap = cv2.VideoCapture(self.__camera_port, cv2.CAP_DSHOW)
+            self.__camera = True
+        else:
+            self.__camera = False
+            self._cap.release()
+        self.camera_icon_view()
+
+
     @record.setter
     def record(self, record: bool):
         self.__record = record
+        self.record_icon_view()
 
     @frame.setter
     def frame(self, frame: np.array):
@@ -129,10 +149,10 @@ class VideoPlayer(ttk.Frame):
         self.control_frame = Frame(self.main_panel, bg="black", relief=SUNKEN)
         self.control_frame.pack(side=BOTTOM, fill=X, padx=20)
 
-        icons_path = os.path.abspath(os.path.join(os.getcwd(), 'Icons'))
+        icons_path = os.path.abspath( os.path.join(os.pardir, 'Icons' ) )
         if setup['play']:
             # play video button button_live_video
-            self.icon_play = PhotoImage(file=os.path.join(icons_path, 'play2.PNG'))
+            self.icon_play = PhotoImage(file=os.path.join(icons_path, 'play.PNG'))
             button_live_video = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
                                        text="> Load Video", bg='black', image=self.icon_play, height=icon_height,
                                        width=icon_width, command=lambda: self.load_movie())
@@ -141,14 +161,14 @@ class VideoPlayer(ttk.Frame):
         # play camera
         if setup['camera']:
             self.icon_camera = PhotoImage(file=os.path.join(icons_path, 'camera.PNG'))
-            button_camera = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
+            self.button_camera = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
                                    text="camera", bg='black', image=self.icon_camera, height=icon_height,
                                    width=icon_width, command=lambda: self.camera_capture())
-            button_camera.pack(side='left')
+            self.button_camera.pack(side='left')
 
         if setup['pause']:
             # pause video button button_live_video
-            self.icon_pause = PhotoImage(file=os.path.join(icons_path, 'pause2.PNG'))
+            self.icon_pause = PhotoImage(file=os.path.join(icons_path, 'pause.PNG'))
 
             self.button_pause_video = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white",
                                              font=('arial', 12, 'bold'),
@@ -168,8 +188,12 @@ class VideoPlayer(ttk.Frame):
 
         if setup['record']:
             # record video
+            self.icon_record_off = PhotoImage( file=os.path.join(icons_path, 'record_off.PNG'))
+            self.icon_record_on = PhotoImage( file=os.path.join(icons_path, 'record_on.PNG'))
+
             self.button_record = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
-                                        text="record", bg="black", height=1, width=8,
+                                        text="record", bg="black", height=icon_height, width=icon_width,
+                                        image= self.icon_record_off,
                                         command=lambda: self.camera_recording())
             self.button_record.pack(side='left')
 
@@ -197,17 +221,31 @@ class VideoPlayer(ttk.Frame):
 
     def camera_recording(self, file: str = 'output.avi'):
 
-        self.__record = True if self.__play == True else False
-        if  self.__record :
-   
+        self.record = True if self.__play == True else False
+        if self.__record:
+
             self._source = cv2.VideoWriter_fourcc(*'XVID')
-            self._out = cv2.VideoWriter(file, self._source, self._frame_rate,  self._size)
-        
-        self.run_frames()    
+            self._out = cv2.VideoWriter(file, self._source, self._frame_rate,   (640,480),0)
+
+    def camera_icon_view(self):
+
+        if self.__camera:
+
+            self.button_camera.config(bg='white')
+        else:
+            self.button_camera.config(bg='black')
+
+    def record_icon_view(self):
+
+        if self.__record :
+            self.button_record.config(image=self.icon_record_on)
+        else:
+            self.button_record.config(image=self.icon_record_off)
 
     def save_frame(self, frame):
+        # convert two images to gray scale
 
-        self._out.write(frame)
+        self._out.write(cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY))
 
     def extract(self):
         if self.algo:
@@ -284,9 +322,9 @@ class VideoPlayer(ttk.Frame):
         self.run_frames()
 
     def camera_capture(self):
-        
+
         self.__play = not self.__play
-        self._cap = cv2.VideoCapture(self.__camera_port,cv2.CAP_DSHOW)
+        self.camera = not self.__camera
         self.__frames_numbers = 1
      
         if self.__play:
@@ -315,7 +353,6 @@ class VideoPlayer(ttk.Frame):
             self.board.update()
 
         self._cap.release()
-        self._out.release()
 
         cv2.destroyAllWindows()
 
@@ -336,7 +373,7 @@ class VideoPlayer(ttk.Frame):
         if self.__record:
 
             self._out.release()
-            self.__record = False
+            self.record = False
 
         cv2.destroyAllWindows()
         self.update_progress(0, 0)
