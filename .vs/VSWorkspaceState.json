@@ -1,8 +1,10 @@
 {
   "ExpandedNodes": [
     "",
-    "\\Icons"
+    "\\GUI",
+    "\\Icons",
+    "\\Test Function"
   ],
-  "SelectedNode": "\\Test Function",
+  "SelectedNode": "\\GUI\\moving_object.py",
   "PreviewInSolutionExplorer": false
 }
