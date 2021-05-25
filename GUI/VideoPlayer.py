@@ -7,7 +7,6 @@ import os
 import copy
 
 
-
 class VideoPlayer(ttk.Frame):
 
     def __init__(self, parent: ttk.Frame=None, **prop: dict):
@@ -237,7 +236,7 @@ class VideoPlayer(ttk.Frame):
 
     def record_icon_view(self):
 
-        if self.__record :
+        if self.__record:
             self.button_record.config(image=self.icon_record_on)
         else:
             self.button_record.config(image=self.icon_record_off)
