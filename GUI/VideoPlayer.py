@@ -9,6 +9,10 @@ import copy
 
 class VideoPlayer(ttk.Frame):
 
+    STD_DIMS = {"480p": (640,480),
+                "720p": (1280,720),
+                "1080p": (1920,1080),
+                "4K": (3840,2160)}
     def __init__(self, parent: ttk.Frame=None, **prop: dict):
 
         setup = self.set_setup(prop)
@@ -28,17 +32,26 @@ class VideoPlayer(ttk.Frame):
 
         # protected
         self._cap =  cv2.VideoCapture()
+        self._source = cv2.VideoWriter_fourcc()
 
-        self._source = object
         self._out = object
-        self._size = (640, 480)
+        self._size = self.STD_DIMS["480P"]
+        self._dim = self.STD_DIMS["480P"]
         self._image_ratio = 480 / 640
         self._command = []
         self._frame_rate = 24.0
+        
         # public
         self.frame = np.array
         # build widget
         self._build_widget(parent, setup)
+
+    @property
+    def dim(self)->tuple:
+        self._dim = (int(self._cap.get(cv2.CAP_PROP_FRAME_HEIGHT)) , int(self._cap.get(cv2.CAP_PROP_FRAME_WIDTH)))
+        return self._dim
+
+
 
     @property
     def play(self)->bool:
@@ -78,9 +91,17 @@ class VideoPlayer(ttk.Frame):
         else:
             self.__camera = False
             self._cap.release()
-        self.camera_icon_view()
+   
+    @dim.setter
+    def dim(self,dim:tuple =STD_DIMS["480P"]):
+        if dim in STD_DIMS:
+            self._dim = dim
+        else:
+            self._dim = STD_DIMS["480P"]
 
 
+
+            T
     @record.setter
     def record(self, record: bool):
         self.__record = record
@@ -156,7 +177,7 @@ class VideoPlayer(ttk.Frame):
         self.control_frame = Frame(self.main_panel, bg="black", relief=SUNKEN)
         self.control_frame.pack(side=BOTTOM, fill=X, padx=20)
 
-        icons_path = os.path.abspath( os.path.join(os.pardir, 'Icons' ) )
+        icons_path = os.path.abspath( os.path.join(os.getcwd(), 'Icons' ) )
         if setup['play']:
             # play video button button_live_video
             self.icon_play = PhotoImage(file=os.path.join(icons_path, 'play.PNG'))
@@ -170,7 +191,7 @@ class VideoPlayer(ttk.Frame):
             self.icon_camera = PhotoImage(file=os.path.join(icons_path, 'camera.PNG'))
             self.button_camera = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
                                    text="camera", bg='black', image=self.icon_camera, height=icon_height,
-                                   width=icon_width, command=lambda: self.camera_capture())
+                                   width=icon_width, command=lambda: self._camera_view())
             self.button_camera.pack(side='left')
 
         if setup['pause']:
@@ -226,15 +247,17 @@ class VideoPlayer(ttk.Frame):
                                    bg='black', fg="gray", font=('arial', 10, 'bold'))
         self.frame_counter.pack(side='left')
 
-    def camera_recording(self, file: str = 'output.avi'):
+    def camera_recording(self, file: str = 'output.mp4'):
         
         if self._cap.isOpened():
             if self.__play:
                 self.__record = not self.__record
                 if self.__record:
 
-            self._source = cv2.VideoWriter_fourcc(*'XVID')
-            self._out = cv2.VideoWriter(file, self._source, self._frame_rate,   (640,480),0)
+                    self._source = cv2.VideoWriter_fourcc(*'XVID')
+                    size = (int(self._cap.get(cv2.CAP_PROP_FRAME_HEIGHT)) , int(self._cap.get(cv2.CAP_PROP_FRAME_WIDTH)))
+
+                    self._out = cv2.VideoWriter(file, self._source, self._frame_rate,size,0)
 
     def _camera_view(self):
 

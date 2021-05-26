@@ -2,7 +2,7 @@ import cv2
 import os
 
 # segment path
-path = os.path.abspath(os.path.join(os.pardir, 'xml'))
+path = os.path.abspath(os.path.join(os.getcwd(), 'xml'))
 face_frontal = os.path.join(path, 'haarcascade_frontalface_default.xml')
 
 # cascade classifier
