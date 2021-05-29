@@ -70,16 +70,15 @@ class VideoPlayer(ttk.Frame):
         return self.__camera
 
     @camera.setter
-    def camera(self,capture:bool):
+    def camera(self, capture: bool):
 
         if capture:
-            self._cap = cv2.VideoCapture(self.__camera_port, cv2.CAP_DSHOW)
+            if not self._cap.isOpened():
+                self._cap = cv2.VideoCapture(self.__camera_port, cv2.CAP_DSHOW)
             self.__camera = True
         else:
             self.__camera = False
             self._cap.release()
-        self.camera_icon_view()
-
 
     @record.setter
     def record(self, record: bool):
@@ -170,7 +169,7 @@ class VideoPlayer(ttk.Frame):
             self.icon_camera = PhotoImage(file=os.path.join(icons_path, 'camera.PNG'))
             self.button_camera = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
                                    text="camera", bg='black', image=self.icon_camera, height=icon_height,
-                                   width=icon_width, command=lambda: self.camera_capture())
+                                   width=icon_width, command=lambda: self._camera_view())
             self.button_camera.pack(side='left')
 
         if setup['pause']:
@@ -187,11 +186,11 @@ class VideoPlayer(ttk.Frame):
         if setup['stop']:
             # stop video button button_live_video
             self.icon_stop = PhotoImage(file=os.path.join(icons_path, 'stop.PNG'))
-            button_stop_video = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
+            self.button_stop_video = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
                                        text="stop", bg='black', height=icon_height, width=icon_width,
                                        image=self.icon_stop,
                                        command=lambda: self.stop_movie())
-            button_stop_video.pack(side='left')
+            self.button_stop_video.pack(side='left')
 
         if setup['record']:
             # record video
@@ -207,11 +206,11 @@ class VideoPlayer(ttk.Frame):
         if setup['image']:
             # load image button button_load_image
             self.icon_image = PhotoImage(file=os.path.join(icons_path, 'image.PNG'))
-            button_load_image = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
+            self.button_image_load = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
                                        text="Load Image", bg="black", image=self.icon_image,
                                        height=icon_height, width=icon_width,
                                        command=lambda: self.load_image())
-            button_load_image.pack(side='left')
+            self.button_image_load.pack(side='left')
 
         if setup['algo']:
             # load image button button_load_image
@@ -233,14 +232,15 @@ class VideoPlayer(ttk.Frame):
                 self.__record = not self.__record
                 if self.__record:
 
-            self._source = cv2.VideoWriter_fourcc(*'XVID')
-            self._out = cv2.VideoWriter(file, self._source, self._frame_rate,   (640,480),0)
+                    self._source = cv2.VideoWriter_fourcc(*'XVID')
+                    self._out = cv2.VideoWriter(file, self._source, self._frame_rate,(640,480),0)
 
     def _camera_view(self):
 
         self.button_camera.config(bg='white',relief = 'sunken')
         self.camera_capture()
         self.button_camera.config(bg='black',relief = 'raised')
+
 
 
     def _pause_view(self):
@@ -255,7 +255,15 @@ class VideoPlayer(ttk.Frame):
         else:
             self.button_pause_video.config(relief = 'raised')
 
-          
+    def _button_view_off(self):
+
+        self.button_live_video.config(relief='raised')
+        self.button_camera.config(bg='black', relief='raised')
+        self.button_pause_video.config(relief='raised')
+        self.button_stop_video.config(relief='raised')
+        self.button_image_load.config(relief='raised')
+        self.button_record.config(image=self.icon_record_off, relief='raised')
+
 
     def _record_view(self):
         
@@ -299,6 +307,7 @@ class VideoPlayer(ttk.Frame):
 
     def load_image(self):
 
+       
         filename = filedialog.askopenfilename(initialdir=self.__initialdir, title="Select the RGB image",
                                               filetypes=(("jpeg files", "*.jpg"), ("all files", "*.*")))
         self.__initialdir = os.path.dirname(os.path.abspath(filename))
@@ -309,6 +318,8 @@ class VideoPlayer(ttk.Frame):
             self.update_progress(1, 1)
             self.__image_ratio = image.height / image.width
             self.show_image(image)
+        
+
 
     def show_image(self, image):
 
@@ -336,8 +347,7 @@ class VideoPlayer(ttk.Frame):
             except Exception as e:
                  print("Exception:", e)
               
-        self.button_live_video.config(bg='black',relief = 'raised')
-         
+        self.button_live_video.config(bg='black', relief='raised')
 
     def play_movie(self, movie_filename: str):
         
@@ -346,11 +356,12 @@ class VideoPlayer(ttk.Frame):
             self.__frames_numbers = int(self._cap.get(cv2.CAP_PROP_FRAME_COUNT))
             self._image_ratio = self._cap.get(cv2.CAP_PROP_FRAME_HEIGHT) / self._cap.get(cv2.CAP_PROP_FRAME_WIDTH)
         except Exception as e:
+
             print("Exception:", e)
 
         self.progressbar["maximum"] = self.__frames_numbers
         self.__play = True
-
+         
         self.run_frames()
 
     def camera_capture(self):
@@ -364,33 +375,35 @@ class VideoPlayer(ttk.Frame):
 
     def run_frames(self):
         frame_pass = 0
+        try:
+            while self._cap.isOpened():
 
-        while self._cap.isOpened():
+                if self.__play:
+                    # update the frame number
+                    ret, image_matrix = self._cap.read()
+                    # self.frame = image_matrix
+                    if ret:
+                        frame_pass += 1
+                        self.update_progress(frame_pass)
+                        if self.__record:
+                            self.save_frame(image_matrix)
 
-            if self.__play:
-                # update the frame number
-                ret, image_matrix = self._cap.read()
-                # self.frame = image_matrix
-                if ret:
-                    frame_pass += 1
-                    self.update_progress(frame_pass)
-                    if self.__record:
-                        self.save_frame(image_matrix)
+                        # convert matrix image to pillow image object
+                        self.__frame = self.matrix_to_pillow(image_matrix)
+                        self.show_image(self.__frame)
 
-                    # convert matrix image to pillow image object
-                    self.__frame = self.matrix_to_pillow(image_matrix)
-                    self.show_image(self.__frame)
+                    elif not ret:
+                        break
 
-                elif not ret:
-                    break
-                    
-            # refresh image display
-            self.board.update()
+                # refresh image display
+                self.board.update()
+        except Exception as e:
+            print(e)
+        finally:
+            self._cap.release()
 
-        self._cap.release()
-
-        cv2.destroyAllWindows()
-
+            cv2.destroyAllWindows()
+            self._button_view_off()
 
     @staticmethod
     def matrix_to_pillow(frame: np.array):
@@ -413,8 +426,8 @@ class VideoPlayer(ttk.Frame):
                 self._out.release()
                 self.record = False
 
-        cv2.destroyAllWindows()
-        self.update_progress(0, 0)
+            cv2.destroyAllWindows()
+            self.update_progress(0, 0)
 
     def pause_movie(self):
 
