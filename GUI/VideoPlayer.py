@@ -9,6 +9,10 @@ import copy
 
 class VideoPlayer(ttk.Frame):
 
+    STD_DIMS = {"480p": (640,480),
+                "720p": (1280,720),
+                "1080p": (1920,1080),
+                "4K": (3840,2160)}
     def __init__(self, parent: ttk.Frame=None, **prop: dict):
 
         setup = self.set_setup(prop)
@@ -28,17 +32,26 @@ class VideoPlayer(ttk.Frame):
 
         # protected
         self._cap =  cv2.VideoCapture()
+        self._source = cv2.VideoWriter_fourcc()
 
-        self._source = object
         self._out = object
-        self._size = (640, 480)
+        self._size = self.STD_DIMS["480P"]
+        self._dim = self.STD_DIMS["480P"]
         self._image_ratio = 480 / 640
         self._command = []
         self._frame_rate = 24.0
+
         # public
         self.frame = np.array
         # build widget
         self._build_widget(parent, setup)
+
+    @property
+    def dim(self)->tuple:
+        self._dim = (int(self._cap.get(cv2.CAP_PROP_FRAME_HEIGHT)) , int(self._cap.get(cv2.CAP_PROP_FRAME_WIDTH)))
+        return self._dim
+
+
 
     @property
     def play(self)->bool:
@@ -79,6 +92,14 @@ class VideoPlayer(ttk.Frame):
         else:
             self.__camera = False
             self._cap.release()
+
+    @dim.setter
+    def dim(self, res:str = "480P"):
+        if res in self.STD_DIMS:
+            self._dim = self.STD_DIMS[res]
+        else:
+            self._dim = self.STD_DIMS["480P"]
+
 
     @record.setter
     def record(self, record: bool):
@@ -233,14 +254,15 @@ class VideoPlayer(ttk.Frame):
                 if self.__record:
 
                     self._source = cv2.VideoWriter_fourcc(*'XVID')
-                    self._out = cv2.VideoWriter(file, self._source, self._frame_rate,(640,480),0)
+                    size = (int(self._cap.get(cv2.CAP_PROP_FRAME_HEIGHT)) , int(self._cap.get(cv2.CAP_PROP_FRAME_WIDTH)))
+
+                    self._out = cv2.VideoWriter(file, self._source, self._frame_rate,size,0)
 
     def _camera_view(self):
 
         self.button_camera.config(bg='white',relief = 'sunken')
         self.camera_capture()
         self.button_camera.config(bg='black',relief = 'raised')
-
 
 
     def _pause_view(self):
@@ -307,7 +329,6 @@ class VideoPlayer(ttk.Frame):
 
     def load_image(self):
 
-       
         filename = filedialog.askopenfilename(initialdir=self.__initialdir, title="Select the RGB image",
                                               filetypes=(("jpeg files", "*.jpg"), ("all files", "*.*")))
         self.__initialdir = os.path.dirname(os.path.abspath(filename))
@@ -318,8 +339,6 @@ class VideoPlayer(ttk.Frame):
             self.update_progress(1, 1)
             self.__image_ratio = image.height / image.width
             self.show_image(image)
-        
-
 
     def show_image(self, image):
 
@@ -356,12 +375,11 @@ class VideoPlayer(ttk.Frame):
             self.__frames_numbers = int(self._cap.get(cv2.CAP_PROP_FRAME_COUNT))
             self._image_ratio = self._cap.get(cv2.CAP_PROP_FRAME_HEIGHT) / self._cap.get(cv2.CAP_PROP_FRAME_WIDTH)
         except Exception as e:
-
             print("Exception:", e)
 
         self.progressbar["maximum"] = self.__frames_numbers
         self.__play = True
-         
+
         self.run_frames()
 
     def camera_capture(self):
@@ -437,7 +455,6 @@ class VideoPlayer(ttk.Frame):
              self.__play = True
 
         self.pause_icon_view()
-
 
 
     def update_progress(self, frame_pass: int=0, frames_numbers: int = None):
