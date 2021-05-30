@@ -10,10 +10,10 @@ from PIL import Image, ImageTk
 
 class VideoPlayer(ttk.Frame):
 
-    STD_DIMS = {"480p": (640, 480),
-                "720p": (1280, 720),
-                "1080p": (1920, 1080),
-                "4K": (3840, 2160)}
+    STD_DIMS = {"480p":   (640,480),
+                "720p":   (1280,720),
+                "1080p":  (1920,1080),
+                "4K":     (3840,2160)}
 
     def __init__(self, parent: ttk.Frame=None, **prop: dict):
 
