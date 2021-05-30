@@ -1,8 +1,9 @@
 {
   "ExpandedNodes": [
     "",
-    "\\Icons"
+    "\\GUI",
+    "\\xml"
   ],
-  "SelectedNode": "\\Test Function",
+  "SelectedNode": "\\GUI\\face_detection.py",
   "PreviewInSolutionExplorer": false
 }
