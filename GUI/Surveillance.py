@@ -1,4 +1,4 @@
-from GUI.VideoPlayer import VideoPlayer
+from VideoPlayer import VideoPlayer
 import numpy as np
 import cv2
 from time import sleep
@@ -12,11 +12,96 @@ class Surveillance(VideoPlayer):
 
         self.__play = True
 
+        self.algo_stack = []
+        self.pri_frame  = zeros()
+
+        # segment path
+        path = os.path.abspath(os.path.join(os.getcwd(), 'xml'))
+        face_frontal = os.path.join(path, 'haarcascade_frontalface_default.xml')
+        pedestrian_cascade = cv2.CascadeClassifier("haarcascade_fullbody.xml")
+
+        # cascade classifier
+        self.face_cascade = cv2.CascadeClassifier(face_frontal)
+        self.pedestrian_cascade = cv2.CascadeClassifier(pedestrian_cascade)
+
+        # load image button button_load_image
+        # self.icon_algo = PhotoImage( file=os.path.join( icons_path, 'algo.PNG' ) )
+        self.button_movement_detection = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
+                                        text="movment", bg="black", height=1, width=8,
+                                        command=lambda: self._button_movement_detection_view())
+        self.button_movement_detection.pack(side='left')
+        self.button_movement.value = False
+
+        # load image button_load_image
+        # self.icon_algo = PhotoImage( file=os.path.join( icons_path, 'algo.PNG' ) )
+        self.button_face_detection = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
+                                        text="face", bg="black", height=1, width=8,
+                                        command=lambda: self._button_face_detection_view())
+        self.button_face_detection.pack(side='left')
+        self.button_face.value =False
+
+        # load image button button_load_image
+        # self.icon_algo = PhotoImage( file=os.path.join( icons_path, 'algo.PNG' ) )
+        self.button_padastrian_detection = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
+                                        text="body", bg="black", height=1, width=8,
+                                        command=lambda: self._button_padastrian_detection_view())
+        self.button_padastrian_detection.pack(side='left')
+        self.button_padastrian.value = False
+
+
+    def _button_movement_detection_view(self):
+
+        self.button_movement.value = not self.self.button_movement.value
+        if self.button_movement.value :
+            self.button_movement_detection.config(bg='white', relief='sunken')
+            run_algo = True
+        else:    
+            run_algo = False
+            self.button_movement_detection.config(bg='black', relief='raised')
+        self.algo_list(run_algo,self.movement_detection())
+
+
+
+    def _button_face_detection_view(self):
+
+        self.button_face.value = not self.button_face.value
+        if self.button_face.value :
+
+            self.button_face_detection.config(bg='white', relief='sunken')
+            self.algo_list(True,self.padastrian_detection())
+        else:    
+            self.algo_list(False,self.padastrian_detection())
+            self.button_face_detection.config(bg='black', relief='raised')
+
+
+    def _button_padastrian_detection_view(self):
+
+        self.button_padastrian.value = not self.button_padastrian.value
+        if self.button_padastrian.value :
+            self.button_padastrian_detection.config(bg='white', relief='sunken')
+            self.algo_list(True,self.padastrian_detection(image))
+        else:
+            self.button_padastrian_detection.config(bg='black', relief='raised')
+            self.algo_list(False,self.padastrian_detection())
+        
+
+
+    def algo_list(self,add:bool=False,algo=None):
+         if add:
+              if algo not in self.algo_stack:
+                 self.algo_stack.append(algo)
+         else:
+             if algo==None:
+                 pass
+             elif algo in self.algo_stack:
+                 self.algo_stack.remove(algo)
+
+
+    
+
+
     def run_frames(self):
 
-        self.movement_detection()
-
-    def movement_detection(self):
         frame_number = 0
         frame_take = 0
 
@@ -33,33 +118,7 @@ class Surveillance(VideoPlayer):
                     # convert two images to gray scale
                     frame = cv2.cvtColor( frame_rgb, cv2.COLOR_RGB2GRAY )
 
-                    # subtract one image from another
-                    sub = cv2.absdiff( frame, pri_frame )
-
-                    # convert the product image to binary image
-                    (thresh, blackAndWhiteImage) = cv2.threshold( sub, 30, 255, cv2.THRESH_BINARY )
-
-                    # save the last frame
-                    pri_frame = frame
-
-                    # label image
-                    label_image = morphology.label( blackAndWhiteImage )
-
-                    # remove noise
-                    image_clear = morphology.remove_small_objects( label_image, min_size=100, connectivity=1 )
-
-                    # check how much blob thar is in the image
-                    cc = measure.regionprops( image_clear )
-
-                    # in the case thar is blob above the threshold ->  trigger record function
-                    if len( cc ) > 1 and frame_take < 150:
-                        record = True
-                        frame_take += 5
-
-                    if frame_take > 0:
-                        self.save_frame( frame )
-                        frame_take -= 1
-                        cv2.imshow( 'record', frame )
+                    # take the image and sand it to the list of function to analize proces 
 
                     # convert matrix image to pillow image object
                     self.__frame = self.matrix_to_pillow(frame_rgb )
@@ -72,6 +131,57 @@ class Surveillance(VideoPlayer):
         self._out.release()
         cv2.destroyAllWindows()
 
+    def face_detection(self,gray_image):
+
+        # Detect the faces
+        faces = self.face_cascade.detectMultiScale(gray_image, 1.1, 4)
+        # Draw the rectangle around each face
+        for (x, y, w, h) in faces:
+            cv2.rectangle(img, (x, y), (x+w, y+h), (255, 0, 0), 2)
+        # Display
+        cv2.imshow('img', img)
+
+    def padastrian_detection(self,gray_image):
+        
+        pedestrians = pedestrian_cascade.detectMultiScale( gray_image, 1.1, 1)
+        # To draw a rectangle on each pedestrians
+        for (x,y,w,h) in pedestrians:
+            cv2.rectangle(frame,(x,y),(x+w,y+h),(0,255,0),2)
+            font = cv2.FONT_HERSHEY_DUPLEX
+            cv2.putText(frame, 'Person', (x + 6, y - 6), font, 0.5, (0, 255, 0), 1)
+            # Display frames in a window
+        return frame
+
+
+    def  movement_detection(self,frame):
+
+         # subtract one image from another
+         sub = cv2.absdiff( frame, self.pri_frame )
+
+         # convert the product image to binary image
+         (thresh, blackAndWhiteImage) = cv2.threshold( sub, 30, 255, cv2.THRESH_BINARY )
+
+         # save the last frame
+         self.pri_frame = frame
+
+         # label image
+         label_image = morphology.label( blackAndWhiteImage )
+
+         # remove noise
+         image_clear = morphology.remove_small_objects( label_image, min_size=100, connectivity=1 )
+
+         # check how much blob thar is in the image
+         cc = measure.regionprops( image_clear )
+
+         # in the case thar is blob above the threshold ->  trigger record function
+         if len( cc ) > 1 and frame_take < 150:
+            record = True
+            frame_take += 5
+
+         if frame_take > 0:
+            self.save_frame( frame )
+            frame_take -= 1
+            cv2.imshow( 'record', frame )
 
 
 

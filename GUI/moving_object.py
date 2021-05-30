@@ -5,6 +5,7 @@ import copy
 from time import sleep
 from matplotlib import pyplot as plt
 from skimage import morphology, measure, segmentation, io
+
 # recording images   
 pri_frame = np.zeros(( 480,640,1), np.uint8)
 cap = cv2.VideoCapture(0)
