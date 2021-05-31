@@ -14,7 +14,7 @@ class Surveillance(VideoPlayer):
 
         self.__play = True
 
-        self.algo_stack = []
+        self.algo_stack = set({})
         self.frame_take = 0
         self.pri_frame = np.zeros(self.image_size, np.uint8)
 
@@ -53,14 +53,14 @@ class Surveillance(VideoPlayer):
 
     def _button_movement_detection_view(self):
 
-        self.button_movement_value = not self.self.button_movement_value
-        if self.button_movement.value :
+        self.button_movement_value = not self.button_movement_value
+        if self.button_movement_value:
             self.button_movement_detection.config(bg='white', relief='sunken')
             run_algo = True
         else:    
             run_algo = False
             self.button_movement_detection.config(bg='black', relief='raised')
-        self.algo_list(run_algo,self.movement_detection())
+        self.algo_list(run_algo, self.movement_detection)
 
     def _button_face_detection_view(self):
 
@@ -68,30 +68,30 @@ class Surveillance(VideoPlayer):
         if self.button_face_value :
 
             self.button_face_detection.config(bg='white', relief='sunken')
-            self.algo_list( True, self.face_detection() )
+            self.algo_list( True, self.face_detection)
         else:    
-            self.algo_list( False, self.face_detection() )
+            self.algo_list( False, self.face_detection)
             self.button_face_detection.config(bg='black', relief='raised')
 
     def _button_pedestrian_detection_view(self):
 
         self.button_pedestrian_value = not self.button_pedestrian_value
-        if self.button_pedestrian_value :
+        if self.button_pedestrian_value:
             self.button_pedestrian_detection.config(bg='white', relief='sunken')
-            self.algo_list( True, self.pedestrian_detection())
+            self.algo_list(True, self.pedestrian_detection)
         else:
             self.button_pedestrian_detection.config(bg='black', relief='raised')
-            self.algo_list( False, self.pedestrian_detection())
-        
-    def algo_list(self,add:bool=False,algo=None):
+            self.algo_list( False, self.pedestrian_detection)
+
+    def algo_list(self, add:bool=False, algo=None):
         if add:
             if algo not in self.algo_stack:
-                self.algo_stack.append(algo)
+                self.algo_stack.add(algo)
         else:
             if algo==None:
                pass
             elif algo in self.algo_stack:
-               self.algo_stack.remove(algo)
+               self.algo_stack.discard(algo)
 
     def run_frames(self):
 
@@ -106,16 +106,16 @@ class Surveillance(VideoPlayer):
                 # self.frame = image_matrix
                 if ret:
                     frame_number += 1
-                    self.update_progress( frame_number )
+                    self.update_progress(frame_number)
 
                     # convert two images to gray scale
-                    frame = cv2.cvtColor( frame_rgb, cv2.COLOR_RGB2GRAY )
+                    frame = cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2GRAY)
 
                     # take the image and sand it to the list of function to analize proces 
-
+                    (y(frame) for y in self.algo_stack)
                     # convert matrix image to pillow image object
                     self.__frame = self.matrix_to_pillow(frame_rgb )
-                    self.show_image( self.__frame )
+                    self.show_image(self.__frame)
 
                 # refresh image display
             self.board.update()
