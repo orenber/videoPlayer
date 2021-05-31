@@ -3,6 +3,7 @@ import numpy as np
 import cv2
 from time import sleep
 from skimage import morphology, measure, segmentation
+import
 
 
 class Surveillance(VideoPlayer):
@@ -13,7 +14,7 @@ class Surveillance(VideoPlayer):
         self.__play = True
 
         self.algo_stack = []
-        self.pri_frame  = zeros()
+        self.pri_frame  = np.zeros([ self.STD_DIMS.get('480p')[0],  self.STD_DIMS.get('480p')[1]], dtype=np.bool)
 
         # segment path
         path = os.path.abspath(os.path.join(os.getcwd(), 'xml'))
@@ -95,9 +96,6 @@ class Surveillance(VideoPlayer):
                  pass
              elif algo in self.algo_stack:
                  self.algo_stack.remove(algo)
-
-
-    
 
 
     def run_frames(self):
