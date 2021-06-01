@@ -5,7 +5,7 @@ from tkinter import *
 import os
 from time import sleep
 from skimage import morphology, measure, segmentation
-import
+
 
 
 class Surveillance(VideoPlayer):
