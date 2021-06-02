@@ -122,7 +122,7 @@ class Surveillance(VideoPlayer):
             self.board.update()
 
         self._cap.release()
-        self._out.release()
+
         cv2.destroyAllWindows()
 
     def face_detection(self,gray_image):

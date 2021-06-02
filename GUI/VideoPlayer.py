@@ -183,14 +183,14 @@ class VideoPlayer(ttk.Frame):
         self.control_frame = Frame(self.main_panel, bg="black", relief=SUNKEN)
         self.control_frame.pack(side=BOTTOM, fill=X, padx=20)
 
-        icons_path = os.path.abspath(os.path.join(os.getcwd(), 'Icons' ))
+        icons_path = os.path.abspath(os.path.join(os.pardir, 'Icons' ))
 
         if setup['play']:
             # play video button button_live_video
             self.icon_play = PhotoImage(file=os.path.join(icons_path, 'play.PNG'))
             self.button_live_video = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
-                                       text="> Load Video", bg='black', image=self.icon_play, height=icon_height,
-                                       width=icon_width, command=lambda: self.load_movie())
+                                         text="> Load Video", bg='black', image=self.icon_play, height=icon_height,
+                                         width=icon_width, command=lambda: self.load_movie())
             self.button_live_video.pack(side='left')
 
         # play camera
