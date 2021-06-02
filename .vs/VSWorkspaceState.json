@@ -2,8 +2,9 @@
   "ExpandedNodes": [
     "",
     "\\GUI",
-    "\\xml"
+    "\\xml",
+    "\\xml\\Test Function"
   ],
-  "SelectedNode": "\\GUI\\body_detection.py",
+  "SelectedNode": "\\GUI\\body_and_face_detction.py",
   "PreviewInSolutionExplorer": false
 }
