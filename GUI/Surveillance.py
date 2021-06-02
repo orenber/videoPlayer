@@ -1,4 +1,4 @@
-from GUI.VideoPlayer import VideoPlayer
+from VideoPlayer import VideoPlayer
 import numpy as np
 import cv2
 from tkinter import *
@@ -20,8 +20,8 @@ class Surveillance(VideoPlayer):
         self.pri_frame = np.zeros(self.image_size, np.uint8)
 
         # segment path
-        path = os.path.abspath(os.path.join(os.pardir, 'xml'))
-        face_frontal = os.path.join(path, 'haarcascade_frontalface_default.xml')
+        path = os.path.abspath(os.path.join(os.getcwd(), 'xml'))
+        face_frontal = os.path.join(path,'haarcascade_frontalface_default.xml')
         #full_body = os.path.join(path,"haarcascade_fullbody.xml")
 
         # cascade classifier
@@ -98,42 +98,48 @@ class Surveillance(VideoPlayer):
 
         frame_number = 0
         self.frame_take = 0
+        try:
+            while self._cap.isOpened():
 
-        while self._cap.isOpened():
+                if self.__play:
+                    # update the frame number
+                    ret, frame_rgb = self._cap.read()
+                    self.__frame = frame_rgb
+                    if ret:
+                        frame_number += 1
+                        self.update_progress(frame_number)
 
-            if self.__play:
-                # update the frame number
-                ret, frame_rgb = self._cap.read()
-                # self.frame = image_matrix
-                if ret:
-                    frame_number += 1
-                    self.update_progress(frame_number)
+                        # convert two images to gray scale
+                        frame_gray = cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2GRAY)
 
-                    # convert two images to gray scale
-                    frame = cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2GRAY)
-
-                    # take the image and sand it to the list of function to analize proces 
-                    (y(frame) for y in self.algo_stack)
-                    # convert matrix image to pillow image object
-                    self.__frame = self.matrix_to_pillow(frame_rgb )
-                    self.show_image(self.__frame)
-
-                # refresh image display
-            self.board.update()
-
-        self._cap.release()
-        self._out.release()
-        cv2.destroyAllWindows()
-
+                        # take the image and sand it to the list of function to analize proces 
+                        #algo_list = list(self.algo_stack)
+                    
+                        #for n in algo_list:
+                        #    algo_list[n](frame)
+                       
+                       
+                        # self.face_detection(frame_gray)
+                        # convert matrix image to pillow image object
+                        self.__frame = self.matrix_to_pillow(frame_rgb )
+                        self.show_image(self.__frame)
+                       
+                               # refresh image display
+                self.board.update()
+        except Exception as e:
+            print(e)
+        finally:
+            self._cap.release()
+            cv2.destroyAllWindows()
+            self._button_view_off()
     def face_detection(self,gray_image):
 
         # Detect the faces
         faces = self.face_cascade.detectMultiScale(gray_image, 1.1, 4)
         # Draw the rectangle around each face
         for (x, y, w, h) in faces:
-            cv2.rectangle(self.frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
+            cv2.rectangle(faces, (x, y), (x+w, y+h), (255, 0, 0), 2)
         # Display
-        cv2.imshow('img', self.frame)
 
     def pedestrian_detection(self, gray_image):
         
