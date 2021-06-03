@@ -1,22 +1,19 @@
 import cv2
 import os
-import threading 
-from threading import Timer
-from time import sleep
 import time
 import numpy as np
 import multiprocessing
 
 
 
-
 # segment path
-path = os.path.abspath(os.path.join(os.getcwd(), 'xml'))
-face_frontal = os.path.join(path, 'haarcascade_frontalface_default.xml')
-full_body = os.path.join(path,"haarcascade_fullbody.xml")
+
+path = os.path.dirname(cv2.__file__)
+face_frontal = os.path.join(path,'data','haarcascade_frontalface_default.xml')
+upper_body = os.path.join(path,'data',"haarcascade_upperbody.xml")
 # cascade classifier
 face_cascade = cv2.CascadeClassifier(face_frontal)
-body_cascade = cv2.CascadeClassifier(full_body)
+body_cascade = cv2.CascadeClassifier(upper_body)
 #
 # To capture video from webcam.
 cap = cv2.VideoCapture(0)
@@ -70,7 +67,7 @@ while True:
     # display image 
     cv2.imshow("body&face",color_image)
     finish = time.perf_counter()
-    print(f'Finished in {round(finish - start,2)} seconds(s)')
+    print('Finished in ', {round(finish - start,2)} ,'seconds(s)')
     # Stop if escape key is pressed
     k = cv2.waitKey(30) & 0xff
     if k==27:

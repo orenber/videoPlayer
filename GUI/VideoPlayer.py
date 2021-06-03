@@ -258,11 +258,8 @@ class VideoPlayer(ttk.Frame):
         
         if self._cap.isOpened():
             if self.__play:
-                self.__record = not self.__record
-                if self.__record:
-
-                    self._source = cv2.VideoWriter_fourcc(*'XVID')
-                    self._out = cv2.VideoWriter(file, self._source, self._frame_rate,self.image_size,0)
+                self._source = cv2.VideoWriter_fourcc(*'XVID')
+                self._out = cv2.VideoWriter(file, self._source, self._frame_rate,self.image_size,0)
 
     def _camera_view(self):
 
@@ -291,15 +288,15 @@ class VideoPlayer(ttk.Frame):
         self.button_image_load.config(relief='raised')
         self.button_record.config(image=self.icon_record_off, relief='raised')
 
-
     def _record_view(self):
         
-        self.camera_recording()
+        self.__record = not self.__record
 
-        if self.__record :
-            self.button_record.config(image=self.icon_record_on,relief = 'sunken')
+        if self.__record:
+            self.camera_recording()
+            self.button_record.config(image=self.icon_record_on, relief = 'sunken')
         else:
-            self.button_record.config(image=self.icon_record_off,relief = 'raised')
+            self.button_record.config(image=self.icon_record_off, relief = 'raised')
 
     def save_frame(self, frame):
         # convert two images to gray scale
