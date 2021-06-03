@@ -10,10 +10,10 @@ from PIL import Image, ImageTk
 
 class VideoPlayer(ttk.Frame):
 
-    STD_DIMS = {"480p":   (640,480),
-                "720p":   (1280,720),
-                "1080p":  (1920,1080),
-                "4K":     (3840,2160)}
+    STD_DIMS = {"480p":   (640, 480),
+                "720p":   (1280, 720),
+                "1080p":  (1920, 1080),
+                "4K":     (3840, 2160)}
 
     def __init__(self, parent: ttk.Frame=None, **prop: dict):
 
@@ -189,16 +189,16 @@ class VideoPlayer(ttk.Frame):
             # play video button button_live_video
             self.icon_play = PhotoImage(file=os.path.join(icons_path, 'play.PNG'))
             self.button_live_video = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
-                                         text="> Load Video", bg='black', image=self.icon_play, height=icon_height,
-                                         width=icon_width, command=lambda: self.load_movie())
+                                            text="> Load Video", bg='black', image=self.icon_play, height=icon_height,
+                                            width=icon_width, command=lambda: self.load_movie())
             self.button_live_video.pack(side='left')
 
         # play camera
         if setup['camera']:
             self.icon_camera = PhotoImage(file=os.path.join(icons_path, 'camera.PNG'))
             self.button_camera = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
-                                   text="camera", bg='black', image=self.icon_camera, height=icon_height,
-                                   width=icon_width, command=lambda: self._camera_view())
+                                        text="camera", bg='black', image=self.icon_camera, height=icon_height,
+                                        width=icon_width, command=lambda: self._camera_view())
             self.button_camera.pack(side='left')
 
         if setup['pause']:
@@ -216,15 +216,15 @@ class VideoPlayer(ttk.Frame):
             # stop video button button_live_video
             self.icon_stop = PhotoImage(file=os.path.join(icons_path, 'stop.PNG'))
             self.button_stop_video = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
-                                       text="stop", bg='black', height=icon_height, width=icon_width,
-                                       image=self.icon_stop,
-                                       command=lambda: self.stop_movie())
+                                            text="stop", bg='black', height=icon_height, width=icon_width,
+                                            image=self.icon_stop,
+                                            command=lambda: self.stop_movie())
             self.button_stop_video.pack(side='left')
 
         if setup['record']:
             # record video
-            self.icon_record_off = PhotoImage( file=os.path.join(icons_path, 'record_off.PNG'))
-            self.icon_record_on = PhotoImage( file=os.path.join(icons_path, 'record_on.PNG'))
+            self.icon_record_off = PhotoImage(file=os.path.join(icons_path, 'record_off.PNG'))
+            self.icon_record_on = PhotoImage(file=os.path.join(icons_path, 'record_on.PNG'))
 
             self.button_record = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
                                         text="record", bg="black", height=icon_height, width=icon_width,
@@ -259,7 +259,7 @@ class VideoPlayer(ttk.Frame):
         if self._cap.isOpened():
             if self.__play:
                 self._source = cv2.VideoWriter_fourcc(*'XVID')
-                self._out = cv2.VideoWriter(file, self._source, self._frame_rate,self.image_size,0)
+                self._out = cv2.VideoWriter(file, self._source, self._frame_rate, self.image_size, 0)
 
     def _camera_view(self):
 
@@ -294,9 +294,9 @@ class VideoPlayer(ttk.Frame):
 
         if self.__record:
             self.camera_recording()
-            self.button_record.config(image=self.icon_record_on, relief = 'sunken')
+            self.button_record.config(image=self.icon_record_on, relief='sunken')
         else:
-            self.button_record.config(image=self.icon_record_off, relief = 'raised')
+            self.button_record.config(image=self.icon_record_off, relief='raised')
 
     def save_frame(self, frame):
         # convert two images to gray scale
@@ -366,9 +366,10 @@ class VideoPlayer(ttk.Frame):
             try:
                 self.play_movie(movie_filename)
             except Exception as e:
-                 print("Exception:", e)
-              
-        self.button_live_video.config(bg='black', relief='raised')
+                print("Exception:", e)
+
+            finally:
+                self.button_live_video.config(bg='black', relief='raised')
 
     def play_movie(self, movie_filename: str):
         

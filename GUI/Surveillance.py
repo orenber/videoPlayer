@@ -8,6 +8,10 @@ from skimage import morphology, measure, segmentation
 
 class Surveillance(VideoPlayer):
 
+    COLOR = {'red':   (0, 0, 255),
+             'blue':  (255, 0, 0),
+             'green': (0, 255, 0)}
+
     def __init__(self):
         super().__init__(image=True, play=True, camera=True,record = True)
 
@@ -21,12 +25,12 @@ class Surveillance(VideoPlayer):
         # segment path
         path = os.path.dirname( cv2.__file__ )
         face_frontal = os.path.join( path, 'data', 'haarcascade_frontalface_default.xml' )
-        upper_body = os.path.join( path, 'data', "haarcascade_upperbody.xml" )
+        face_profile = os.path.join( path, 'data', "haarcascade_profileface.xml" )
 
 
         # cascade classifier
         self.face_cascade = cv2.CascadeClassifier(face_frontal)
-        self.pedestrian_cascade = cv2.CascadeClassifier(upper_body)
+        self.profile_cascade = cv2.CascadeClassifier(face_profile)
 
         # load image button button_load_image
         # self.icon_algo = PhotoImage( file=os.path.join( icons_path, 'algo.PNG' ) )
@@ -46,11 +50,11 @@ class Surveillance(VideoPlayer):
 
         # load image button button_load_image
         # self.icon_algo = PhotoImage( file=os.path.join( icons_path, 'algo.PNG' ) )
-        self.button_pedestrian_detection = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
+        self.button_profile_face_detection = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
                                                   text="body", bg="black", height=1, width=8,
-                                                  command=lambda: self._button_pedestrian_detection_view() )
-        self.button_pedestrian_detection.pack(side='left')
-        self.button_pedestrian_value = False
+                                                  command=lambda: self._button_profile_face_detection_view() )
+        self.button_profile_face_detection.pack(side='left')
+        self.button_profile_face_value = False
 
     def _button_movement_detection_view(self):
 
@@ -74,15 +78,15 @@ class Surveillance(VideoPlayer):
             self.algo_list( False, self.face_detection)
             self.button_face_detection.config(bg='black', relief='raised')
 
-    def _button_pedestrian_detection_view(self):
+    def _button_profile_face_detection_view(self):
 
-        self.button_pedestrian_value = not self.button_pedestrian_value
-        if self.button_pedestrian_value:
-            self.button_pedestrian_detection.config(bg='white', relief='sunken')
-            self.algo_list(True, self.pedestrian_detection)
+        self.button_profile_face_value = not self.button_profile_face_value
+        if self.button_profile_face_value:
+            self.button_profile_face_detection.config(bg='white', relief='sunken')
+            self.algo_list(True, self.profile_detection)
         else:
-            self.button_pedestrian_detection.config(bg='black', relief='raised')
-            self.algo_list(False, self.pedestrian_detection)
+            self.button_profile_face_detection.config(bg='black', relief='raised')
+            self.algo_list(False, self.profile_detection)
 
     def algo_list(self, add: bool=False, algo=None):
 
@@ -148,19 +152,34 @@ class Surveillance(VideoPlayer):
         faces = self.face_cascade.detectMultiScale(gray_image, 1.1, 4)
         # Draw the rectangle around each face
         for (x, y, w, h) in faces:
-            cv2.rectangle(self.__frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
-            cv2.putText(self.__frame, 'Face', (x + 6, y - 6), cv2.FONT_HERSHEY_DUPLEX, 0.5, (255, 0, 0), 1)
+            cv2.rectangle(self.__frame, (x, y), (x+w, y+h), self.COLOR['blue'], 2)
+            cv2.putText(self.__frame, 'Face', (x + 6, y - 6), cv2.FONT_HERSHEY_DUPLEX, 0.5, self.COLOR['green'], 1)
         # Display
 
-    def pedestrian_detection(self, gray_image):
-        
-        pedestrians = self.pedestrian_cascade.detectMultiScale(gray_image, 1.1, 1)
-        # To draw a rectangle on each pedestrians
-        for (x, y, w, h) in pedestrians:
-            cv2.rectangle(self.__frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+    def profile_detection(self, gray_image):
+
+        profile = self.profile_cascade.detectMultiScale(gray_image, 1.1, 1)
+        # To draw a rectangle on each profile_faces
+        for (x, y, w, h) in profile:
+            cv2.rectangle(self.__frame, (x, y), (x+w, y+h), self.COLOR['blue'], 2)
             font = cv2.FONT_HERSHEY_DUPLEX
-            cv2.putText(self.__frame, 'Person', (x + 6, y - 6), font, 0.5, (0, 255, 0), 1)
+            cv2.putText(self.__frame, 'Profile', (x + 6, y - 6), font, 0.5, self.COLOR['green'], 1)
             # Display frames in a window
+
+    def record_movement(self,frame,image_noise_movement):
+
+        # in the case thar is blob above the threshold ->  trigger record function
+        if np.any(image_noise_movement) and self.frame_take < 150:
+            # record
+            self.frame_take += 5
+
+        if self.frame_take > 0:
+            self.save_frame(frame)
+            self.frame_take -= 1
+            cv2.imshow('record', frame)
+            self.button_record.config(image=self.icon_record_on, relief='sunken')
+        elif self.frame_take == 0:
+            self.button_record.config(image=self.icon_record_off, relief='raised')
 
     def movement_detection(self, frame):
 
@@ -174,23 +193,16 @@ class Surveillance(VideoPlayer):
         self.pri_frame = frame
     
         # label image
-        label_image = morphology.label( blackAndWhiteImage )
+        label_image = morphology.label(blackAndWhiteImage)
     
         # remove noise
-        image_clear = morphology.remove_small_objects( label_image, min_size=100, connectivity=1 )
-    
-        # check how much blob thar is in the image
-        cc = measure.regionprops( image_clear )
-    
-        # in the case thar is blob above the threshold ->  trigger record function
-        if len( cc ) > 1 and self.frame_take < 150:
-            record = True
-            self.frame_take += 5
-    
-        if self.frame_take > 0:
-            self.save_frame(frame)
-            self.frame_take -= 1
-            cv2.imshow( 'record', frame)
+        image_clear = morphology.remove_small_objects(label_image, min_size=100, connectivity=1 )
+
+        # record if thar is movement
+        self.record_movement(frame, image_clear)
+
+
+
 
 
 
