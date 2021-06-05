@@ -23,16 +23,17 @@ def extract_image(matrix_image: np.array):
 
 
 root = Tk()
+
 root.geometry("700x700+0+0")
 titleStr = "demo videoPlayer"
 root.title(titleStr)
 
 # main panel
-MainPanel = Frame(root, width=500, height=2000, bg="gray24", relief=SUNKEN)
+MainPanel = Frame(root, width=1500, height=2000, bg="gray24", relief="raised")
 MainPanel.pack(side=TOP)
-MainPanel.place(relx=0.1, rely=0.1, relwidth=0.8, relheight=0.8)
+MainPanel.place(relx=0, rely=0, relwidth=1, relheight=1)
 
-title = Label(MainPanel, font=('arial', 12, 'bold'), text='example how to embedded video player in your application ',
+title = Label(MainPanel, font=('arial', 12, 'bold'), text='Demo: how to reparent video player widget in your application',
               bg="gray24", fg="snow", bd=10)
 title.pack()
 
@@ -41,14 +42,14 @@ txtPlatNumberDisplay = Entry(MainPanel, font=('arial', 20, 'bold'), textvariable
 txtPlatNumberDisplay.pack(pady=15)
 
 # control panel
-control_frame_top = Canvas(MainPanel, width=350, height=5, bg="black", relief=SUNKEN)
-control_frame_top.pack(fill=BOTH, expand=False)
+control_frame_top = Canvas(MainPanel, width=900, height=5, bg="black", relief="raised")
+control_frame_top.pack(fill=BOTH, expand=True)
 
-board = Label(control_frame_top, width=80, height=-1, bg="black")
+board = Label(control_frame_top, width=600, height=-1, bg="black")
 board.pack(fill=BOTH, expand=True)
 
 # control panel
-control_frame_main = Canvas(MainPanel, width=300, height=700, bg="blue", relief=SUNKEN)
+control_frame_main = Canvas(MainPanel, width=600, height=700, bg="blue", relief="raised")
 control_frame_main.pack(fill=BOTH, expand=True)
 
 # video player

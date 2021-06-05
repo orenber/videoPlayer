@@ -10,10 +10,17 @@ from PIL import Image, ImageTk
 
 class VideoPlayer(ttk.Frame):
 
-    STD_DIMS = {"480p":   (640, 480),
-                "720p":   (1280, 720),
-                "1080p":  (1920, 1080),
-                "4K":     (3840, 2160)}
+    STD_DIMS = {
+                "0.02MP": (160, 120),
+                "0.06MP": (320, 180),
+                "0.08MP": (320, 240),
+                "0.1MP":  (424, 240),
+                "0.2MP":  (640, 360),
+                "0.3MP":  (640, 480),
+                "0.4MP":  (848, 480),
+                "0.5MP":  (960, 540),
+                "0.9MP":  (1280, 720)
+    }
 
     def __init__(self, parent: ttk.Frame=None, **prop: dict):
 
@@ -22,24 +29,26 @@ class VideoPlayer(ttk.Frame):
         ttk.Frame.__init__(self, parent)
 
         # private
-        self.__frames_numbers = 0
-        self.__play = False
-        self.__record = False
-        self.__camera = False
-        self.__algo = False
-        self.__frame = np.array
+
         self.__initialdir = "/"
         self.__initialdir_movie = "/"
-        self.__camera_port = 0
 
         # protected
+        self._frames_numbers = 0
+        self._play = False
+        self._record = False
+        self._camera = False
+        self._algo = False
+        self._frame = np.array
+
+        self._camera_port = 0
         self._cap = cv2.VideoCapture()
         self._source = 0
 
         self._out = object
-        self._size = self.STD_DIMS.get('480P')
-        self._image_size = self.STD_DIMS.get('480P')
-        self._image_size_camera = self.STD_DIMS.get('480p')
+        self._size = self.STD_DIMS.get('0.3MP')
+        self._image_size = self.STD_DIMS.get('0.3MP')
+        self._image_size_camera = self.STD_DIMS.get('0.3MP')
         self._image_ratio = 480/640
         self._command = []
         self._frame_rate = 24.0
@@ -59,21 +68,29 @@ class VideoPlayer(ttk.Frame):
         return self._image_size
 
     @property
+    def image_ratio(self)->float:
+        if self._cap.get(cv2.CAP_PROP_FRAME_WIDTH) != 0:
+            self._image_ratio = self._cap.get(cv2.CAP_PROP_FRAME_HEIGHT)/self._cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+        else:
+            self._image_ratio = 0
+        return self._image_ratio
+
+    @property
     def play(self)->bool:
 
         if self._cap.isOpened():
-            self.__play = True
+            self._play = True
         else:
-            self.__play = False
-        return self.__play
+            self._play = False
+        return self._play
 
     @property
     def record(self)->bool:
-        return self.__record
+        return self._record
 
     @property
     def frame(self)->np.array:
-        return self.__frame
+        return self._frame
 
     @property
     def command(self):
@@ -81,41 +98,41 @@ class VideoPlayer(ttk.Frame):
 
     @property
     def algo(self)->bool:
-        return self.__algo
+        return self._algo
 
     @property
     def camera(self):
 
-        return self.__camera
+        return self._camera
 
     @camera.setter
     def camera(self, capture: bool):
 
         if capture:
             if not self._cap.isOpened():
-                self._cap = cv2.VideoCapture(self.__camera_port, cv2.CAP_DSHOW)
+                self._cap = cv2.VideoCapture(self._camera_port, cv2.CAP_DSHOW)
                 self._cap.set(3, self._image_size_camera[0])
                 self._cap.set(4, self._image_size_camera[1])
-            self.__camera = True
+            self._camera = True
         else:
-            self.__camera = False
+            self._camera = False
             self._cap.release()
 
     @image_size_camera.setter
-    def image_size_camera(self, res: str = '480P'):
+    def image_size_camera(self, res: str = '0.3MP'):
         if res in self.STD_DIMS.keys():
             self._image_size_camera = self.STD_DIMS.get(res)
         else:
-            self._image_size_camera = self.STD_DIMS.get('480P')
+            self._image_size_camera = self.STD_DIMS.get('0.3MP')
 
     @record.setter
     def record(self, record: bool):
-        self.__record = record
+        self._record = record
         self._record_view()
 
     @frame.setter
     def frame(self, frame: np.array):
-        self.__frame = frame
+        self._frame = frame
 
         if self.algo and callable(self._command):
             # convert image to numpy image
@@ -132,16 +149,9 @@ class VideoPlayer(ttk.Frame):
     @algo.setter
     def algo(self, algo: bool):
         if isinstance(algo, bool):
-            self.__algo = algo
+            self._algo = algo
 
-    def set_setup(self, prop: dict)->dict:
-
-        default = {'play': True, 'camera': False, 'pause': True, 'stop': True, 'record': False, 'image': False, 'algo': False}
-        setup = default.copy()
-        setup.update(prop)
-        self.algo = setup['algo']
-        return setup
-
+    # private
     def _build_widget(self, parent: ttk.Frame=None, setup: dict=dict):
 
         if parent is None:
@@ -162,7 +172,7 @@ class VideoPlayer(ttk.Frame):
 
         self.canvas_image = Canvas(self.main_panel, bg="black", highlightthickness=0)
         self.canvas_image.pack(fill=BOTH, expand=True, side=TOP)
-        self.canvas_image.bind("<Configure>", self.resize)
+        self.canvas_image.bind("<Configure>", self._resize)
 
         self.board = Label(self.canvas_image, bg="black", width=44, height=14)
         self.board.pack(fill=BOTH, expand=True)
@@ -218,7 +228,7 @@ class VideoPlayer(ttk.Frame):
             self.button_stop_video = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
                                             text="stop", bg='black', height=icon_height, width=icon_width,
                                             image=self.icon_stop,
-                                            command=lambda: self.stop_movie())
+                                            command=lambda: self.stop_player())
             self.button_stop_video.pack(side='left')
 
         if setup['record']:
@@ -246,7 +256,7 @@ class VideoPlayer(ttk.Frame):
             # self.icon_algo = PhotoImage( file=os.path.join( icons_path, 'algo.PNG' ) )
             self.button_run_algo = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
                                           text="Run algo", bg="black", height=1, width=8,
-                                          command=lambda: self.extract())
+                                          command=lambda: self._extract())
             self.button_run_algo.pack(side='left')
 
         # edit box
@@ -254,28 +264,21 @@ class VideoPlayer(ttk.Frame):
                                    bg='black', fg="gray", font=('arial', 10, 'bold'))
         self.frame_counter.pack(side='left')
 
-    def camera_recording(self, file: str = 'output.avi'):
-        
-        if self._cap.isOpened():
-            if self.__play:
-                self._source = cv2.VideoWriter_fourcc(*'XVID')
-                self._out = cv2.VideoWriter(file, self._source, self._frame_rate, self.image_size, 0)
-
     def _camera_view(self):
-
-        self.button_camera.config(bg='white', relief='sunken')
-        self.camera_capture()
-        self.button_camera.config(bg='black', relief='raised')
+        if not self.play:
+            self.button_camera.config(bg='white', relief='sunken')
+            self.camera_capture()
+            self.button_camera.config(bg='black', relief='raised')
 
     def _pause_view(self):
 
         if self._cap.isOpened():
-            if self.__play:
+            if self._play:
                 self.button_pause_video.config(relief='sunken')
-                self.__play = False
+                self._play = False
             else:
                 self.button_pause_video.config(relief='raised')
-                self.__play = True
+                self._play = True
         else:
             self.button_pause_video.config(relief='raised')
 
@@ -290,20 +293,58 @@ class VideoPlayer(ttk.Frame):
 
     def _record_view(self):
         
-        self.__record = not self.__record
+        self._record = not self._record
 
-        if self.__record:
+        if self._record and self.play:
             self.camera_recording()
             self.button_record.config(image=self.icon_record_on, relief='sunken')
         else:
             self.button_record.config(image=self.icon_record_off, relief='raised')
 
-    def save_frame(self, frame):
-        # convert two images to gray scale
+    def _update_progress(self, frame_pass: int = 0, frames_numbers: int = None):
 
-        self._out.write(cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY))
+        if frames_numbers is None:
+            frames_numbers = self._frames_numbers
 
-    def extract(self):
+        self.frame_counter.configure( text=str( frame_pass ) + " / " + str( frames_numbers ) )
+        # update the progressbar
+        self.progressbar["value"] = frame_pass
+        self.progressbar.update()
+
+    def _resize(self, event):
+
+        w_frame, h_frame = event.width, event.height
+        frame_ratio = h_frame/w_frame
+
+        self._image_ratio = self.image_ratio
+        h_image = self._cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        w_image = self._cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+
+        if frame_ratio < self._image_ratio:
+
+            h_ratio = h_frame/h_image
+            h = h_frame*h_ratio
+            w = w_frame*h_ratio
+        elif self._image_ratio == 0:
+            return
+        elif frame_ratio > self._image_ratio:
+
+            w_ratio = w_frame / w_image
+            h = h_frame * w_ratio
+            w = w_frame * w_ratio
+
+        elif frame_ratio == self._image_ratio:
+
+            p = frame_ratio / self._image_ratio
+            h = p*h_image
+            w = p*w_image
+
+        self._size = (int(w), int(h))
+
+        if Image.isImageType(self.frame):
+            self.show_image(self.frame)
+
+    def _extract(self):
         if self.algo:
 
             self.algo = False
@@ -312,106 +353,34 @@ class VideoPlayer(ttk.Frame):
             self.algo = True
             self.button_run_algo.config(text="Stop algo")
 
-    def resize(self, event):
+    # public
+    def set_setup(self, prop: dict) -> dict:
 
-        w, h = event.width, event.height
-
-        width = h/self._image_ratio
-        height = h
-
-        if width > w:
-
-            width = w
-            height = w*self._image_ratio
-
-        self._size = (int(width), int(height))
-        if Image.isImageType(self.frame):
-            image = copy.deepcopy(self.frame)
-            self.show_image(image)
-
-    def load_image(self):
-
-        filename = filedialog.askopenfilename(initialdir=self.__initialdir, title="Select the RGB image",
-                                              filetypes=(("jpeg files", "*.jpg"), ("all files", "*.*")))
-        self.__initialdir = os.path.dirname(os.path.abspath(filename))
-        if len(filename) != 0:
-            self.frame = Image.open(filename)
-            image = self.frame
-
-            self.update_progress(1, 1)
-            self.__image_ratio = image.height / image.width
-            self.show_image(image)
-
-    def show_image(self, image):
-
-        # resize image
-        image.thumbnail(self._size)
-        self.photo = ImageTk.PhotoImage(image=image)
-        # The Label widget is a standard Tkinter widget used to display a text or image on the screen.
-        self.board.config(image=self.photo)
-        self.board.image = self.photo
-        # refresh image display
-        self.board.update()
-
-    def load_movie(self):
-        
-        self.button_live_video.config(relief = 'sunken')
-        movie_filename = filedialog.askopenfilename(initialdir=self.__initialdir_movie,
-                                                    title="Select the movie to play",
-                                                    filetypes=(("AVI files", "*.AVI"),
-                                                               ("MP4 files", "*.MP4"),
-                                                               ("all files", "*.*")))
-        if len(movie_filename) != 0:
-            self.__initialdir_movie = os.path.dirname(os.path.abspath(movie_filename))
-            try:
-                self.play_movie(movie_filename)
-            except Exception as e:
-                print("Exception:", e)
-
-            finally:
-                self.button_live_video.config(bg='black', relief='raised')
-
-    def play_movie(self, movie_filename: str):
-        
-        try:
-            self._cap = cv2.VideoCapture(movie_filename)
-            self.__frames_numbers = int(self._cap.get(cv2.CAP_PROP_FRAME_COUNT))
-            self._image_ratio = self._cap.get(cv2.CAP_PROP_FRAME_HEIGHT) / self._cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-        except Exception as e:
-            print("Exception:", e)
-
-        self.progressbar["maximum"] = self.__frames_numbers
-        self.__play = True
-
-        self.run_frames()
-
-    def camera_capture(self):
-
-        self.__play = True
-        self.camera = True
-        self.__frames_numbers = 1
-     
-        if self.__play:
-            self.run_frames()
+        default = {'play': True, 'camera': False, 'pause': True, 'stop': True, 'record': False, 'image': False,
+                   'algo': False}
+        setup = default.copy()
+        setup.update( prop )
+        self.algo = setup['algo']
+        return setup
 
     def run_frames(self):
         frame_pass = 0
         try:
             while self._cap.isOpened():
 
-                if self.__play:
+                if self._play:
                     # update the frame number
                     ret, image_matrix = self._cap.read()
                     self.frame = image_matrix
                     if ret:
                         frame_pass += 1
-                        self.update_progress(frame_pass)
-                        if self.__record:
-                            self.save_frame(image_matrix)
+                        self._update_progress( frame_pass )
+                        if self._record:
+                            self.save_frame( image_matrix )
 
                         # convert matrix image to pillow image object
-                        self.__frame = self.matrix_to_pillow(image_matrix)
-                        self.show_image(self.__frame)
+                        self._frame = self.matrix_to_pillow( image_matrix )
+                        self.show_image( self._frame )
 
                     elif not ret:
                         break
@@ -419,12 +388,121 @@ class VideoPlayer(ttk.Frame):
                 # refresh image display
                 self.board.update()
         except Exception as e:
-            print(e)
+            print( e )
         finally:
             self._cap.release()
 
             cv2.destroyAllWindows()
             self._button_view_off()
+
+    def load_movie(self):
+        if not self.play:
+            self.button_live_video.config( relief='sunken' )
+            movie_filename = filedialog.askopenfilename( initialdir=self.__initialdir_movie,
+                                                         title="Select the movie to play",
+                                                         filetypes=(("AVI files", "*.AVI"),
+                                                                    ("MP4 files", "*.MP4"),
+                                                                    ("all files", "*.*")) )
+            if len( movie_filename ) != 0:
+                self.__initialdir_movie = os.path.dirname( os.path.abspath( movie_filename ) )
+                try:
+                    self.play_movie( movie_filename )
+                except Exception as e:
+                    print( "Exception:", e )
+
+                finally:
+                    self.button_live_video.config( bg='black', relief='raised' )
+            else:
+                self.button_live_video.config( bg='black', relief='raised' )
+
+    def play_movie(self, movie_filename: str):
+
+        try:
+            self._cap = cv2.VideoCapture( movie_filename )
+            self._frames_numbers = int( self._cap.get( cv2.CAP_PROP_FRAME_COUNT ) )
+            self._image_ratio = self._cap.get( cv2.CAP_PROP_FRAME_HEIGHT ) / self._cap.get( cv2.CAP_PROP_FRAME_WIDTH )
+        except Exception as e:
+            print( "Exception:", e )
+
+        self.progressbar["maximum"] = self._frames_numbers
+        self._play = True
+
+        self.run_frames()
+
+    def camera_capture(self):
+
+        self._play = True
+        self.camera = True
+        self._frames_numbers = 1
+
+        if self._play:
+            self.run_frames()
+
+    def pause_player(self):
+
+        if self.play:
+            self._play = False
+        else:
+            self._play = True
+
+        self.pause_icon_view()
+
+    def stop_player(self):
+
+        # in the case the player is on stop the player
+        if self.play:
+            self._play = False
+            self._cap.release()
+
+            if self._record:
+                # in the case the record in on - stop the recording
+                self._out.release()
+                self.record = False
+
+            cv2.destroyAllWindows()
+            self._update_progress(0, 0)
+
+    def camera_recording(self, file: str = 'output.avi'):
+
+        if self.play:
+            self._source = cv2.VideoWriter_fourcc(*'XVID')
+            self._out = cv2.VideoWriter(file, self._source, self._frame_rate, self.image_size, 0)
+
+    def save_frame(self, frame):
+        # convert two images to gray scale
+
+        self._out.write(cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY))
+
+    def load_image(self):
+
+        filename = filedialog.askopenfilename(initialdir=self.__initialdir, title="Select the RGB image",
+                                              filetypes=(("jpeg files", "*.jpg"), ("all files", "*.*")))
+        self.__initialdir = os.path.dirname(os.path.abspath(filename))
+        if len(filename) != 0:
+            try:
+                self.frame = Image.open(filename)
+            except Exception as error:
+                print( "Exception:", error)
+
+            image = self.frame
+
+            self._update_progress(1, 1)
+            self._image_ratio = image.height / image.width
+            self.show_image(image)
+
+    def show_image(self, image):
+
+        # resize image
+        # resize the image
+        inter = cv2.INTER_AREA
+        resized = cv2.resize( image, self._size, interpolation=inter)
+        resized.thumbnail(self._size)
+        self.photo = ImageTk.PhotoImage(image=resized)
+        # The Label widget is a standard Tkinter widget used to display a text or image on the screen.
+        self.board.config(image=self.photo)
+        self.board.image = self.photo
+        # refresh image display
+        self.board.update()
 
     @staticmethod
     def matrix_to_pillow(frame: np.array):
@@ -435,51 +513,17 @@ class VideoPlayer(ttk.Frame):
         frame_pillow = Image.fromarray(frame_bgr)
         return frame_pillow
 
-    def stop_movie(self):
-        
-        # in the case the player is on stop the player 
-        if self.play: 
-            self.__play = False
-            self._cap.release()
-
-            if self.__record:
-        # in the case the record in on - stop the recording 
-                self._out.release()
-                self.record = False
-
-            cv2.destroyAllWindows()
-            self.update_progress(0, 0)
-
-    def pause_movie(self):
-
-        if self.play:
-            self.__play = False
-        else:
-             self.__play = True
-
-        self.pause_icon_view()
-
-
-    def update_progress(self, frame_pass: int=0, frames_numbers: int = None):
-
-        if frames_numbers is None:
-            frames_numbers = self.__frames_numbers
-
-        self.frame_counter.configure(text=str(frame_pass) + " / " + str(frames_numbers))
-        # update the progressbar
-        self.progressbar["value"] = frame_pass
-        self.progressbar.update()
 
 
 def main():
     vid = VideoPlayer(image=True, play=True, camera=True, record = True,algo = True)
     vid.command = lambda frame: extract_image(frame)
-    vid.image_size_camera = '480p'
+    vid.image_size_camera = '0.02MP'
     vid.mainloop()
 
 # segment path
-path = os.path.abspath(os.path.join(os.pardir, 'xml'))
-face_frontal = os.path.join(path, 'haarcascade_frontalface_default.xml')
+path = os.path.dirname( cv2.__file__ )
+face_frontal = os.path.join( path, 'data', 'haarcascade_frontalface_default.xml' )
 
 # cascade classifier
 face_cascade = cv2.CascadeClassifier(face_frontal)

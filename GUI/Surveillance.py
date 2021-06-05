@@ -2,6 +2,7 @@ from GUI.VideoPlayer import VideoPlayer
 import numpy as np
 import cv2
 from tkinter import *
+from tkinter import ttk
 import os
 from skimage import morphology, measure, segmentation
 
@@ -13,9 +14,8 @@ class Surveillance(VideoPlayer):
              'green': (0, 255, 0)}
 
     def __init__(self):
-        super().__init__(image=True, play=True, camera=True,record = True)
 
-        self.__play = True
+        super().__init__(  image=True, play=True, camera=True, record=True )
 
         self.algo_stack = []
         self.frame_take = 0
@@ -32,6 +32,20 @@ class Surveillance(VideoPlayer):
         self.face_cascade = cv2.CascadeClassifier(face_frontal)
         self.profile_cascade = cv2.CascadeClassifier(face_profile)
 
+    def _build_widget(self, parent: ttk.Frame = None, setup: dict = dict):
+
+        self.master.geometry("950x720+0+0")
+        # main panel
+
+        self.main_panel = Frame(width=1000, height=720, bg="gray24", relief="raised" )
+        self.main_panel.pack( side=TOP )
+        self.main_panel.place( relx=0, rely=0, relwidth=1, relheight=1 )
+
+        # control panel
+        self.canvas_main = Canvas(self.main_panel, width=600, height=700, bg="blue", relief="raised" )
+        self.canvas_main.pack(fill=BOTH, expand=True)
+
+        super()._build_widget(self.canvas_main, setup)
         # load image button button_load_image
         # self.icon_algo = PhotoImage( file=os.path.join( icons_path, 'algo.PNG' ) )
         self.button_movement_detection = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
@@ -109,16 +123,16 @@ class Surveillance(VideoPlayer):
         try:
             while self._cap.isOpened():
 
-                if self.__play:
+                if self._play:
                     # update the frame number
-                    ret, self.__frame = self._cap.read()
+                    ret, self._frame = self._cap.read()
 
                     if ret:
                         frame_number += 1
                         self.update_progress(frame_number)
 
                         # convert two images to gray scale
-                        gray_image = cv2.cvtColor(self.__frame, cv2.COLOR_RGB2GRAY)
+                        gray_image = cv2.cvtColor(self._frame, cv2.COLOR_RGB2GRAY)
 
                         # take the image and sand it to the list of function to analize proces 
                         algo_list = self.algo_stack
@@ -129,8 +143,8 @@ class Surveillance(VideoPlayer):
                        
                         # self.face_detection(frame_gray)
                         # convert matrix image to pillow image object
-                        self.__frame = self.matrix_to_pillow(self.__frame)
-                        self.show_image(self.__frame)
+                        self._frame = self.matrix_to_pillow(self._frame)
+                        self.show_image(self._frame)
                        
                                # refresh image display
                 self.board.update()
@@ -141,10 +155,25 @@ class Surveillance(VideoPlayer):
             cv2.destroyAllWindows()
             self._button_view_off()
 
-    def save_frame(self, frame):
-        # convert two images to gray scale
+    def movement_detection(self, frame):
 
-        self._out.write(frame)
+        # subtract one image from another
+        sub = cv2.absdiff( frame, self.pri_frame )
+
+        # convert the product image to binary image
+        (thresh, blackAndWhiteImage) = cv2.threshold( sub, 30, 255, cv2.THRESH_BINARY )
+
+        # save the last frame
+        self.pri_frame = frame
+
+        # label image
+        label_image = morphology.label( blackAndWhiteImage )
+
+        # remove noise
+        image_clear = morphology.remove_small_objects( label_image, min_size=100, connectivity=1 )
+
+        # record if thar is movement
+        self.record_movement( frame, image_clear )
 
     def face_detection(self, gray_image):
 
@@ -152,8 +181,8 @@ class Surveillance(VideoPlayer):
         faces = self.face_cascade.detectMultiScale(gray_image, 1.1, 4)
         # Draw the rectangle around each face
         for (x, y, w, h) in faces:
-            cv2.rectangle(self.__frame, (x, y), (x+w, y+h), self.COLOR['blue'], 2)
-            cv2.putText(self.__frame, 'Face', (x + 6, y - 6), cv2.FONT_HERSHEY_DUPLEX, 0.5, self.COLOR['green'], 1)
+            cv2.rectangle(self._frame, (x, y), (x+w, y+h), self.COLOR['blue'], 2)
+            cv2.putText(self._frame, 'Face', (x + 6, y - 6), cv2.FONT_HERSHEY_DUPLEX, 0.5, self.COLOR['green'], 1)
         # Display
 
     def profile_detection(self, gray_image):
@@ -161,9 +190,9 @@ class Surveillance(VideoPlayer):
         profile = self.profile_cascade.detectMultiScale(gray_image, 1.1, 1)
         # To draw a rectangle on each profile_faces
         for (x, y, w, h) in profile:
-            cv2.rectangle(self.__frame, (x, y), (x+w, y+h), self.COLOR['blue'], 2)
+            cv2.rectangle(self._frame, (x, y), (x+w, y+h), self.COLOR['blue'], 2)
             font = cv2.FONT_HERSHEY_DUPLEX
-            cv2.putText(self.__frame, 'Profile', (x + 6, y - 6), font, 0.5, self.COLOR['green'], 1)
+            cv2.putText(self._frame, 'Profile', (x + 6, y - 6), font, 0.5, self.COLOR['green'], 1)
             # Display frames in a window
 
     def record_movement(self,frame,image_noise_movement):
@@ -181,29 +210,10 @@ class Surveillance(VideoPlayer):
         elif self.frame_take == 0:
             self.button_record.config(image=self.icon_record_off, relief='raised')
 
-    def movement_detection(self, frame):
+    def save_frame(self, frame):
+        # convert two images to gray scale
 
-        # subtract one image from another
-        sub = cv2.absdiff(frame, self.pri_frame)
-
-        # convert the product image to binary image
-        (thresh, blackAndWhiteImage) = cv2.threshold( sub, 30, 255, cv2.THRESH_BINARY )
-        
-        # save the last frame
-        self.pri_frame = frame
-    
-        # label image
-        label_image = morphology.label(blackAndWhiteImage)
-    
-        # remove noise
-        image_clear = morphology.remove_small_objects(label_image, min_size=100, connectivity=1 )
-
-        # record if thar is movement
-        self.record_movement(frame, image_clear)
-
-
-
-
+        self._out.write( frame )
 
 
 def main():
