@@ -193,7 +193,7 @@ class VideoPlayer(ttk.Frame):
         self.control_frame = Frame(self.main_panel, bg="black", relief=SUNKEN)
         self.control_frame.pack(side=BOTTOM, fill=X, padx=20)
 
-        icons_path = os.path.abspath(os.path.join(os.pardir, 'Icons' ))
+        icons_path = os.path.abspath(os.path.join(os.getcwd(), 'Icons' ))
 
         if setup['play']:
             # play video button button_live_video
@@ -377,7 +377,7 @@ class VideoPlayer(ttk.Frame):
                         self._update_progress( frame_pass )
                         if self._record:
                             self.save_frame( image_matrix )
-
+                        
                         # convert matrix image to pillow image object
                         self._frame = self.matrix_to_pillow( image_matrix )
                         self.show_image( self._frame )
@@ -493,10 +493,7 @@ class VideoPlayer(ttk.Frame):
     def show_image(self, image):
 
         # resize image
-        # resize the image
-        inter = cv2.INTER_AREA
-        resized = cv2.resize( image, self._size, interpolation=inter)
-        resized.thumbnail(self._size)
+        image.thumbnail(self._size)
         self.photo = ImageTk.PhotoImage(image=resized)
         # The Label widget is a standard Tkinter widget used to display a text or image on the screen.
         self.board.config(image=self.photo)
