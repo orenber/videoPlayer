@@ -1,6 +1,6 @@
 from tkinter import*
 import numpy as np
-from VideoPlayer import VideoPlayer
+from GUI.VideoPlayer import VideoPlayer
 from PIL import Image, ImageTk
 import os
 
