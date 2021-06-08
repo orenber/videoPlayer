@@ -4,3 +4,6 @@
 
 /output.MP4
 /output.AVI
+/GUI/__pycache__/image_procesing.cpython-37.pyc
+/.vs/tasks.vs.json
+/.vs/videoPlayer/config/applicationhost.config

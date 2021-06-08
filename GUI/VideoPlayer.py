@@ -6,6 +6,7 @@ from tkinter import filedialog, ttk
 import cv2
 import numpy as np
 from PIL import Image, ImageTk
+from image_procesing import resize_image_to_frame
 
 
 class VideoPlayer(ttk.Frame):
@@ -39,7 +40,7 @@ class VideoPlayer(ttk.Frame):
         self._record = False
         self._camera = False
         self._algo = False
-        self._frame = np.array
+        self._frame = np.zeros( self.STD_DIMS.get('0.3MP'),float)
 
         self._camera_port = 0
         self._cap = cv2.VideoCapture()
@@ -54,7 +55,7 @@ class VideoPlayer(ttk.Frame):
         self._frame_rate = 24.0
 
         # public
-        self.frame = np.array
+      
         # build widget
         self._build_widget(parent, setup)
 
@@ -64,13 +65,15 @@ class VideoPlayer(ttk.Frame):
 
     @property
     def image_size(self)->tuple:
-        self._image_size = (int(self._cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(self._cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+        height,width,*_= self._frame.shape
+        self._image_size = (int(width), int(height))
         return self._image_size
 
     @property
     def image_ratio(self)->float:
-        if self._cap.get(cv2.CAP_PROP_FRAME_WIDTH) != 0:
-            self._image_ratio = self._cap.get(cv2.CAP_PROP_FRAME_HEIGHT)/self._cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+        height,width,*_= self._frame.shape
+        if width != 0:   
+            self._image_ratio = height/width
         else:
             self._image_ratio = 0
         return self._image_ratio
@@ -173,7 +176,8 @@ class VideoPlayer(ttk.Frame):
         self.canvas_image = Canvas(self.main_panel, bg="black", highlightthickness=0)
         self.canvas_image.pack(fill=BOTH, expand=True, side=TOP)
         self.canvas_image.bind("<Configure>", self._resize)
-
+        self.canvas_image_height = int(self.canvas_image.config("height")[4])
+        self.canvas_image_width  = int(self.canvas_image.config("width")[4])
         self.board = Label(self.canvas_image, bg="black", width=44, height=14)
         self.board.pack(fill=BOTH, expand=True)
 
@@ -313,36 +317,14 @@ class VideoPlayer(ttk.Frame):
 
     def _resize(self, event):
 
-        w_frame, h_frame = event.width, event.height
-        frame_ratio = h_frame/w_frame
-
-        self._image_ratio = self.image_ratio
-        h_image = self._cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-        w_image = self._cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-
-        if frame_ratio < self._image_ratio:
-
-            h_ratio = h_frame/h_image
-            h = h_frame*h_ratio
-            w = w_frame*h_ratio
-        elif self._image_ratio == 0:
+        self.canvas_image_width, self.canvas_image_height = event.width, event.height
+   
+        # resize image
+       
+        if self._frame.any():
             return
-        elif frame_ratio > self._image_ratio:
-
-            w_ratio = w_frame / w_image
-            h = h_frame * w_ratio
-            w = w_frame * w_ratio
-
-        elif frame_ratio == self._image_ratio:
-
-            p = frame_ratio / self._image_ratio
-            h = p*h_image
-            w = p*w_image
-
-        self._size = (int(w), int(h))
-
-        if Image.isImageType(self.frame):
-            self.show_image(self.frame)
+        else:
+            self.resize_image_show(self._frame)
 
     def _extract(self):
         if self.algo:
@@ -370,17 +352,15 @@ class VideoPlayer(ttk.Frame):
 
                 if self._play:
                     # update the frame number
-                    ret, image_matrix = self._cap.read()
-                    self.frame = image_matrix
+                    ret, self.frame  = self._cap.read()
+                    
                     if ret:
                         frame_pass += 1
                         self._update_progress( frame_pass )
                         if self._record:
-                            self.save_frame( image_matrix )
-                        
-                        # convert matrix image to pillow image object
-                        self._frame = self.matrix_to_pillow( image_matrix )
-                        self.show_image( self._frame )
+                            self.save_frame( self._frame )
+
+                        self.resize_image_show(self._frame)
 
                     elif not ret:
                         break
@@ -489,12 +469,24 @@ class VideoPlayer(ttk.Frame):
             self._update_progress(1, 1)
             self._image_ratio = image.height / image.width
             self.show_image(image)
+    
+    def resize_image_show(self,image):
+        print(type(image))
+        if Image.isImageType(image):
+           self.show_image(image)
+        elif isinstance(image,np.ndarray):
+      
+           self._size = resize_image_to_frame((self._frame.shape[1],self._frame.shape[0]),(self.canvas_image_width, self.canvas_image_height))
+           resize = cv2.resize(self._frame,  self._size, interpolation = cv2.INTER_AREA)
+           image = self.matrix_to_pillow(resize )
+           self.show_image(image)
+
 
     def show_image(self, image):
-
+       
         # resize image
         image.thumbnail(self._size)
-        self.photo = ImageTk.PhotoImage(image=resized)
+        self.photo = ImageTk.PhotoImage(image=image)
         # The Label widget is a standard Tkinter widget used to display a text or image on the screen.
         self.board.config(image=self.photo)
         self.board.image = self.photo
@@ -515,7 +507,7 @@ class VideoPlayer(ttk.Frame):
 def main():
     vid = VideoPlayer(image=True, play=True, camera=True, record = True,algo = True)
     vid.command = lambda frame: extract_image(frame)
-    vid.image_size_camera = '0.02MP'
+    vid.image_size_camera = '0.2MP'
     vid.mainloop()
 
 # segment path
