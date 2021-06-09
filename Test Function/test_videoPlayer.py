@@ -17,10 +17,10 @@ class TestVideoPlayer( TestCase ):
 
     def test_image_size_camera(self):
         self.test__init__( image=True, play=True, camera=True, record=True )
-        self.vid.image_size_camera = '480p'
-        self.assertEqual( self.vid.image_size_camera, (640, 480), "Error set image size 480p" )
-        self.vid.image_size_camera = '720p'
-        self.assertEqual( self.vid.image_size_camera, (1280, 720), "Error set image size 720p" )
+        for res, value in self.vid.STD_DIMS.items():
+            self.vid.image_size_camera = res
+            self.assertEqual(self.vid.image_size_camera,value, "Error set image size:"+res )
+
 
     def test_image_size(self):
         self.fail()

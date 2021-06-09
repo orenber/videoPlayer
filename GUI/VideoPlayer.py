@@ -1,12 +1,12 @@
 import copy
 import os
 from tkinter import *
-from tkinter import filedialog, ttk
+from tkinter import filedialog, ttk,messagebox
 
 import cv2
 import numpy as np
 from PIL import Image, ImageTk
-from image_procesing import resize_image_to_frame
+from Utility.image_procesing import resize_image_to_frame
 
 
 class VideoPlayer(ttk.Frame):
@@ -158,9 +158,12 @@ class VideoPlayer(ttk.Frame):
     def _build_widget(self, parent: ttk.Frame=None, setup: dict=dict):
 
         if parent is None:
+
             self.master.geometry("700x500+0+0")
+            self.master.protocol( "WM_DELETE_WINDOW", self.on_closing)
             self.main_panel = Frame(self.master, relief=SUNKEN)
             self.main_panel.place(relx=0.1, rely=0.1, relwidth=0.8, relheight=0.8)
+
 
         else:
             self.main_panel = parent
@@ -197,7 +200,7 @@ class VideoPlayer(ttk.Frame):
         self.control_frame = Frame(self.main_panel, bg="black", relief=SUNKEN)
         self.control_frame.pack(side=BOTTOM, fill=X, padx=20)
 
-        icons_path = os.path.abspath(os.path.join(os.getcwd(), 'Icons' ))
+        icons_path = os.path.abspath(os.path.join(os.pardir, 'Icons' ))
 
         if setup['play']:
             # play video button button_live_video
@@ -310,7 +313,7 @@ class VideoPlayer(ttk.Frame):
         if frames_numbers is None:
             frames_numbers = self._frames_numbers
 
-        self.frame_counter.configure( text=str( frame_pass ) + " / " + str( frames_numbers ) )
+        self.frame_counter.configure(text=str(frame_pass) + " / " + str( frames_numbers ) )
         # update the progressbar
         self.progressbar["value"] = frame_pass
         self.progressbar.update()
@@ -320,11 +323,8 @@ class VideoPlayer(ttk.Frame):
         self.canvas_image_width, self.canvas_image_height = event.width, event.height
    
         # resize image
-       
-        if self._frame.any():
-            return
-        else:
-            self.resize_image_show(self._frame)
+
+        self.resize_image_show(self._frame)
 
     def _extract(self):
         if self.algo:
@@ -464,23 +464,20 @@ class VideoPlayer(ttk.Frame):
             except Exception as error:
                 print( "Exception:", error)
 
-            image = self.frame
-
-            self._update_progress(1, 1)
-            self._image_ratio = image.height / image.width
-            self.show_image(image)
+            self.resize_image_show(self._frame)
     
     def resize_image_show(self,image):
-        print(type(image))
-        if Image.isImageType(image):
-           self.show_image(image)
-        elif isinstance(image,np.ndarray):
-      
-           self._size = resize_image_to_frame((self._frame.shape[1],self._frame.shape[0]),(self.canvas_image_width, self.canvas_image_height))
-           resize = cv2.resize(self._frame,  self._size, interpolation = cv2.INTER_AREA)
-           image = self.matrix_to_pillow(resize )
-           self.show_image(image)
 
+        if Image.isImageType(image):
+            self._size = resize_image_to_frame(image._size, (self.canvas_image_width, self.canvas_image_height) )
+            image_view = copy.copy(image)
+            self.show_image(image_view)
+        elif isinstance(image, np.ndarray):
+            if image.any():
+               self._size = resize_image_to_frame((self._frame.shape[1],self._frame.shape[0]),(self.canvas_image_width, self.canvas_image_height))
+               resize = cv2.resize(self._frame,  self._size, interpolation = cv2.INTER_AREA)
+               image = self.matrix_to_pillow(resize)
+               self.show_image(image)
 
     def show_image(self, image):
        
@@ -502,12 +499,19 @@ class VideoPlayer(ttk.Frame):
         frame_pillow = Image.fromarray(frame_bgr)
         return frame_pillow
 
+    def on_closing(self):
+        if messagebox.askokcancel( "Quit", "Do you want to quit?" ):
+            self.stop_player()
+            self.master.destroy()
+
+
+
 
 
 def main():
     vid = VideoPlayer(image=True, play=True, camera=True, record = True,algo = True)
     vid.command = lambda frame: extract_image(frame)
-    vid.image_size_camera = '0.2MP'
+    vid.image_size_camera = '0.3MP'
     vid.mainloop()
 
 # segment path
