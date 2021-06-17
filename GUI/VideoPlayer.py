@@ -9,6 +9,57 @@ from PIL import Image, ImageTk
 from Utility.image_procesing import resize_image_to_frame
 
 
+class FrameImg(object):
+
+    def __init__(self,image):
+        self._image = np.zeros((640, 480), float)
+        self._width
+        self._height
+        self._size = 0
+        self._ratio
+        self._type = "RGB"
+        self.image = image
+
+    @property
+    def image(self)->np.array:
+        return self._image
+
+    @property
+    def size(self)->tuple:
+
+        return self._size
+
+    @property
+    def ratio(self)->float:
+
+        return self._ratio
+
+    @property
+    def width(self)->float:
+
+        return self._width
+
+    @property
+    def high(self)->float:
+
+        return self.width
+
+    @image.setter
+    def image(self, image):
+        if Image.isImageType(image):
+            self._image = image
+            self._size = image._size
+
+        elif isinstance(image, np.ndarray):
+            self._image = image
+            self._size = image.shape
+
+        else:
+            raise TypeError( "Only image are allowed" )
+        self._width, self._height = (self.image_size[1],self._size[0])
+        self.ratio = self.height / self.height
+
+
 class VideoPlayer(ttk.Frame):
 
     STD_DIMS = {
@@ -25,7 +76,7 @@ class VideoPlayer(ttk.Frame):
 
     def __init__(self, parent: ttk.Frame=None, **prop: dict):
 
-        setup = self.set_setup(prop)
+        self.setup = self.set_setup(prop)
 
         ttk.Frame.__init__(self, parent)
 
@@ -40,7 +91,7 @@ class VideoPlayer(ttk.Frame):
         self._record = False
         self._camera = False
         self._algo = False
-        self._frame = np.zeros( self.STD_DIMS.get('0.3MP'),float)
+        self._frame = np.zeros( self.STD_DIMS.get('0.3MP'), float)
 
         self._camera_port = 0
         self._cap = cv2.VideoCapture()
@@ -57,7 +108,7 @@ class VideoPlayer(ttk.Frame):
         # public
       
         # build widget
-        self._build_widget(parent, setup)
+        self._build_widget(parent, self.setup)
 
     @property
     def image_size_camera(self)->tuple:
@@ -65,17 +116,12 @@ class VideoPlayer(ttk.Frame):
 
     @property
     def image_size(self)->tuple:
-        height,width,*_= self._frame.shape
-        self._image_size = (int(width), int(height))
+
         return self._image_size
 
     @property
     def image_ratio(self)->float:
-        height,width,*_= self._frame.shape
-        if width != 0:   
-            self._image_ratio = height/width
-        else:
-            self._image_ratio = 0
+
         return self._image_ratio
 
     @property
@@ -97,7 +143,7 @@ class VideoPlayer(ttk.Frame):
 
     @property
     def command(self):
-        return self.__command
+        return self._command
 
     @property
     def algo(self)->bool:
@@ -107,6 +153,14 @@ class VideoPlayer(ttk.Frame):
     def camera(self):
 
         return self._camera
+
+    @image_size.setter
+    def image_size(self, image_size: tuple):
+        self._image_size = image_size
+
+    @image_ratio.setter
+    def image_ratio(self, ratio: float):
+        self._image_ratio = ratio
 
     @camera.setter
     def camera(self, capture: bool):
@@ -130,13 +184,26 @@ class VideoPlayer(ttk.Frame):
 
     @record.setter
     def record(self, record: bool):
-        self._record = record
-        self._record_view()
+
+        if self.play:
+            self._record = record
+        else:
+            self._record = False
 
     @frame.setter
-    def frame(self, frame: np.array):
-        self._frame = frame
+    def frame(self, frame):
 
+        if Image.isImageType(frame):
+            self._frame = frame
+            self.image_size = frame._size
+
+        elif isinstance(frame,np.ndarray):
+            self.image_size = frame.shape
+            self._frame = frame
+        else:
+            raise TypeError("Only frame are allowed")
+
+        self.image_ratio = self.image_size[1] / self.image_size[0]
         if self.algo and callable(self._command):
             # convert image to numpy image
             matrix_image = np.array(self.frame)
@@ -161,9 +228,8 @@ class VideoPlayer(ttk.Frame):
 
             self.master.geometry("700x500+0+0")
             self.master.protocol( "WM_DELETE_WINDOW", self.on_closing)
-            self.main_panel = Frame(self.master, relief=SUNKEN)
+            self.main_panel = Frame(self.master, relief='sunken')
             self.main_panel.place(relx=0.1, rely=0.1, relwidth=0.8, relheight=0.8)
-
 
         else:
             self.main_panel = parent
@@ -291,20 +357,31 @@ class VideoPlayer(ttk.Frame):
 
     def _button_view_off(self):
 
-        self.button_live_video.config(relief='raised')
-        self.button_camera.config(bg='black', relief='raised')
-        self.button_pause_video.config(relief='raised')
-        self.button_stop_video.config(relief='raised')
-        self.button_image_load.config(relief='raised')
-        self.button_record.config(image=self.icon_record_off, relief='raised')
+        if self.setup['play']:
+            self.button_live_video.config(relief='raised')
+        if self.setup['camera']:
+            self.button_camera.config(bg='black', relief='raised')
+        if self.setup['pause']:
+            self.button_pause_video.config(relief='raised')
+        if self.setup['stop']:
+            self.button_stop_video.config(relief='raised')
+        if self.setup['image']:
+            self.button_image_load.config(relief='raised')
+        if self.setup['record']:
+            self.button_record.config(image=self.icon_record_off, relief='raised')
 
     def _record_view(self):
-        
-        self._record = not self._record
 
-        if self._record and self.play:
-            self.camera_recording()
-            self.button_record.config(image=self.icon_record_on, relief='sunken')
+        if self.play:
+            if self.record:
+
+                self.camera_recording()
+                self.button_record.config(image=self.icon_record_on, relief='sunken')
+                self._record = False
+            else:
+                self.button_record.config( image=self.icon_record_off, relief='raised')
+                self._record = True
+
         else:
             self.button_record.config(image=self.icon_record_off, relief='raised')
 
@@ -367,8 +444,8 @@ class VideoPlayer(ttk.Frame):
 
                 # refresh image display
                 self.board.update()
-        except Exception as e:
-            print( e )
+        except Exception as error:
+            print(error)
         finally:
             self._cap.release()
 
@@ -378,31 +455,31 @@ class VideoPlayer(ttk.Frame):
     def load_movie(self):
         if not self.play:
             self.button_live_video.config( relief='sunken' )
-            movie_filename = filedialog.askopenfilename( initialdir=self.__initialdir_movie,
-                                                         title="Select the movie to play",
-                                                         filetypes=(("AVI files", "*.AVI"),
+            movie_filename = filedialog.askopenfilename(initialdir=self.__initial_dir_movie,
+                                                        title="Select the movie to play",
+                                                        filetypes=(("AVI files", "*.AVI"),
                                                                     ("MP4 files", "*.MP4"),
                                                                     ("all files", "*.*")) )
             if len( movie_filename ) != 0:
-                self.__initialdir_movie = os.path.dirname( os.path.abspath( movie_filename ) )
+                self.__initial_dir_movie = os.path.dirname( os.path.abspath( movie_filename ) )
                 try:
                     self.play_movie( movie_filename )
                 except Exception as e:
                     print( "Exception:", e )
 
                 finally:
-                    self.button_live_video.config( bg='black', relief='raised' )
+                    self.button_live_video.config(bg='black', relief='raised' )
             else:
-                self.button_live_video.config( bg='black', relief='raised' )
+                self.button_live_video.config(bg='black', relief='raised' )
 
     def play_movie(self, movie_filename: str):
 
         try:
             self._cap = cv2.VideoCapture( movie_filename )
             self._frames_numbers = int( self._cap.get( cv2.CAP_PROP_FRAME_COUNT ) )
-            self._image_ratio = self._cap.get( cv2.CAP_PROP_FRAME_HEIGHT ) / self._cap.get( cv2.CAP_PROP_FRAME_WIDTH )
-        except Exception as e:
-            print( "Exception:", e )
+
+        except Exception as error:
+            print("Exception:", error)
 
         self.progressbar["maximum"] = self._frames_numbers
         self._play = True
