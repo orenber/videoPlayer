@@ -5,7 +5,6 @@ def resize_image_to_frame(image_size:tuple,frame_size:tuple)->tuple:
     # frame inputs
     w_frame,h_frame = frame_size
     frame_ratio = h_frame/w_frame
-   
 
     # image_inputs
     w_image, h_image = image_size
