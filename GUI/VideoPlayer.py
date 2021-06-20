@@ -23,26 +23,26 @@ class FrameImg(object):
         self.image = image
 
     @property
-    def image(self)->np.array:
+    def image(self) -> np.array:
         return self._image
 
     @property
-    def size(self)->tuple:
+    def size(self) -> tuple:
 
         return self._size
 
     @property
-    def ratio(self)->float:
+    def ratio(self) -> float:
 
         return self._ratio
 
     @property
-    def width(self)->float:
+    def width(self) -> float:
 
         return self._width
 
     @property
-    def height(self)->float:
+    def height(self) -> float:
 
         return self._height
 
@@ -76,7 +76,7 @@ class VideoPlayer(ttk.Frame):
                 "0.9MP":  (1280, 720)
     }
 
-    def __init__(self, parent: ttk.Frame=None, **prop: dict):
+    def __init__(self, parent: ttk.Frame = None, **prop: dict):
 
         self.setup = self.set_setup(prop)
 
@@ -111,15 +111,15 @@ class VideoPlayer(ttk.Frame):
         self._build_widget(parent, self.setup)
 
     @property
-    def size(self)->tuple:
+    def size(self) -> tuple:
         return self._size
 
     @property
-    def image_size_camera(self)->tuple:
+    def image_size_camera(self) -> tuple:
         return self._image_size_camera
 
     @property
-    def play(self)->bool:
+    def play(self) -> bool:
 
         if self._cap.isOpened():
             self._play = True
@@ -128,11 +128,11 @@ class VideoPlayer(ttk.Frame):
         return self._play
 
     @property
-    def record(self)->bool:
+    def record(self) -> bool:
         return self._record
 
     @property
-    def frame(self)->np.array:
+    def frame(self) -> np.array:
         return self._frame
 
     @property
@@ -140,7 +140,7 @@ class VideoPlayer(ttk.Frame):
         return self._command
 
     @property
-    def algo(self)->bool:
+    def algo(self) -> bool:
         return self._algo
 
     @property
@@ -199,7 +199,7 @@ class VideoPlayer(ttk.Frame):
             self._algo = algo
 
     # private
-    def _build_widget(self, parent: ttk.Frame=None, setup: dict=dict):
+    def _build_widget(self, parent: ttk.Frame = None, setup: dict = dict):
 
         if parent is None:
 
@@ -398,8 +398,8 @@ class VideoPlayer(ttk.Frame):
     # public
     def set_setup(self, prop: dict) -> dict:
 
-        default = {'play': True, 'camera': False, 'pause': True, 'stop': True, 'record': False, 'image': False,
-                   'algo': False}
+        default = {'play': True, 'camera': False, 'pause': True,
+                   'stop': True, 'record': False, 'image': False, 'algo': False}
         setup = default.copy()
         setup.update(prop)
         self.algo = setup['algo']
@@ -485,7 +485,7 @@ class VideoPlayer(ttk.Frame):
         else:
             self._play = True
 
-        self.pause_icon_view()
+        self._pause_view()
 
     def stop_player(self):
 
@@ -540,7 +540,7 @@ class VideoPlayer(ttk.Frame):
                 self.show_image(image_show)
 
     def show_image(self, image):
-       
+
         # resize image
         image.thumbnail(self._size)
         photo = ImageTk.PhotoImage(image=image)
@@ -566,7 +566,7 @@ class VideoPlayer(ttk.Frame):
 
 
 def main():
-    vid = VideoPlayer(image=True, play=True, camera=True, record=True,algo=True)
+    vid = VideoPlayer(image=True, play=True, camera=True, record=True, algo=True)
     vid.command = lambda frame: extract_image(frame)
     vid.image_size_camera = '0.3MP'
     vid.mainloop()

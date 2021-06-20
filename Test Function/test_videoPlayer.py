@@ -22,8 +22,8 @@ class TestVideoPlayer(TestCase):
         image_file = os.path.join(images_path, '301-F.jpg')
         self.image_test = Image.open(image_file)
 
-        movie_path = os.path.abspath( os.path.join( os.pardir, 'Resources', 'movies'))
-        movie_file = os.path.join( movie_path, 'carplate30.mp4')
+        movie_path = os.path.abspath(os.path.join(os.pardir, 'Resources', 'movies'))
+        movie_file = os.path.join(movie_path, 'carplate30.mp4')
         self.move_test = movie_file
 
     def test_image_size_camera(self):
@@ -46,9 +46,6 @@ class TestVideoPlayer(TestCase):
         self.vid.record = True
         self.assertFalse(self.vid.record)
         # open file
-        movie_path = os.path.abspath(os.path.join(os.pardir, 'Resources', 'movies'))
-        movie_file = os.path.join(movie_path, 'carplate30.mp4')
-
         self.vid._record = True
         self.vid.play_movie(self.move_test)
         self.assertFalse(self.vid.record)
@@ -92,10 +89,7 @@ class TestVideoPlayer(TestCase):
     def test_play_movie(self):
         self.test__init__(play=True, pause=True, stop=True)
         # open file
-        movie_path = os.path.abspath(os.path.join(os.pardir, 'Resources', 'movies'))
-        movie_file = os.path.join(movie_path, 'carplate30.mp4')
-
-        self.vid.play_movie(movie_file)
+        self.vid.play_movie(self.move_test)
 
         pass
 
@@ -133,7 +127,7 @@ class TestVideoPlayer(TestCase):
         pass
 
     def test_matrix_to_pillow(self):
-        self.test__init__(image =True )
+        self.test__init__(image=True)
         matrix_image = np.array(self.image_test)
         pillow_image = self.vid.matrix_to_pillow(matrix_image)
         self.assertTrue(Image.isImageType(pillow_image))
@@ -141,11 +135,11 @@ class TestVideoPlayer(TestCase):
 
     def test_command(self):
         #
-        self.test__init__(algo = True)
+        self.test__init__(algo=True)
         self.vid.command = lambda frame: extract_image(frame)
 
         # call show image method
-        self.vid.show_image( self.image_test)
+        self.vid.show_image(self.image_test)
         self.vid._extract()
 
         self.vid.frame = self.image_test
@@ -153,5 +147,4 @@ class TestVideoPlayer(TestCase):
 
 
 def extract_image(matrix_image):
-    cv2.imshow( 'frame', matrix_image)
-
+    cv2.imshow('frame', matrix_image)
