@@ -68,9 +68,11 @@ class TestVideoPlayer(TestCase):
         pass
 
     def test_frame(self):
+        self.test__init__(play=True, image=True)
+        self.vid.frame = self.image_test
         self.test_show_image()
         image = self.vid.frame
-        assert isinstance(image, Image)
+        self.assertEqual(image,  self.vid.frame, 'test_frame :images not equal')
 
         pass
 
