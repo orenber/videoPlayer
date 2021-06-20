@@ -30,7 +30,7 @@ class TestVideoPlayer(TestCase):
         self.test__init__(image=True, play=True, camera=True, record=True)
         for res, value in self.vid.STD_DIMS.items():
             self.vid.image_size_camera = res
-            self.assertEqual(self.vid.image_size_camere(), value, "Error set image size:"+res)
+            self.assertTupleEqual(self.vid.image_size_camere, value, "Error set image size:"+res)
 
     def test_image_size(self):
 
@@ -77,7 +77,11 @@ class TestVideoPlayer(TestCase):
         pass
 
     def test_set_setup(self):
-        self.fail()
+        test_setup = {"play": True, "pause": True, "stop": True, "camera": False,
+                      "record": False, "algo": False, "image": False}
+        self.test__init__(**test_setup)
+        self.assertDictEqual(self.vid.setup, test_setup)
+        pass
 
     def run_frame(self):
         self.fail()
