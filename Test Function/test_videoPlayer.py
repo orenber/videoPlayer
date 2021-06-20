@@ -83,9 +83,6 @@ class TestVideoPlayer(TestCase):
         self.assertDictEqual(self.vid.setup, test_setup)
         pass
 
-    def run_frame(self):
-        self.fail()
-
     def test_load_movie(self):
         self.test__init__(play=True, pause=True, stop=True)
 
@@ -111,18 +108,30 @@ class TestVideoPlayer(TestCase):
         self.assertRaises(tkinter.TclError, lambda: self.vid.pause_player())
 
     def test_stop_player(self):
-        self.fail()
+        self.test__init__(play=True, stop=True)
+        # open file
+        self.assertRaises(tkinter.TclError, lambda: self.vid.play_movie(self.move_test))
+        self.assertRaises(tkinter.TclError, lambda: self.vid.stop_player())
+        pass
 
     def test_camera_recording(self):
-        self.fail()
+        self.test__init__(play=True, stop=True, record = True )
+        # open file
+
+        self.assertRaises(tkinter.TclError, lambda: self.vid.play_movie(self.move_test))
+        self.assertRaises(tkinter.TclError, lambda: self.vid._record_view())
 
     def test_save_frame(self):
-        self.fail()
+
+        self.test__init__(image=True, play=False, stop=False, pause=False)
+        self.vid.frame = np.array(self.image_test)
+        self.vid.save_frame(self.vid.frame.image)
 
     def test_load_image(self):
-        self.test__init__(image=True)
 
-        self.vid.load_image()
+        self.test__init__(image=True, play=False, stop=False, pause=False)
+        self.assertRaises(tkinter.TclError, lambda: self.vid.load_image())
+
         pass
 
     def test_show_image(self):
