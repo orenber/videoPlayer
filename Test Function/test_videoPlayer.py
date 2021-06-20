@@ -30,14 +30,14 @@ class TestVideoPlayer(TestCase):
         self.test__init__(image=True, play=True, camera=True, record=True)
         for res, value in self.vid.STD_DIMS.items():
             self.vid.image_size_camera = res
-            self.assertEqual(self.vid.image_size_camera, value, "Error set image size:"+res)
+            self.assertEqual(self.vid.image_size_camere(), value, "Error set image size:"+res)
 
     def test_image_size(self):
 
         self.test__init__(image=True)
         # read image
         self.vid.frame = self.image_test
-        image_size = self.vid.image_size
+        image_size = self.vid.image_size()
         self.assertTupleEqual(self.image_test._size, image_size)
         pass
 
@@ -50,16 +50,19 @@ class TestVideoPlayer(TestCase):
         movie_file = os.path.join(movie_path, 'carplate30.mp4')
 
         self.vid._record = True
-        self.vid.play_movie(movie_file)
+        self.vid.play_movie(self.move_test)
         self.assertFalse(self.vid.record)
 
         pass
 
-    def test_command(self):
-        self.fail()
-
     def test_algo(self):
-        self.fail()
+        self.test__init__(algo=True)
+        self.vid.command = lambda frame: extract_image(frame)
+
+        # call show image method
+        self.vid.show_image(self.image_test)
+        self.vid._extract()
+        self.assertTrue(self.vid.algo)
 
     def test_camera(self):
         self.test__init__(play=True, camera=True)
@@ -127,7 +130,6 @@ class TestVideoPlayer(TestCase):
         # read image
         # call show image method
         self.vid.show_image(self.image_test)
-        sleep(1)
         pass
 
     def test_matrix_to_pillow(self):
