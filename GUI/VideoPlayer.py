@@ -405,7 +405,7 @@ class VideoPlayer(ttk.Frame):
         self.algo = setup['algo']
         return setup
 
-    def run_frames(self):
+    def _run_frames(self):
         frame_pass = 0
         try:
             while self._cap.isOpened():
@@ -467,7 +467,7 @@ class VideoPlayer(ttk.Frame):
         self.progressbar["maximum"] = self._frames_numbers
         self._play = True
 
-        self.run_frames()
+        self._run_frames()
 
     def camera_capture(self):
 
@@ -476,7 +476,7 @@ class VideoPlayer(ttk.Frame):
         self._frames_numbers = 1
 
         if self._play:
-            self.run_frames()
+            self._run_frames()
 
     def pause_player(self):
 
@@ -508,7 +508,7 @@ class VideoPlayer(ttk.Frame):
             self._source = cv2.VideoWriter_fourcc(*'XVID')
             self._out = cv2.VideoWriter(file, self._source, self._frame_rate, self.frame.size, 0)
 
-    def save_frame(self, frame):
+    def save_frame(self, frame: np.array):
         # convert two images to gray scale
 
         self._out.write(cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY))

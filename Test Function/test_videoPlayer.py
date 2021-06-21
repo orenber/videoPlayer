@@ -30,15 +30,15 @@ class TestVideoPlayer(TestCase):
         self.test__init__(image=True, play=True, camera=True, record=True)
         for res, value in self.vid.STD_DIMS.items():
             self.vid.image_size_camera = res
-            self.assertTupleEqual(self.vid.image_size_camere, value, "Error set image size:"+res)
+            self.assertTupleEqual(self.vid.image_size_camera, value, "Error set image size:"+res)
 
     def test_image_size(self):
 
         self.test__init__(image=True)
         # read image
         self.vid.frame = self.image_test
-        image_size = self.vid.image_size()
-        self.assertTupleEqual(self.image_test._size, image_size)
+        image_size = self.vid.frame.size
+        self.assertTupleEqual(self.image_test.size, image_size)
         pass
 
     def test_record(self):
@@ -115,7 +115,7 @@ class TestVideoPlayer(TestCase):
         pass
 
     def test_camera_recording(self):
-        self.test__init__(play=True, stop=True, record = True )
+        self.test__init__(play=True, stop=True, record=True)
         # open file
 
         self.assertRaises(tkinter.TclError, lambda: self.vid.play_movie(self.move_test))
