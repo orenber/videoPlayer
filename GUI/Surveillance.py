@@ -19,7 +19,7 @@ class Surveillance(VideoPlayer):
 
         self.algo_stack = []
         self.frame_take = 0
-        self.image_size_camera = '480p'
+
         self.pri_frame = np.zeros((480, 640), np.uint8)
 
         # segment path
@@ -89,9 +89,9 @@ class Surveillance(VideoPlayer):
         if self.button_face_value :
 
             self.button_face_detection.config(bg='white', relief='sunken')
-            self.algo_list( True, self.face_detection)
+            self.algo_list(True, self.face_detection)
         else:    
-            self.algo_list( False, self.face_detection)
+            self.algo_list(False, self.face_detection)
             self.button_face_detection.config(bg='black', relief='raised')
 
     def _button_profile_face_detection_view(self):
@@ -127,14 +127,15 @@ class Surveillance(VideoPlayer):
 
                 if self._play:
                     # update the frame number
-                    ret, self._frame = self._cap.read()
+                    ret, self.frame = self._cap.read()
+                    image = self.frame.image
 
                     if ret:
                         frame_number += 1
                         self._update_progress(frame_number)
 
                         # convert two images to gray scale
-                        gray_image = cv2.cvtColor(self._frame, cv2.COLOR_RGB2GRAY)
+                        gray_image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
 
                         # take the image and sand it to the list of function to analize proces 
                         algo_list = self.algo_stack
@@ -144,28 +145,28 @@ class Surveillance(VideoPlayer):
 
                         # self.face_detection(frame_gray)
                         # convert matrix image to pillow image object
-                        self._frame = self.matrix_to_pillow(self._frame)
-                        self.show_image(self._frame)
+                        self.resize_image_show(self.frame)
                        
                         # refresh image display
                 self.board.update()
-        except Exception as e:
-            print(e)
+        except Exception as error:
+            print(error)
         finally:
             self._cap.release()
+            self._out.release()
             cv2.destroyAllWindows()
             self._button_view_off()
 
-    def movement_detection(self, frame: np.array):
+    def movement_detection(self, gray_image: np.array):
 
         # subtract one image from another
-        sub = cv2.absdiff(frame, self.pri_frame)
+        sub = cv2.absdiff(gray_image, self.pri_frame)
 
         # convert the product image to binary image
         (thresh, blackAndWhiteImage) = cv2.threshold(sub, 30, 255, cv2.THRESH_BINARY)
 
         # save the last frame
-        self.pri_frame = frame
+        self.pri_frame = gray_image
 
         # label image
         label_image = morphology.label(blackAndWhiteImage)
@@ -174,7 +175,7 @@ class Surveillance(VideoPlayer):
         image_clear = morphology.remove_small_objects(label_image, min_size=100, connectivity=1)
 
         # record if thar is movement
-        self.record_movement(frame, image_clear)
+        self.record_movement(gray_image, image_clear)
 
     def face_detection(self, gray_image: np.array):
 
@@ -182,8 +183,8 @@ class Surveillance(VideoPlayer):
         faces = self.face_cascade.detectMultiScale(gray_image, 1.1, 4)
         # Draw the rectangle around each face
         for (x, y, w, h) in faces:
-            cv2.rectangle(self._frame, (x, y), (x+w, y+h), self.COLOR['blue'], 2)
-            cv2.putText(self._frame, 'Face', (x + 6, y - 6), cv2.FONT_HERSHEY_DUPLEX, 0.5, self.COLOR['green'], 1)
+            cv2.rectangle(self.frame.image, (x, y), (x+w, y+h), self.COLOR['blue'], 2)
+            cv2.putText(self.frame.image, 'Face', (x + 6, y - 6), cv2.FONT_HERSHEY_DUPLEX, 0.5, self.COLOR['green'], 1)
         # Display
 
     def profile_detection(self, gray_image: np.array):
@@ -191,9 +192,9 @@ class Surveillance(VideoPlayer):
         profile = self.profile_cascade.detectMultiScale(gray_image, 1.1, 1)
         # To draw a rectangle on each profile_faces
         for (x, y, w, h) in profile:
-            cv2.rectangle(self._frame, (x, y), (x+w, y+h), self.COLOR['blue'], 2)
+            cv2.rectangle(self.frame.image, (x, y), (x+w, y+h), self.COLOR['blue'], 2)
             font = cv2.FONT_HERSHEY_DUPLEX
-            cv2.putText(self._frame, 'Profile', (x + 6, y - 6), font, 0.5, self.COLOR['green'], 1)
+            cv2.putText(self.frame.image, 'Profile', (x + 6, y - 6), font, 0.5, self.COLOR['green'], 1)
             # Display frames in a window
 
     def record_movement(self, frame: np.array, image_noise_movement: np.array):

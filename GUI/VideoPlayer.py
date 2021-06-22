@@ -425,9 +425,9 @@ class VideoPlayer(ttk.Frame):
                         frame_pass += 1
                         self._update_progress(frame_pass)
                         if self._record:
-                            self.save_frame(self._frame.image)
+                            self.save_frame(self.frame.image)
 
-                        self.resize_image_show(self._frame)
+                        self.resize_image_show(self.frame)
 
                     elif not ret:
                         break
@@ -533,7 +533,7 @@ class VideoPlayer(ttk.Frame):
 
             self.resize_image_show(self._frame)
     
-    def resize_image_show(self, frame):
+    def resize_image_show(self, frame:FrameImg):
 
         if Image.isImageType(frame.image):
             self._size = resize_image_to_frame(frame.size, (self.canvas_image_width, self.canvas_image_height))
@@ -542,7 +542,7 @@ class VideoPlayer(ttk.Frame):
         elif isinstance(frame.image, np.ndarray):
             if frame.image.any():
                 self._size = resize_image_to_frame(frame.size, (self.canvas_image_width, self.canvas_image_height))
-                resize_image = cv2.resize(self._frame.image,  self._size, interpolation=cv2.INTER_AREA)
+                resize_image = cv2.resize(self.frame.image,  self._size, interpolation=cv2.INTER_AREA)
                 image_show = self.matrix_to_pillow(resize_image)
                 self.show_image(image_show)
 
