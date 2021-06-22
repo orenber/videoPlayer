@@ -357,14 +357,20 @@ class VideoPlayer(ttk.Frame):
 
         if self.play:
 
-            if self._record:
+            if self.button_record.cget('relief') == 'raised':
 
-                self.camera_recording()
-                self.button_record.config(image=self.icon_record_on, relief='sunken')
-                self._record = False
-            else:
+                try:
+                    self._record = True
+                    self.camera_recording()
+                    self.button_record.config(image=self.icon_record_on, relief='sunken')
+                except Exception as error:
+                    print(error)
+                    self._record = False
+                    self.button_record.config(image=self.icon_record_off, relief='raised')
+
+            elif self.button_record.cget('relief') == 'sunken':
                 self.button_record.config(image=self.icon_record_off, relief='raised')
-                self.button_record._getconfigure('relief')
+                self._record = False
 
         else:
             self.button_record.config(image=self.icon_record_off, relief='raised')
@@ -391,10 +397,10 @@ class VideoPlayer(ttk.Frame):
         if self.algo:
 
             self.algo = False
-            self.button_run_algo.config(text="Run algo")
+            self.button_run_algo.config(text="Run algo", relief='raised')
         else:
             self.algo = True
-            self.button_run_algo.config(text="Stop algo")
+            self.button_run_algo.config(text="Stop algo",)
 
     # public
     def set_setup(self, prop: dict) -> dict:
