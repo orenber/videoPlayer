@@ -20,13 +20,12 @@ class Surveillance(VideoPlayer):
         self.algo_stack = []
         self.frame_take = 0
         self.image_size_camera = '480p'
-        self.pri_frame = np.zeros((480,640), np.uint8)
+        self.pri_frame = np.zeros((480, 640), np.uint8)
 
         # segment path
-        path = os.path.dirname( cv2.__file__ )
-        face_frontal = os.path.join( path, 'data', 'haarcascade_frontalface_default.xml' )
-        face_profile = os.path.join( path, 'data', "haarcascade_profileface.xml" )
-
+        path = os.path.dirname(cv2.__file__ )
+        face_frontal = os.path.join(path, 'data', 'haarcascade_frontalface_default.xml')
+        face_profile = os.path.join(path, 'data', "haarcascade_profileface.xml")
 
         # cascade classifier
         self.face_cascade = cv2.CascadeClassifier(face_frontal)
@@ -37,18 +36,19 @@ class Surveillance(VideoPlayer):
         self.master.geometry("950x720+0+0")
         # main panel
 
-        self.main_panel = Frame(width=1000, height=720, bg="gray24", relief="raised" )
-        self.main_panel.pack( side=TOP )
-        self.main_panel.place( relx=0, rely=0, relwidth=1, relheight=1 )
+        self.main_panel = Frame(width=1000, height=720, bg="gray24", relief="raised")
+        self.main_panel.pack(side=TOP)
+        self.main_panel.place(relx=0, rely=0, relwidth=1, relheight=1)
 
         # control panel
-        self.canvas_main = Canvas(self.main_panel, width=600, height=700, bg="blue", relief="raised" )
+        self.canvas_main = Canvas(self.main_panel, width=600, height=700, bg="blue", relief="raised")
         self.canvas_main.pack(fill=BOTH, expand=True)
 
         super()._build_widget(self.canvas_main, setup)
         # load image button button_load_image
         # self.icon_algo = PhotoImage( file=os.path.join( icons_path, 'algo.PNG' ) )
-        self.button_movement_detection = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
+        self.button_movement_detection = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white",
+                                                font=('arial', 12, 'bold'),
                                                 text="movment", bg="black", height=1, width=8,
                                                 command=lambda: self._button_movement_detection_view())
         self.button_movement_detection.pack(side='left')
@@ -56,7 +56,8 @@ class Surveillance(VideoPlayer):
 
         # load image button_load_image
         # self.icon_algo = PhotoImage( file=os.path.join( icons_path, 'algo.PNG' ) )
-        self.button_face_detection = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
+        self.button_face_detection = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white",
+                                            font=('arial', 12, 'bold'),
                                             text="face", bg="black", height=1, width=8,
                                             command=lambda: self._button_face_detection_view())
         self.button_face_detection.pack(side='left')
@@ -64,9 +65,10 @@ class Surveillance(VideoPlayer):
 
         # load image button button_load_image
         # self.icon_algo = PhotoImage( file=os.path.join( icons_path, 'algo.PNG' ) )
-        self.button_profile_face_detection = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white", font=('arial', 12, 'bold'),
-                                                  text="body", bg="black", height=1, width=8,
-                                                  command=lambda: self._button_profile_face_detection_view() )
+        self.button_profile_face_detection = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white",
+                                                    font=('arial', 12, 'bold'),
+                                                    text="body", bg="black", height=1, width=8,
+                                                    command=lambda: self._button_profile_face_detection_view())
         self.button_profile_face_detection.pack(side='left')
         self.button_profile_face_value = False
 
@@ -102,7 +104,7 @@ class Surveillance(VideoPlayer):
             self.button_profile_face_detection.config(bg='black', relief='raised')
             self.algo_list(False, self.profile_detection)
 
-    def algo_list(self, add: bool=False, algo=None):
+    def algo_list(self, add: bool = False, algo=None):
 
         if add:
             if algo not in self.algo_stack:
@@ -129,7 +131,7 @@ class Surveillance(VideoPlayer):
 
                     if ret:
                         frame_number += 1
-                        self.update_progress(frame_number)
+                        self._update_progress(frame_number)
 
                         # convert two images to gray scale
                         gray_image = cv2.cvtColor(self._frame, cv2.COLOR_RGB2GRAY)
@@ -137,16 +139,15 @@ class Surveillance(VideoPlayer):
                         # take the image and sand it to the list of function to analize proces 
                         algo_list = self.algo_stack
                     
-                        for n in range(0,len(algo_list)):
+                        for n in range(0, len(algo_list)):
                             algo_list[n](gray_image)
-                       
-                       
+
                         # self.face_detection(frame_gray)
                         # convert matrix image to pillow image object
                         self._frame = self.matrix_to_pillow(self._frame)
                         self.show_image(self._frame)
                        
-                               # refresh image display
+                        # refresh image display
                 self.board.update()
         except Exception as e:
             print(e)
@@ -155,27 +156,27 @@ class Surveillance(VideoPlayer):
             cv2.destroyAllWindows()
             self._button_view_off()
 
-    def movement_detection(self, frame):
+    def movement_detection(self, frame: np.array):
 
         # subtract one image from another
-        sub = cv2.absdiff( frame, self.pri_frame )
+        sub = cv2.absdiff(frame, self.pri_frame)
 
         # convert the product image to binary image
-        (thresh, blackAndWhiteImage) = cv2.threshold( sub, 30, 255, cv2.THRESH_BINARY )
+        (thresh, blackAndWhiteImage) = cv2.threshold(sub, 30, 255, cv2.THRESH_BINARY)
 
         # save the last frame
         self.pri_frame = frame
 
         # label image
-        label_image = morphology.label( blackAndWhiteImage )
+        label_image = morphology.label(blackAndWhiteImage)
 
         # remove noise
-        image_clear = morphology.remove_small_objects( label_image, min_size=100, connectivity=1 )
+        image_clear = morphology.remove_small_objects(label_image, min_size=100, connectivity=1)
 
         # record if thar is movement
-        self.record_movement( frame, image_clear )
+        self.record_movement(frame, image_clear)
 
-    def face_detection(self, gray_image):
+    def face_detection(self, gray_image: np.array):
 
         # Detect the faces
         faces = self.face_cascade.detectMultiScale(gray_image, 1.1, 4)
@@ -185,7 +186,7 @@ class Surveillance(VideoPlayer):
             cv2.putText(self._frame, 'Face', (x + 6, y - 6), cv2.FONT_HERSHEY_DUPLEX, 0.5, self.COLOR['green'], 1)
         # Display
 
-    def profile_detection(self, gray_image):
+    def profile_detection(self, gray_image: np.array):
 
         profile = self.profile_cascade.detectMultiScale(gray_image, 1.1, 1)
         # To draw a rectangle on each profile_faces
@@ -195,7 +196,7 @@ class Surveillance(VideoPlayer):
             cv2.putText(self._frame, 'Profile', (x + 6, y - 6), font, 0.5, self.COLOR['green'], 1)
             # Display frames in a window
 
-    def record_movement(self,frame,image_noise_movement):
+    def record_movement(self, frame: np.array, image_noise_movement: np.array):
 
         # in the case thar is blob above the threshold ->  trigger record function
         if np.any(image_noise_movement) and self.frame_take < 150:
@@ -210,10 +211,10 @@ class Surveillance(VideoPlayer):
         elif self.frame_take == 0:
             self.button_record.config(image=self.icon_record_off, relief='raised')
 
-    def save_frame(self, frame):
+    def save_frame(self, frame: np.array):
         # convert two images to gray scale
 
-        self._out.write( frame )
+        self._out.write(frame)
 
 
 def main():

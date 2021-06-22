@@ -42,13 +42,20 @@ class TestVideoPlayer(TestCase):
         pass
 
     def test_record(self):
+
         self.test__init__(play=True, record=True)
         self.vid.record = True
         self.assertFalse(self.vid.record)
+
         # open file
         self.vid._record = True
         self.vid.play_movie(self.move_test)
-        self.assertFalse(self.vid.record)
+        self.assertTrue(self.vid.record)
+
+        # play record
+        movie_path = os.path.abspath(os.path.join(os.pardir, 'Test Function'))
+        recorded_file = os.path.join(movie_path, 'output.avi')
+        self.vid.play_movie(recorded_file)
 
         pass
 
@@ -111,13 +118,12 @@ class TestVideoPlayer(TestCase):
         self.test__init__(play=True, stop=True)
         # open file
         self.assertRaises(tkinter.TclError, lambda: self.vid.play_movie(self.move_test))
-        self.assertRaises(tkinter.TclError, lambda: self.vid.stop_player())
+        self.vid.stop_player()
         pass
 
     def test_camera_recording(self):
         self.test__init__(play=True, stop=True, record=True)
         # open file
-
         self.assertRaises(tkinter.TclError, lambda: self.vid.play_movie(self.move_test))
         self.assertRaises(tkinter.TclError, lambda: self.vid._record_view())
 
