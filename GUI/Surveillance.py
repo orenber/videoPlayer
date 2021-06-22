@@ -127,14 +127,14 @@ class Surveillance(VideoPlayer):
 
                 if self._play:
                     # update the frame number
-                    ret, self._frame = self._cap.read()
+                    ret, self.frame = self._cap.read()
 
                     if ret:
                         frame_number += 1
                         self._update_progress(frame_number)
 
                         # convert two images to gray scale
-                        gray_image = cv2.cvtColor(self._frame, cv2.COLOR_RGB2GRAY)
+                        gray_image = cv2.cvtColor(self._frame.image, cv2.COLOR_RGB2GRAY)
 
                         # take the image and sand it to the list of function to analize proces 
                         algo_list = self.algo_stack
@@ -144,8 +144,8 @@ class Surveillance(VideoPlayer):
 
                         # self.face_detection(frame_gray)
                         # convert matrix image to pillow image object
-                        self._frame = self.matrix_to_pillow(self._frame)
-                        self.show_image(self._frame)
+                        image_to_show = self.matrix_to_pillow(self._frame.image)
+                        self.show_image(image_to_show)
                        
                         # refresh image display
                 self.board.update()
