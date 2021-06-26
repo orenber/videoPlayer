@@ -1,10 +1,10 @@
-from GUI.VideoPlayer import VideoPlayer
+from GUI.VideoPlayer import VideoPlayer , FrameImg
 import numpy as np
 import cv2
 from tkinter import *
 from tkinter import ttk
 import os
-from skimage import morphology, measure, segmentation
+from skimage import morphology
 
 
 class Surveillance(VideoPlayer):
@@ -15,15 +15,16 @@ class Surveillance(VideoPlayer):
 
     def __init__(self):
 
-        super().__init__(  image=True, play=True, camera=True, record=True )
+        super().__init__(image=True, play=True, camera=True, record=True)
 
         self.algo_stack = []
         self.frame_take = 0
+        self.frame_number = 0
 
-        self.pri_frame = np.zeros((480, 640), np.uint8)
+        self.pri_frame = FrameImg(np.zeros(self.STD_DIMS.get('0.3MP'), float))
 
         # segment path
-        path = os.path.dirname(cv2.__file__ )
+        path = os.path.dirname(cv2.__file__)
         face_frontal = os.path.join(path, 'data', 'haarcascade_frontalface_default.xml')
         face_profile = os.path.join(path, 'data', "haarcascade_profileface.xml")
 
@@ -36,12 +37,13 @@ class Surveillance(VideoPlayer):
         self.master.geometry("950x720+0+0")
         # main panel
 
-        self.main_panel = Frame(width=1000, height=720, bg="gray24", relief="raised")
+        self.main_panel = Frame(width=1000, height=720, bg="gray24", relief="raised", name="main_panel")
         self.main_panel.pack(side=TOP)
         self.main_panel.place(relx=0, rely=0, relwidth=1, relheight=1)
 
         # control panel
-        self.canvas_main = Canvas(self.main_panel, width=600, height=700, bg="blue", relief="raised")
+        self.canvas_main = Canvas(self.main_panel, width=600, height=700, bg="blue",
+                                  relief="raised", name="canvas_main")
         self.canvas_main.pack(fill=BOTH, expand=True)
 
         super()._build_widget(self.canvas_main, setup)
@@ -49,60 +51,62 @@ class Surveillance(VideoPlayer):
         # self.icon_algo = PhotoImage( file=os.path.join( icons_path, 'algo.PNG' ) )
         self.button_movement_detection = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white",
                                                 font=('arial', 12, 'bold'),
-                                                text="movment", bg="black", height=1, width=8,
+                                                text="movement", bg="black", height=1, width=8,
+                                                name="button_movement_detection",
                                                 command=lambda: self._button_movement_detection_view())
         self.button_movement_detection.pack(side='left')
-        self.button_movement_value = False
 
         # load image button_load_image
         # self.icon_algo = PhotoImage( file=os.path.join( icons_path, 'algo.PNG' ) )
         self.button_face_detection = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white",
                                             font=('arial', 12, 'bold'),
                                             text="face", bg="black", height=1, width=8,
+                                            name="button_face_detection",
                                             command=lambda: self._button_face_detection_view())
         self.button_face_detection.pack(side='left')
-        self.button_face_value = False
 
         # load image button button_load_image
         # self.icon_algo = PhotoImage( file=os.path.join( icons_path, 'algo.PNG' ) )
         self.button_profile_face_detection = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white",
                                                     font=('arial', 12, 'bold'),
                                                     text="body", bg="black", height=1, width=8,
+                                                    name='button_profile_face_detection',
                                                     command=lambda: self._button_profile_face_detection_view())
         self.button_profile_face_detection.pack(side='left')
-        self.button_profile_face_value = False
 
     def _button_movement_detection_view(self):
 
-        self.button_movement_value = not self.button_movement_value
-        if self.button_movement_value:
+        if self.button_movement_detection.cget('relief') == 'raised':
+            self.algo_list(True, self.movement_detection)
             self.button_movement_detection.config(bg='white', relief='sunken')
-            run_algo = True
-        else:    
-            run_algo = False
+
+        elif self.button_movement_detection.cget('relief') == 'sunken':
+            self.algo_list(False, self.movement_detection)
             self.button_movement_detection.config(bg='black', relief='raised')
-        self.algo_list(run_algo, self.movement_detection)
 
     def _button_face_detection_view(self):
 
-        self.button_face_value = not self.button_face_value
-        if self.button_face_value :
+        if self.button_face_detection.cget('relief') == 'raised':
 
-            self.button_face_detection.config(bg='white', relief='sunken')
             self.algo_list(True, self.face_detection)
-        else:    
+            self.button_face_detection.config(bg='white', relief='sunken')
+
+        elif self.button_face_detection.cget('relief') == 'sunken':
+
             self.algo_list(False, self.face_detection)
             self.button_face_detection.config(bg='black', relief='raised')
 
     def _button_profile_face_detection_view(self):
 
-        self.button_profile_face_value = not self.button_profile_face_value
-        if self.button_profile_face_value:
-            self.button_profile_face_detection.config(bg='white', relief='sunken')
+        if self.button_profile_face_detection.cget('relief') == 'raised':
+
             self.algo_list(True, self.profile_detection)
-        else:
-            self.button_profile_face_detection.config(bg='black', relief='raised')
+            self.button_profile_face_detection.config(bg='white', relief='sunken')
+
+        elif self.button_profile_face_detection.cget('relief') == 'sunken':
+
             self.algo_list(False, self.profile_detection)
+            self.button_profile_face_detection.config(bg='black', relief='raised')
 
     def algo_list(self, add: bool = False, algo=None):
 
@@ -118,26 +122,30 @@ class Surveillance(VideoPlayer):
 
     def run_frames(self):
 
-        frame_number = 0
+        self.frame_number = 0
         self.frame_take = 0
 
         self.camera_recording()
         try:
+
             while self._cap.isOpened():
 
                 if self._play:
                     # update the frame number
-                    ret, self.frame = self._cap.read()
-                    image = self.frame.image
+                    ret, image = self._cap.read()
 
                     if ret:
-                        frame_number += 1
-                        self._update_progress(frame_number)
+
+                        self.frame.image = image
+
+                        self.frame_number += 1
+
+                        self._update_progress(self.frame_number)
 
                         # convert two images to gray scale
                         gray_image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
 
-                        # take the image and sand it to the list of function to analize proces 
+                        # take the image and sand it to the list of function to analyze process
                         algo_list = self.algo_stack
                     
                         for n in range(0, len(algo_list)):
@@ -159,14 +167,17 @@ class Surveillance(VideoPlayer):
 
     def movement_detection(self, gray_image: np.array):
 
+        if self.frame_number == 1:
+            self.pri_frame.image = gray_image
+
         # subtract one image from another
-        sub = cv2.absdiff(gray_image, self.pri_frame)
+        sub = cv2.absdiff(gray_image, self.pri_frame.image)
 
         # convert the product image to binary image
         (thresh, blackAndWhiteImage) = cv2.threshold(sub, 30, 255, cv2.THRESH_BINARY)
 
         # save the last frame
-        self.pri_frame = gray_image
+        self.pri_frame.image = gray_image
 
         # label image
         label_image = morphology.label(blackAndWhiteImage)

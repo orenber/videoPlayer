@@ -48,13 +48,14 @@ class FrameImg(object):
 
     @image.setter
     def image(self, image):
-        if Image.isImageType(image):
-            self._image = image
-            self._size = (image.size[0], image.size[1])
 
-        elif isinstance(image, np.ndarray):
+        if isinstance(image, np.ndarray):
             self._image = image
             self._size = (image.shape[1], image.shape[0])
+
+        elif Image.isImageType(image):
+            self._image = image
+            self._size = (image.size[0], image.size[1])
 
         else:
             raise TypeError("Only image are allowed")
@@ -419,13 +420,13 @@ class VideoPlayer(ttk.Frame):
 
                 if self._play:
                     # update the frame number
-                    ret, self.frame = self._cap.read()
-                    
+                    ret, image = self._cap.read()
                     if ret:
+                        self.frame.image = image
                         frame_pass += 1
                         self._update_progress(frame_pass)
                         if self._record:
-                            self.save_frame(self.frame.image)
+                            self.save_frame(image)
 
                         self.resize_image_show(self.frame)
 
@@ -533,7 +534,7 @@ class VideoPlayer(ttk.Frame):
 
             self.resize_image_show(self._frame)
     
-    def resize_image_show(self, frame:FrameImg):
+    def resize_image_show(self, frame: FrameImg):
 
         if Image.isImageType(frame.image):
             self._size = resize_image_to_frame(frame.size, (self.canvas_image_width, self.canvas_image_height))
