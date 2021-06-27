@@ -215,11 +215,14 @@ class Surveillance(VideoPlayer):
             self.frame_take += 5
 
         if self.frame_take > 0:
+            if self.button_record.cget("relief") == 'raised':
+                self.camera_recording()
+                self.button_record.config(image=self.icon_record_on, relief='sunken')
 
             self.save_frame(frame)
             self.frame_take -= 1
             cv2.imshow('record', frame)
-            self.button_record.config(image=self.icon_record_on, relief='sunken')
+
         elif self.frame_take == 0:
             self.button_record.config(image=self.icon_record_off, relief='raised')
 
