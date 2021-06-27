@@ -17,7 +17,7 @@ class TestSurveillance(TestCase):
         self.image_test = Image.open(image_file)
 
         movie_path = os.path.abspath(os.path.join(os.pardir, 'Resources', 'movies'))
-        movie_file = os.path.join(movie_path, 'carplate30.mp4')
+        movie_file = os.path.join(movie_path, 'kids_play.avi')
         self.move_test = movie_file
 
     def test_algo_list(self):
@@ -31,11 +31,8 @@ class TestSurveillance(TestCase):
         for i, fun in enumerate(test_list):
 
             self.vid.algo_list(False, fun)
-            self.assertListEqual(self.vid.algo_stack[:i], test_list[:i],
+            self.assertListEqual(self.vid.algo_stack[:], test_list[i+1:],
                                  "Error: List methods are not the same")
-
-    def test_run_frames(self):
-        self.fail()
 
     def test_movement_detection(self):
         self.test__init__()
@@ -65,4 +62,5 @@ class TestSurveillance(TestCase):
         self.fail()
 
     def test_save_frame(self):
+
         self.fail()

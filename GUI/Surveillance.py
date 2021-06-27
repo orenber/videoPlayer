@@ -155,6 +155,8 @@ class Surveillance(VideoPlayer):
                         self.resize_image_show(self.frame)
                        
                         # refresh image display
+                    elif not ret:
+                        break
                 self.board.update()
         except Exception as error:
             print(error)

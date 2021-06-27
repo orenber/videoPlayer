@@ -7,7 +7,7 @@ import cv2
 import numpy as np
 from PIL import Image, ImageTk
 from Utility.image_procesing import resize_image_to_frame
-
+from Utility.file_location import file_date
 
 class FrameImg(object):
 
@@ -510,7 +510,7 @@ class VideoPlayer(ttk.Frame):
             cv2.destroyAllWindows()
             self._update_progress(0, 0)
 
-    def camera_recording(self, file: str = 'output.avi'):
+    def camera_recording(self, file: str = file_date("output", ".avi")):
 
         if self.play:
             self._source = cv2.VideoWriter_fourcc(*'XVID')
