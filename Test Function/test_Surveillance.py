@@ -28,7 +28,7 @@ class TestSurveillance(TestCase):
             self.assertListEqual(self.vid.algo_stack[:i], test_list[:i],
                                  "Error: List methods are not the same")
 
-        for fun, i in enumerate(test_list):
+        for i, fun in enumerate(test_list):
 
             self.vid.algo_list(False, fun)
             self.assertListEqual(self.vid.algo_stack[:i], test_list[:i],
