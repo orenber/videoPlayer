@@ -125,7 +125,6 @@ class Surveillance(VideoPlayer):
         self.frame_number = 0
         self.frame_take = 0
 
-        self.camera_recording()
         try:
 
             while self._cap.isOpened():
@@ -216,6 +215,7 @@ class Surveillance(VideoPlayer):
             self.frame_take += 5
 
         if self.frame_take > 0:
+
             self.save_frame(frame)
             self.frame_take -= 1
             cv2.imshow('record', frame)
@@ -224,7 +224,6 @@ class Surveillance(VideoPlayer):
             self.button_record.config(image=self.icon_record_off, relief='raised')
 
     def save_frame(self, frame: np.array):
-        # convert two images to gray scale
 
         self._out.write(frame)
 
