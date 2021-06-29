@@ -1,5 +1,6 @@
 import copy
 import os
+import logging
 from tkinter import *
 from tkinter import filedialog, ttk, messagebox
 
@@ -78,6 +79,9 @@ class VideoPlayer(ttk.Frame):
     }
 
     def __init__(self, parent: ttk.Frame = None, **prop: dict):
+
+        # create logger
+
 
         self.setup = self.set_setup(prop)
 
