@@ -10,6 +10,7 @@ from PIL import Image, ImageTk
 from Utility.image_procesing import resize_image_to_frame
 from Utility.file_location import file_date
 
+
 class FrameImg(object):
 
     def __init__(self, image):
