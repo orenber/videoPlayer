@@ -1,7 +1,7 @@
 from unittest import TestCase
 import os
 from PIL import Image
-from GUI.Surveillance import Surveillance
+from GUI.surveillance import Surveillance
 
 
 class TestSurveillance(TestCase):

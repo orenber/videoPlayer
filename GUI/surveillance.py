@@ -1,4 +1,5 @@
-from GUI.VideoPlayer import VideoPlayer, FrameImg
+from GUI.videoPlayer import VideoPlayer
+from GUI.frameImg import FrameImg
 import numpy as np
 import cv2
 from tkinter import *

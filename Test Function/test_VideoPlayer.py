@@ -1,5 +1,5 @@
 from unittest import TestCase
-from GUI.VideoPlayer import VideoPlayer
+from GUI.videoPlayer import VideoPlayer
 import os
 from PIL import Image
 import cv2
