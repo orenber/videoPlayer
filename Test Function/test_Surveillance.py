@@ -2,7 +2,7 @@ from unittest import TestCase
 import os
 from PIL import Image
 from GUI.surveillance import Surveillance
-
+from datetime import datetime
 
 class TestSurveillance(TestCase):
 
