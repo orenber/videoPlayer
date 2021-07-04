@@ -36,7 +36,7 @@ class TestFrameImg(TestCase):
         self.frame = FrameImg(self.image_test)
         width, height = self.image_test.size
         image_ratio = height/width
-        self.assertEqual(self.frame.ratio,image_ratio)
+        self.assertEqual(self.frame.ratio, image_ratio)
 
     def test_width(self):
         self.frame = FrameImg(self.image_test)

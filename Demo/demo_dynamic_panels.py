@@ -9,8 +9,6 @@ panel_main = PanedWindow(bd=4, relief="raised", bg="red")
 panel_main.pack(fill=BOTH, expand=1)
 
 
-
-
 label_left = Label(panel_main, text="left Panel")
 panel_main.add(label_left)
 
