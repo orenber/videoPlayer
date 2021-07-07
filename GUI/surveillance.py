@@ -42,12 +42,12 @@ class Surveillance(VideoPlayer):
         self.main_panel.pack(side=TOP)
         self.main_panel.place(relx=0, rely=0, relwidth=1, relheight=1)
 
-        # control panel
-        self.canvas_main = Canvas(self.main_panel, width=600, height=700, bg="blue",
-                                  relief="raised", name="canvas_main")
-        self.canvas_main.pack(fill=BOTH, expand=True)
 
-        super()._build_widget(self.canvas_main, setup)
+        # control panel
+        matrix = {"col": [{"row": [0, 0, 0]}, {"row": [1, 1, 1]}, {"row": [2, 2, 2]}]}
+        self.dynamic_panel = DynamicPanel(self.main_panel,matrix)
+
+        super()._build_widget(self.dynamic_panel, setup)
         # load image button button_load_image
         # self.icon_algo = PhotoImage( file=os.path.join( icons_path, 'algo.PNG' ) )
         self.button_movement_detection = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white",
