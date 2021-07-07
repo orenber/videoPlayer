@@ -12,7 +12,7 @@ panel_main.pack(fill=BOTH, expand=1)
 label_left = Label(panel_main, text="left Panel")
 panel_main.add(label_left)
 
-panel_top = PanedWindow(panel_main, orient=VERTICAL, bd=4, relief="raised",bg="blue")
+panel_top = PanedWindow(panel_main, orient=VERTICAL, bd=4, relief="raised", bg="blue")
 panel_main.add(panel_top)
 
 label_top = Label(panel_main, text="top")
