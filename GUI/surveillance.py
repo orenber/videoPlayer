@@ -1,5 +1,6 @@
 from GUI.videoPlayer import VideoPlayer
 from GUI.frameImg import FrameImg
+from GUI.dynamic_panel import DynamicPanel
 import numpy as np
 import cv2
 from tkinter import *
@@ -42,12 +43,11 @@ class Surveillance(VideoPlayer):
         self.main_panel.pack(side=TOP)
         self.main_panel.place(relx=0, rely=0, relwidth=1, relheight=1)
 
+        super()._build_widget(self.main_panel, setup)
         # control panel
-        self.canvas_main = Canvas(self.main_panel, width=600, height=700, bg="blue",
-                                  relief="raised", name="canvas_main")
-        self.canvas_main.pack(fill=BOTH, expand=True)
+        matrix = {"row": [{"no_row": [0]}]}
+        self.dynamic_panel = DynamicPanel(self.canvas_image, matrix)
 
-        super()._build_widget(self.canvas_main, setup)
         # load image button button_load_image
         # self.icon_algo = PhotoImage( file=os.path.join( icons_path, 'algo.PNG' ) )
         self.button_movement_detection = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white",
