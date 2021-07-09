@@ -35,7 +35,7 @@ class DynamicPanel(ttk.Frame):
 
             if key in signals:
 
-                panel = PanedWindow(parent_panel, bd=1, relief="raised", bg="blue", orient =self.direction[key])
+                panel = PanedWindow(parent_panel, bd=1, relief="raised", bg="blue", orient=self.direction[key])
                 panel.pack(fill=BOTH, expand=1)
                 parent_panel.add(panel,stretch="always")
                 parent = panel
