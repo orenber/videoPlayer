@@ -1,25 +1,16 @@
-
-
 from tkinter import *
-from tkinter import filedialog, ttk, messagebox
+from tkinter import ttk
 
 
-
-
-
-class DaynamicPanel(ttk.Frame):
+class DynamicPanel(ttk.Frame):
 
     def __init__(self, parent: ttk.Frame = None, **matrix: dict):
         root = Tk()
         root.title( "Image gallery" )
 
-
         matrix = {"row": [{"ncol" : [1, 1]}]}
 
-
         self.key, self.new_cell = list(matrix.items())[0]
-
-
 
         self._build_widget( parent, self.setup )
 

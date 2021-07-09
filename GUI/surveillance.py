@@ -142,14 +142,17 @@ class Surveillance(VideoPlayer):
 
                         self._update_progress(self.frame_number)
 
-                        # convert two images to gray scale
-                        gray_image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-
                         # take the image and sand it to the list of function to analyze process
                         algo_list = self.algo_stack
-                    
-                        for n in range(0, len(algo_list)):
-                            algo_list[n](gray_image)
+                        algo_nums = len(algo_list)
+
+                        if algo_nums:
+
+                            # convert two images to gray scale
+                            gray_image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+
+                            for n in range(0, algo_nums):
+                                algo_list[n](gray_image)
 
                         # self.face_detection(frame_gray)
                         # convert matrix image to pillow image object
