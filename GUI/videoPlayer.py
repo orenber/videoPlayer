@@ -175,7 +175,7 @@ class VideoPlayer(ttk.Frame):
         self.canvas_image.bind("<Configure>", self._resize)
         self.canvas_image_height = int(self.canvas_image.config("height")[4])
         self.canvas_image_width = int(self.canvas_image.config("width")[4])
-        self.rec = Label(self.canvas_image,text="Rec", fg="Red", bg="black", font=('arial', 14, 'bold'))
+        self.rec = Label(self.canvas_image, text="", fg="Red", bg="black", font=('arial', 14, 'bold'))
         self.rec.pack(anchor=NW)
         self.board = Label(self.canvas_image, bg="black", width=44, height=14)
         self.board.pack(fill=BOTH, expand=True)
@@ -241,7 +241,7 @@ class VideoPlayer(ttk.Frame):
             # record video
             self.icon_record_off = PhotoImage(file=os.path.join(icons_path, 'record_off.PNG'))
             self.icon_record_on = PhotoImage(file=os.path.join(icons_path, 'record_on.PNG'))
-            self.rec.config(text="")
+
             self.button_record = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white",
                                         font=('arial', 12, 'bold'),
                                         text="record", bg="black", height=icon_height, width=icon_width,
@@ -304,7 +304,7 @@ class VideoPlayer(ttk.Frame):
         if self.setup['image']:
             self.button_image_load.config(relief='raised')
         if self.setup['record']:
-            self.button_record.config(image=self.icon_record_off, relief='raised')
+            self._record_view_state(False)
 
     def _record_view(self):
 
@@ -315,22 +315,32 @@ class VideoPlayer(ttk.Frame):
                 try:
                     self._record = True
                     self.camera_recording()
-                    self.button_record.config(image=self.icon_record_on, relief='sunken')
-                    self.rec.config(text="REC")
+                    self._record_view_state(self._record)
+
                 except Exception as error:
                     print(error)
                     self._record = False
-                    self.button_record.config(image=self.icon_record_off, relief='raised')
-                    self.rec.config(text="")
+                    self._record_view_state(self._record)
 
             elif self.button_record.cget('relief') == 'sunken':
-                self.button_record.config(image=self.icon_record_off, relief='raised')
-                self.rec.config(text="")
+
                 self._record = False
+                self._record_view_state(self._record)
 
         else:
-            self.button_record.config(image=self.icon_record_off, relief='raised')
+            self._record_view_state(False)
+
+    def _record_view_state(self, state: bool=True):
+
+        if state:
+            self.button_record.config(image=self.icon_record_on, relief='sunken')
+            self.rec.config(text="REC")
+        else:
+            self.button_record.config( image=self.icon_record_off, relief='raised' )
             self.rec.config(text="")
+
+
+
 
     def _update_progress(self, frame_pass: int = 0, frames_numbers: int = None):
 

@@ -45,8 +45,14 @@ class Surveillance(VideoPlayer):
 
         super()._build_widget(self.main_panel, setup)
         # control panel
-        matrix = {"row": [{"no_row": [0]}]}
+        matrix = {"row": [{"col": [0,0]}]}
         self.dynamic_panel = DynamicPanel(self.canvas_image, matrix)
+
+        self.board.place_forget()
+        self.board.destroy()
+        self.board = Label( self.dynamic_panel.canvas_image[1]  , bg="black", width=44, height=14 )
+        self.board.pack(fill=BOTH, expand=True)
+
 
         # load image button button_load_image
         # self.icon_algo = PhotoImage( file=os.path.join( icons_path, 'algo.PNG' ) )
