@@ -56,7 +56,7 @@ class Surveillance(VideoPlayer):
 
         self.board.place_forget()
         self.board.destroy()
-        self.board = Label(self.dynamic_panel.canvas_image[1], bg="black", width=44, height=14)
+        self.board = self.dynamic_panel.current_label_image()
         self.board.pack(fill=BOTH, expand=True)
 
         # load image button button_load_image

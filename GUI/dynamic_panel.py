@@ -24,8 +24,8 @@ class DynamicPanel(ttk.Frame):
         return self._label_current
 
     @current_label_image.setter
-    def current_label(self, canvas: Label):
-        self._label_current = Label
+    def current_label(self, widget: Label):
+        self._label_current = widget
 
 
     @property
