@@ -3,6 +3,7 @@ import os
 import logging
 from tkinter import *
 from tkinter import filedialog, ttk, messagebox
+from time import monotonic as timer # or time.time if it is not available
 
 import cv2
 import numpy as np
@@ -338,6 +339,7 @@ class VideoPlayer(ttk.Frame):
         else:
             self.button_record.config( image=self.icon_record_off, relief='raised' )
             self.rec.config(text="")
+
 
 
 

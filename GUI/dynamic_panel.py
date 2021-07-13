@@ -13,8 +13,28 @@ class DynamicPanel(ttk.Frame):
         self.key, self.new_cell = list(matrix.items())[0]
 
         self.canvas_image = []
+        self.label_image = []
 
+        self._canvas_current = Canvas
+        self._label_current = Label
         self._build_widget(parent, matrix)
+
+    @property
+    def current_label_image(self) -> Label:
+        return self._label_current
+
+    @current_label_image.setter
+    def current_label(self, canvas: Label):
+        self._label_current = Label
+
+
+    @property
+    def current_canvas(self) -> Canvas:
+        return self._canvas_current
+
+    @current_canvas.setter
+    def current_canvas(self, canvas: Canvas):
+        self._canvas_current = canvas
 
     def _build_widget(self, parent=Tk, matrix: dict = {"row": [{"ncol": [1, 1]}]}):
 
@@ -45,19 +65,19 @@ class DynamicPanel(ttk.Frame):
 
             for _ in range(0, col_num):
                 self.canvas_image.append(Canvas(parent, bg="black", highlightthickness=0))
-                self.canvas_image[-1].bind("<Button-1>", self._focus)
-                parent.add(self.canvas_image[len(self.canvas_image)-1], stretch="always")
+                self.label_image.append(Label(self.canvas_image[-1], bg="black",
+                                        width=44, height=14))
+                self.label_image[-1].bind("<Button-1>", self._focus_label)
+                self.label_image[-1].pack(fill=BOTH, expand=True)
+                parent.add(self.canvas_image[len(self.canvas_image) - 1], stretch="always")
 
-    def _focus(self, event):
+    def _focus_label(self, event):
+        self.update_defult_label()
+        event.widget.config(borderwidth=5, relief="groove")
+        self.current_label_image = event.widget
 
-        self.update_defult_canvas()
-
-        event.widget.config(highlightthickness=3, highlightbackground="yellow")
-
-        pass
-
-    def update_defult_canvas(self):
-        [can.config(highlightthickness=0, highlightbackground="black") for can in self.canvas_image]
+    def update_defult_label(self):
+        [lab.config(relief="flat") for lab in self.label_image]
         pass
 
 

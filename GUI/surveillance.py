@@ -5,7 +5,8 @@ import numpy as np
 import cv2
 from tkinter import *
 from tkinter import ttk
-import os
+
+from Utility.file_location import *
 from skimage import morphology
 
 
@@ -15,13 +16,18 @@ class Surveillance(VideoPlayer):
              'blue':  (255, 0, 0),
              'green': (0, 255, 0)}
 
-    def __init__(self):
+    FILE_TYPE ={".AVI",0,
+                ".MP4",1}
 
+    def __init__(self):
         super().__init__(image=True, play=True, camera=True, record=True)
 
         self.algo_stack = []
         self.frame_take = 0
         self.frame_number = 0
+        self.file_type= ".AVI"
+        self.file_name = "movement_detect"
+        self.output_path = full_file(['Resources','Record', self.file_name ])
 
         self.pri_frame = FrameImg(np.zeros(self.STD_DIMS.get('0.3MP'), float))
 
@@ -45,14 +51,13 @@ class Surveillance(VideoPlayer):
 
         super()._build_widget(self.main_panel, setup)
         # control panel
-        matrix = {"row": [{"col": [0,0]}]}
+        matrix = {"row": [{"col": [0, 0]}]}
         self.dynamic_panel = DynamicPanel(self.canvas_image, matrix)
 
         self.board.place_forget()
         self.board.destroy()
-        self.board = Label( self.dynamic_panel.canvas_image[1]  , bg="black", width=44, height=14 )
+        self.board = Label(self.dynamic_panel.canvas_image[1], bg="black", width=44, height=14)
         self.board.pack(fill=BOTH, expand=True)
-
 
         # load image button button_load_image
         # self.icon_algo = PhotoImage( file=os.path.join( icons_path, 'algo.PNG' ) )
@@ -228,15 +233,15 @@ class Surveillance(VideoPlayer):
 
         if self.frame_take > 0:
             if self.button_record.cget("relief") == 'raised':
-                self.camera_recording()
-                self.button_record.config(image=self.icon_record_on, relief='sunken')
+                self.camera_recording(file_date(self.output_path, self.file_type))
+                self._record_view_state(True)
 
             self.save_frame(frame)
             self.frame_take -= 1
             cv2.imshow('record', frame)
 
         elif self.frame_take == 0:
-            self.button_record.config(image=self.icon_record_off, relief='raised')
+            self._record_view_state(False)
 
     def save_frame(self, frame: np.array):
 
