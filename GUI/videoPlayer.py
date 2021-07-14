@@ -340,10 +340,6 @@ class VideoPlayer(ttk.Frame):
             self.button_record.config( image=self.icon_record_off, relief='raised' )
             self.rec.config(text="")
 
-
-
-
-
     def _update_progress(self, frame_pass: int = 0, frames_numbers: int = None):
 
         if frames_numbers is None:
