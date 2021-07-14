@@ -17,15 +17,28 @@ class DynamicPanel(ttk.Frame):
 
         self._canvas_current = Canvas
         self._label_current = Label
+        self._label_link = Label
+
         self._build_widget(parent, matrix)
+        self.current_label_image = self.label_image[0]
+
+
+    @property
+    def label_link(self) -> Label:
+        return self._label_link
+
+    @label_link.setter
+    def label_link(self, widget: Label):
+        self._label_link = widget
 
     @property
     def current_label_image(self) -> Label:
         return self._label_current
 
     @current_label_image.setter
-    def current_label(self, widget: Label):
+    def current_label_image(self, widget: Label):
         self._label_current = widget
+        self._label_link = widget
 
 
     @property
@@ -69,7 +82,8 @@ class DynamicPanel(ttk.Frame):
                                         width=44, height=14))
                 self.label_image[-1].bind("<Button-1>", self._focus_label)
                 self.label_image[-1].pack(fill=BOTH, expand=True)
-                parent.add(self.canvas_image[len(self.canvas_image) - 1], stretch="always")
+                parent.add(self.canvas_image[len(self.canvas_image) - 1],stretch="always",)
+
 
     def _focus_label(self, event):
         self.update_defult_label()

@@ -50,14 +50,21 @@ class Surveillance(VideoPlayer):
         self.main_panel.place(relx=0, rely=0, relwidth=1, relheight=1)
 
         super()._build_widget(self.main_panel, setup)
+
+        self.canvas_image.unbind( "<Configure>" )
+
         # control panel
-        matrix = {"row": [{"col": [0, 0]}]}
+        matrix = {"row": [{"col": [0, 0]},{"no_col": [1]}]}
         self.dynamic_panel = DynamicPanel(self.canvas_image, matrix)
 
         self.board.place_forget()
         self.board.destroy()
-        self.board = self.dynamic_panel.current_label_image()
+        self.board = self.dynamic_panel.current_label_image
         self.board.pack(fill=BOTH, expand=True)
+
+        self.dynamic_panel.label_link = self.board
+        [can.bind( "<Configure>", self._resize ) for can in self.dynamic_panel.canvas_image]
+
 
         # load image button button_load_image
         # self.icon_algo = PhotoImage( file=os.path.join( icons_path, 'algo.PNG' ) )
@@ -85,6 +92,12 @@ class Surveillance(VideoPlayer):
                                                     name='button_profile_face_detection',
                                                     command=lambda: self._button_profile_face_detection_view())
         self.button_profile_face_detection.pack(side='left')
+
+    def _focus_label(self,event):
+
+        self.board = event.widget
+
+
 
     def _button_movement_detection_view(self):
 
