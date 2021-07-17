@@ -54,7 +54,7 @@ class Surveillance(VideoPlayer):
         self.canvas_image.unbind( "<Configure>" )
 
         # control panel
-        matrix = {"row": [{"col": [0, 0]}, {"no_col": [1]}]}
+        matrix = {"row": [{"col": [0, 0]}]}
         self.dynamic_panel = DynamicPanel(self.canvas_image, matrix)
 
         self.board.place_forget()
