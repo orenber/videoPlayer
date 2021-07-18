@@ -4,7 +4,7 @@ from datetime import datetime
 
 
 def full_file(file_folder: list = ()) -> str:
-    return os.path.abspath(os.path.join(*file_folder))
+    return os.path.abspath(os.path.join(os.pardir,*file_folder))
 
 
 def file_date(file_name: str = "output", extension: str = " ") -> str:
