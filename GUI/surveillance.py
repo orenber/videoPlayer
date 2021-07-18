@@ -16,8 +16,8 @@ class Surveillance(VideoPlayer):
              'blue':  (255, 0, 0),
              'green': (0, 255, 0)}
 
-    FILE_TYPE ={".AVI",0,
-                ".MP4",1}
+    FILE_TYPE = {".AVI", 0,
+                 ".MP4", 1}
 
     def __init__(self):
         super().__init__(image=True, play=True, camera=True, record=True)
@@ -25,9 +25,9 @@ class Surveillance(VideoPlayer):
         self.algo_stack = []
         self.frame_take = 0
         self.frame_number = 0
-        self.file_type= ".AVI"
-        self.file_name = "movement_detect"
-        self.output_path = full_file(['Resources','Record', self.file_name ])
+
+        self._file_name_record = "movement_detect"
+        self._output_path_record = full_file(['Resources', 'Record', self._file_name_record])
 
         self.pri_frame = FrameImg(np.zeros(self.STD_DIMS.get('0.3MP'), float))
 
@@ -43,6 +43,7 @@ class Surveillance(VideoPlayer):
     def _build_widget(self, parent: ttk.Frame = None, setup: dict = dict):
 
         self.master.geometry("950x720+0+0")
+        self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
         # main panel
 
         self.main_panel = Frame(width=1000, height=720, bg="gray24", relief="raised", name="main_panel")
@@ -51,7 +52,7 @@ class Surveillance(VideoPlayer):
 
         super()._build_widget(self.main_panel, setup)
 
-        self.canvas_image.unbind( "<Configure>" )
+        self.canvas_image.unbind("<Configure>")
 
         # control panel
         matrix = {"row": [{"col": [0, 0]}]}
@@ -243,7 +244,7 @@ class Surveillance(VideoPlayer):
 
         if self.frame_take > 0:
             if self.button_record.cget("relief") == 'raised':
-                self.camera_recording(file_date(self.output_path, self.file_type))
+                self.camera_recording(file_date(self._output_path_record, self._file_type_record))
                 self._record_view_state(True)
 
             self.save_frame(frame)

@@ -67,8 +67,8 @@ class DynamicPanel(ttk.Frame):
 
         if key in signals:
 
-            self.panel_main = PanedWindow(parent, bd=1, relief="raised", bg="red", orient=self.direction[key])
-            self.panel_main.pack(fill=BOTH, expand=1)
+            self.panel_main = PanedWindow(parent, bd=3, relief="raised", bg="blue", orient=self.direction[key])
+            self.panel_main.pack(side=TOP, fill=BOTH, expand=1)
             parent_panel = self.panel_main
 
         for cell in new_cell:
@@ -78,8 +78,8 @@ class DynamicPanel(ttk.Frame):
 
             if key in signals:
 
-                panel = PanedWindow(parent_panel, bd=1, relief="raised", bg="blue", orient=self.direction[key])
-                panel.pack(fill=BOTH, expand=1)
+                panel = PanedWindow(parent_panel, bd=3, relief="raised", bg="blue", orient=self.direction[key])
+                panel.pack(side=TOP, fill=BOTH, expand=1)
                 parent_panel.add(panel, stretch="always")
                 parent = panel
 
@@ -91,20 +91,19 @@ class DynamicPanel(ttk.Frame):
                 self.label_image.append(Label(self.canvas_image[-1], bg="black",
                                         width=44, height=14))
                 self.label_image[-1].bind("<Button-1>", self._focus_label)
-                self.label_image[-1].pack(fill=BOTH, expand=True)
+                self.label_image[-1].pack(fill=BOTH, expand=True,padx=3, pady=3)
                 self.canvas_image[-1].pack(fill=BOTH, expand=True)
-                parent.add(self.canvas_image[len(self.canvas_image) - 1],stretch="always")
-
-
-
+                parent.add(self.canvas_image[len(self.canvas_image) - 1], stretch="always")
 
     def _focus_label(self, event):
-        self.update_defult_label()
-        event.widget.config(borderwidth=5, relief="groove")
+        self.update_default_panel()
+        event.widget.config(borderwidth=3, relief="groove")
         self.current_label_image = event.widget
+        event.widget.master.config( highlightthickness=3, highlightbackground="yellow")
 
-    def update_defult_label(self):
+    def update_default_panel(self):
         [lab.config(relief="flat") for lab in self.label_image]
+        [cav.config(highlightthickness=0, highlightbackground="black") for cav in self.canvas_image]
         pass
 
 

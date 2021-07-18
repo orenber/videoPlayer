@@ -4,7 +4,6 @@ from GUI.dynamic_panel import DynamicPanel
 from PIL import Image, ImageTk
 
 
-
 root = Tk()
 
 root.geometry("700x700+0+0")
