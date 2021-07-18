@@ -1,6 +1,4 @@
 import copy
-import os
-import logging
 from tkinter import *
 from tkinter import filedialog, ttk, messagebox
 from time import monotonic as timer # or time.time if it is not available
@@ -9,7 +7,7 @@ import cv2
 import numpy as np
 from PIL import Image, ImageTk
 from Utility.image_procesing import resize_image_to_frame
-from Utility.file_location import file_date
+from Utility.file_location import *
 from GUI.frameImg import FrameImg
 
 
@@ -27,7 +25,7 @@ class VideoPlayer(ttk.Frame):
                 "0.9MP":  (1280, 720)
     }
 
-    def __init__(self, parent: ttk.Frame = None, **prop: dict):
+    def __init__(self, parent: ttk.Frame = None, **prop: tuple):
 
         # create logger
         self.setup = self.set_setup(prop)
@@ -57,10 +55,18 @@ class VideoPlayer(ttk.Frame):
         self._command = []
         self._frame_rate = 24.0
 
+        self._file_type_record = ".AVI"
+        self._file_name_record = "Record"
+        self._output_path_record = full_file(['Resources', 'Record', self._file_name_record])
+
         # public
       
         # build widget
         self._build_widget(parent, self.setup)
+
+    @property
+    def file_name_record(self) -> str:
+        return self._file_name_record
 
     @property
     def size(self) -> tuple:
@@ -112,6 +118,10 @@ class VideoPlayer(ttk.Frame):
         else:
             self._camera = False
             self._cap.release()
+
+    @file_name_record.setter
+    def file_name_record(self, file_name: str = "record"):
+        self._file_name_record = file_name
 
     @image_size_camera.setter
     def image_size_camera(self, res: str = '0.3MP'):
@@ -197,7 +207,7 @@ class VideoPlayer(ttk.Frame):
         self.control_frame = Frame(self.main_panel, bg="black", relief=SUNKEN)
         self.control_frame.pack(side=BOTTOM, fill=X, padx=20)
 
-        icons_path = os.path.abspath(os.path.join(os.pardir, 'Icons'))
+        icons_path = full_file(["Icons"])
 
         if setup['play']:
             # play video button button_live_video
@@ -315,7 +325,7 @@ class VideoPlayer(ttk.Frame):
 
                 try:
                     self._record = True
-                    self.camera_recording()
+                    self.camera_recording(file_date(self._output_path_record, self._file_type_record))
                     self._record_view_state(self._record)
 
                 except Exception as error:
@@ -331,13 +341,13 @@ class VideoPlayer(ttk.Frame):
         else:
             self._record_view_state(False)
 
-    def _record_view_state(self, state: bool=True):
+    def _record_view_state(self, state: bool = True):
 
         if state:
             self.button_record.config(image=self.icon_record_on, relief='sunken')
             self.rec.config(text="REC")
         else:
-            self.button_record.config( image=self.icon_record_off, relief='raised' )
+            self.button_record.config(image=self.icon_record_off, relief='raised')
             self.rec.config(text="")
 
     def _update_progress(self, frame_pass: int = 0, frames_numbers: int = None):
@@ -540,7 +550,7 @@ class VideoPlayer(ttk.Frame):
 def main():
     vid = VideoPlayer(image=True, play=True, camera=True, record=True, algo=True)
     vid.command = lambda frame: extract_image(frame)
-    vid.image_size_camera = '0.3MP'
+    vid.image_size_camera = '0.02MP'
     vid.mainloop()
 
 
