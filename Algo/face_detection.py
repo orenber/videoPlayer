@@ -8,7 +8,7 @@ face_frontal = os.path.join(path, 'haarcascade_frontalface_default.xml')
 # cascade classifier
 face_cascade = cv2.CascadeClassifier(face_frontal)
 
-# To capture video from webcam.
+# To capture video from webcame.
 cap = cv2.VideoCapture(0)
 # To use a video file as input
 # cap = cv2.VideoCapture('filename.mp4')

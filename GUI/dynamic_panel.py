@@ -67,7 +67,7 @@ class DynamicPanel(ttk.Frame):
 
         if key in signals:
 
-            self.panel_main = PanedWindow(parent, bd=3, relief="raised", bg="blue", orient=self.direction[key])
+            self.panel_main = PanedWindow(parent, bd=3, relief="raised", bg="gray", orient=self.direction[key])
             self.panel_main.pack(side=TOP, fill=BOTH, expand=1)
             parent_panel = self.panel_main
 
@@ -78,7 +78,7 @@ class DynamicPanel(ttk.Frame):
 
             if key in signals:
 
-                panel = PanedWindow(parent_panel, bd=3, relief="raised", bg="blue", orient=self.direction[key])
+                panel = PanedWindow(parent_panel, bd=3, relief="raised", bg="gray", orient=self.direction[key])
                 panel.pack(side=TOP, fill=BOTH, expand=1)
                 parent_panel.add(panel, stretch="always")
                 parent = panel
@@ -99,7 +99,7 @@ class DynamicPanel(ttk.Frame):
         self.update_default_panel()
         event.widget.config(borderwidth=3, relief="groove")
         self.current_label_image = event.widget
-        event.widget.master.config( highlightthickness=3, highlightbackground="yellow")
+        event.widget.master.config(highlightthickness=3, highlightbackground="yellow")
 
     def update_default_panel(self):
         [lab.config(relief="flat") for lab in self.label_image]
@@ -111,7 +111,7 @@ def main():
 
     matrix = {"col": [{"row": [0, 0, 0]}, {"row": [1, 1, 1]}, {"row": [2, 2, 2]}]}
     pan = DynamicPanel(Tk(), matrix)
-    pan.canvas_image
+
     pan.mainloop()
 
     pass

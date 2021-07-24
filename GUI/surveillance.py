@@ -4,7 +4,9 @@ from GUI.dynamic_panel import DynamicPanel
 import numpy as np
 import cv2
 from tkinter import *
-from tkinter import ttk
+from tkinter import ttk,messagebox
+import keyboard
+import copy as copy
 
 from Utility.file_location import *
 from skimage import morphology
@@ -30,6 +32,8 @@ class Surveillance(VideoPlayer):
         self._output_path_record = full_file(['Resources', 'Record', self._file_name_record])
 
         self.pri_frame = FrameImg(np.zeros(self.STD_DIMS.get('0.3MP'), float))
+        self.face = [{'detect': False, 'pos_label': (None, None), 'ROI': {'x': [None, None], 'y': [None, None]}}]
+
 
         # segment path
         path = os.path.dirname(cv2.__file__)
@@ -143,6 +147,44 @@ class Surveillance(VideoPlayer):
             elif algo in self.algo_stack:
                 self.algo_stack.remove(algo)
 
+    def _pause_view(self):
+        super()._pause_view()
+        # condition for crop ROI
+        if self.face[0]['detect']:
+
+            # if face detect and ther is labeling mode
+
+            # write on the image lable
+            cv2.setMouseCallback(self.lable_image())
+
+
+        # creat/open folder and insert image inside
+
+    def lable_image(self):
+
+        lable_position = list(self.face[0]['pos_label'])
+        frame = copy.copy(self.frame)
+        text = []
+        while self.face[0]['detect']:
+
+            self.resize_image_show(frame)
+
+            # wait for keypress
+            key = keyboard.read_key()
+
+
+            if key == 'BackSpace':
+               text.pop[-1]
+            if key == 'Enter':
+                # in the case Enter press
+
+                if messagebox.askokcancel("Cancel", "Do you want to Crop ROI Image?"):
+                    pass
+                    # crop face ROI and ask the user for permission
+
+
+
+
     def run_frames(self):
 
         self.frame_number = 0
@@ -217,13 +259,18 @@ class Surveillance(VideoPlayer):
 
     def face_detection(self, gray_image: np.array):
 
-        # Detect the faces
+        # detect the faces
         faces = self.face_cascade.detectMultiScale(gray_image, 1.1, 4)
+        self.face = [{'detect': False, 'pos_label': (None, None), 'ROI': {'x': [None, None], 'y': [None, None]}} for k
+                     in range(len(faces))]
         # Draw the rectangle around each face
-        for (x, y, w, h) in faces:
+        for count, (x, y, w, h) in enumerate(faces):
+
+            self.face[count] = {'detect': True, 'ROI': {'x': (x, x + w), 'y': (y, y + h)}, 'pos_label': (x + 6, y - 6)}
             cv2.rectangle(self.frame.image, (x, y), (x+w, y+h), self.COLOR['blue'], 2)
-            cv2.putText(self.frame.image, 'Face', (x + 6, y - 6), cv2.FONT_HERSHEY_DUPLEX, 0.5, self.COLOR['green'], 1)
-        # Display
+            cv2.putText(self.frame.image, 'Face', self.face[count]['pos_label'],
+                        cv2.FONT_HERSHEY_DUPLEX, 0.5, self.COLOR['green'], 1)
+            # Display
 
     def profile_detection(self, gray_image: np.array):
 
