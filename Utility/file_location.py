@@ -16,6 +16,13 @@ def file_date(file_name: str = "output", extension: str = " ") -> str:
     return file_full_name
 
 
+def create_folder_if_not_exist(file_folder: str = os.pardir) -> bool:
+
+    os.makedirs(file_folder, exist_ok=True)
+    is_exist = os.path.isdir(file_folder)
+    return is_exist
+
+
 class LOGGER:
     def __int__(self, app_name: str):
         logging.basicConfig(level=logging.INFO, filename= file_date(app_name, '.log'), filemode='w')
