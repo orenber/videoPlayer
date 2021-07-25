@@ -65,6 +65,10 @@ class VideoPlayer(ttk.Frame):
         self._build_widget(parent, self.setup)
 
     @property
+    def frame_rate(self) -> float:
+        return self._frame_rate
+
+    @property
     def file_name_record(self) -> str:
         return self._file_name_record
 
@@ -105,6 +109,10 @@ class VideoPlayer(ttk.Frame):
     def camera(self):
 
         return self._camera
+
+    @frame_rate.setter
+    def frame_rate(self, rate: float = 24.0):
+        self._frame_rate = rate
 
     @camera.setter
     def camera(self, capture: bool):

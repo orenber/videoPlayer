@@ -4,7 +4,7 @@ from datetime import datetime
 
 
 def full_file(file_folder: list = ()) -> str:
-    return os.path.abspath(os.path.join(os.pardir,*file_folder))
+    return os.path.abspath(os.path.join(os.pardir, *file_folder))
 
 
 def file_date(file_name: str = "output", extension: str = " ") -> str:
@@ -25,7 +25,7 @@ def create_folder_if_not_exist(file_folder: str = os.pardir) -> bool:
 
 class LOGGER:
     def __int__(self, app_name: str):
-        logging.basicConfig(level=logging.INFO, filename= file_date(app_name, '.log'), filemode='w')
+        logging.basicConfig(level=logging.INFO, filename=file_date(app_name, '.log'), filemode='w')
         self.logger = logging.getLogger(app_name+"Start")
         self.logger.setLevel(logging.DEBUG)
 
@@ -41,6 +41,7 @@ class LOGGER:
 
         # add ch to logger
         self.logger.addHandler(ch)
+
 
 def main():
 

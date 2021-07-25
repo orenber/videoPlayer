@@ -4,7 +4,7 @@ from GUI.dynamic_panel import DynamicPanel
 import numpy as np
 import cv2
 from tkinter import *
-from tkinter import ttk,messagebox
+from tkinter import ttk, messagebox
 import keyboard
 import copy as copy
 
@@ -157,7 +157,6 @@ class Surveillance(VideoPlayer):
             # write on the image lable
             cv2.setMouseCallback(self.lable_image())
 
-
         # creat/open folder and insert image inside
 
     def lable_image(self):
@@ -171,19 +170,15 @@ class Surveillance(VideoPlayer):
 
             # wait for keypress
             key = keyboard.read_key()
-
-
             if key == 'BackSpace':
                text.pop[-1]
+
             if key == 'Enter':
                 # in the case Enter press
 
                 if messagebox.askokcancel("Cancel", "Do you want to Crop ROI Image?"):
                     pass
                     # crop face ROI and ask the user for permission
-
-
-
 
     def run_frames(self):
 
