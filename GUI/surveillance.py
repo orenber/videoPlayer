@@ -1,6 +1,7 @@
 from GUI.videoPlayer import VideoPlayer
 from GUI.frameImg import FrameImg
 from GUI.dynamic_panel import DynamicPanel
+from GUI.message_photo import MessagePhoto
 import numpy as np
 import cv2
 from tkinter import *
@@ -155,30 +156,26 @@ class Surveillance(VideoPlayer):
             # if face detect and ther is labeling mode
 
             # write on the image lable
-            cv2.setMouseCallback(self.lable_image())
+            self.board.bind("<Double-Button>", self.lable_image)
+
 
         # creat/open folder and insert image inside
 
-    def lable_image(self):
+    def lable_image(self,event):
 
-        lable_position = list(self.face[0]['pos_label'])
-        frame = copy.copy(self.frame)
-        text = []
-        while self.face[0]['detect']:
+        if self.face[0]['detect']:
 
-            self.resize_image_show(frame)
+            roi = self.face[0]['ROI']
+            x = roi['x']
+            y = roi['y']
+            crop_image = self.frame.image[y[0]:y[1], x[0]:x[1]]
 
-            # wait for keypress
-            key = keyboard.read_key()
-            if key == 'BackSpace':
-               text.pop[-1]
+            message = MessagePhoto()
+            message.update_image(crop_image[0])
 
-            if key == 'Enter':
-                # in the case Enter press
+            self.dynamic_panel.current_label_image.unbind("<Button>")
 
-                if messagebox.askokcancel("Cancel", "Do you want to Crop ROI Image?"):
-                    pass
-                    # crop face ROI and ask the user for permission
+
 
     def run_frames(self):
 

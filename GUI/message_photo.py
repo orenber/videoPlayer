@@ -33,7 +33,7 @@ class MessagePhoto(tk.Frame):
                                     width=5).pack(side=tk.LEFT)
 
     def update_image(self, image):
-        label_image = self.dynamic_panel.current_label_image
+        label_image = self._dynamic_panel.current_label_image
         label_image.config(image=image)
 
 
