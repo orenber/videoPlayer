@@ -11,7 +11,7 @@ face_cascade = cv2.CascadeClassifier(face_frontal_path)
 recognizer = cv2.face.LBPHFaceRecognizer_create()
 recognizer.read("trainner.yml")
 
-images_face_path = full_file(["Resources", "images", "faces", "face"])
+images_face_path = full_file(["Resources", "images", "faces"])
 
 labels = {"person_name": 1}
 font = cv2.FONT_HERSHEY_SIMPLEX
@@ -51,12 +51,12 @@ while(True):
            cv2.putText(frame, name, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1, color, stroke, cv2.LINE_AA)
 
         # crop the region of intrest ( faces in the images)
-        cv2.imwrite(file_date(images_face_path, '.png'), roi_gray)
+        # cv2.imwrite(file_date(images_face_path, '.png'), roi_gray)
         # take the roi corrdinet x and y
-        points_start = (x, y)
-        points_end = (x+w, y+h)
+           points_start = (x, y)
+           points_end = (x+w, y+h)
         # draw rectangle around the faces
-        cv2.rectangle(frame, points_start, points_end, (255, 0, 0), 3)
+           cv2.rectangle(frame, points_start, points_end, (255, 0, 0), 3)
 
     # display image and plot
     cv2.imshow('frame', frame)

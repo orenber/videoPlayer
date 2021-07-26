@@ -5,8 +5,9 @@ from Utility.file_location import *
 from PIL import Image
 import pickle
 
-images_dir = full_file([os.pardir, "Resources", "images"])
-face_frontal_path = os.path.join(images_dir, 'data', 'haarcascade_frontalface_default.xml')
+images_dir = full_file(["Resources", "images", "faces"])
+path = os.path.dirname(cv2.__file__)
+face_frontal_path = os.path.join(path, 'data', 'haarcascade_frontalface_default.xml')
 face_cascade = cv2.CascadeClassifier(face_frontal_path)
 recognizer = cv2.face.LBPHFaceRecognizer_create()
 
@@ -33,10 +34,10 @@ for root, dirs, files in os.walk(images_dir):
             # convert to gray scale
             pil_image = Image.open(path).convert("L")
             # resize images to the same size
-            size = (550, 550)
-            image_resize = pil_image.resize(size, Image.ANTIALIAS)
+            #size = (550, 550)
+            #image_resize = pil_image.resize(size, Image.ANTIALIAS)
             # convert image to numpy array
-            image_array = np.array(image_resize, "uint8")
+            image_array = np.array(pil_image, "uint8")
             print(image_array)
             faces = face_cascade.detectMultiScale(image_array, scaleFactor=1.5, minNeighbors=5)
 

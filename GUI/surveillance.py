@@ -5,7 +5,8 @@ from GUI.message_photo import MessagePhoto
 import numpy as np
 import cv2
 from tkinter import *
-from tkinter import ttk, messagebox
+from tkinter import ttk
+from tkinter.simpledialog import askstring
 import keyboard
 import copy as copy
 
@@ -158,10 +159,10 @@ class Surveillance(VideoPlayer):
             # write on the image lable
             self.board.bind("<Double-Button>", self.lable_image)
 
-
         # creat/open folder and insert image inside
 
     def lable_image(self,event):
+
 
         if self.face[0]['detect']:
 
@@ -169,13 +170,20 @@ class Surveillance(VideoPlayer):
             x = roi['x']
             y = roi['y']
             crop_image = self.frame.image[y[0]:y[1], x[0]:x[1]]
+            cv2.imshow('ROI', crop_image)
 
-            message = MessagePhoto()
-            message.update_image(crop_image[0])
-
-            self.dynamic_panel.current_label_image.unbind("<Button>")
-
-
+            lable_image = askstring("label", "label the ROI image")
+            print(lable_image)
+            try:
+                images_face_path = full_file(["Resources", "images", "faces", lable_image])
+                create_folder_if_not_exist(images_face_path)
+                path_file = images_face_path + '\\' + file_date(lable_image, ".png")
+                cv2.imwrite(path_file, crop_image)
+                cv2.destroyAllWindows()
+            except Exception as error:
+                print(error)
+            finally:
+                self.dynamic_panel.current_label_image.unbind("<Button>")
 
     def run_frames(self):
 
@@ -289,6 +297,9 @@ class Surveillance(VideoPlayer):
             self.save_frame(frame)
             self.frame_take -= 1
             cv2.imshow('record', frame)
+
+
+
 
         elif self.frame_take == 0:
             self._record_view_state(False)
