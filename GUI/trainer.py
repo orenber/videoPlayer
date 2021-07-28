@@ -3,7 +3,7 @@ from tkinter import *
 from tkinter import ttk
 
 
-root =Tk()
+root = Tk()
 root.geometry("500x700+0+0")
 
 # create Main Frame
