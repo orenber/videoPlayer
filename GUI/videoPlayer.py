@@ -184,10 +184,10 @@ class VideoPlayer(ttk.Frame):
         # main panel
         self.main_panel.config(bg="black")
 
-        icon_width = 45
-        icon_height = 50
+        self.icon_width = 45
+        self.icon_height = 50
         canvas_progressbar_height = 2
-        # frame_height = int(self.main_panel.cget('height')/10-icon_height-canvas_progressbar_height)
+        # frame_height = int(self.main_panel.cget('height')/10-self.icon_height -canvas_progressbar_height)
 
         self.canvas_image = Canvas(self.main_panel, bg="black", highlightthickness=0)
         self.canvas_image.pack(fill=BOTH, expand=True, side=TOP)
@@ -215,72 +215,76 @@ class VideoPlayer(ttk.Frame):
         self.control_frame = Frame(self.main_panel, bg="black", relief=SUNKEN)
         self.control_frame.pack(side=BOTTOM, fill=X, padx=20)
 
-        icons_path = full_file(["Icons"])
+        self.icons_path = full_file(["Icons"])
 
         if setup['play']:
             # play video button button_live_video
-            self.icon_play = PhotoImage(file=os.path.join(icons_path, 'play.PNG'))
+            self.icon_play = PhotoImage(file=os.path.join(self.icons_path , 'play.PNG'))
             self.button_live_video = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white",
                                             font=('arial', 12, 'bold'),
-                                            text="> Load Video", bg='black', image=self.icon_play, height=icon_height,
-                                            width=icon_width, command=lambda: self.load_movie())
+                                            text="> Load Video", bg='black', image=self.icon_play, height=self.icon_height ,
+                                            width=self.icon_width, command=lambda: self.load_movie())
             self.button_live_video.pack(side='left')
 
         # play camera
         if setup['camera']:
-            self.icon_camera = PhotoImage(file=os.path.join(icons_path, 'camera.PNG'))
-            self.button_camera = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white",
+            self.icon_camera = PhotoImage(file=os.path.join(self.icons_path , 'camera.PNG'))
+            self.button_camera = Button(self.control_frame,
+                                        padx=10, pady=10, bd=8, fg="white",
                                         font=('arial', 12, 'bold'),
-                                        text="camera", bg='black', image=self.icon_camera, height=icon_height,
-                                        width=icon_width, command=lambda: self._camera_view())
+                                        text="camera", bg='black',
+                                        image=self.icon_camera,
+                                        height=self.icon_height,
+                                        width=self.icon_width,
+                                        command=lambda: self._camera_view())
             self.button_camera.pack(side='left')
 
         if setup['pause']:
             # pause video button button_live_video
-            self.icon_pause = PhotoImage(file=os.path.join(icons_path, 'pause.PNG'))
+            self.icon_pause = PhotoImage(file=os.path.join(self.icons_path , 'pause.PNG'))
 
             self.button_pause_video = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white",
                                              font=('arial', 12, 'bold'),
                                              text="Pause", bg='black', image=self.icon_pause,
-                                             height=icon_height, width=icon_width,
+                                             height=self.icon_height , width=self.icon_width,
                                              command=lambda: self._pause_view())
             self.button_pause_video.pack(side='left')
 
         if setup['stop']:
             # stop video button button_live_video
-            self.icon_stop = PhotoImage(file=os.path.join(icons_path, 'stop.PNG'))
+            self.icon_stop = PhotoImage(file=os.path.join(self.icons_path , 'stop.PNG'))
             self.button_stop_video = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white",
                                             font=('arial', 12, 'bold'),
-                                            text="stop", bg='black', height=icon_height, width=icon_width,
+                                            text="stop", bg='black', height=self.icon_height , width=self.icon_width,
                                             image=self.icon_stop,
                                             command=lambda: self.stop_player())
             self.button_stop_video.pack(side='left')
 
         if setup['record']:
             # record video
-            self.icon_record_off = PhotoImage(file=os.path.join(icons_path, 'record_off.PNG'))
-            self.icon_record_on = PhotoImage(file=os.path.join(icons_path, 'record_on.PNG'))
+            self.icon_record_off = PhotoImage(file=os.path.join(self.icons_path , 'record_off.PNG'))
+            self.icon_record_on = PhotoImage(file=os.path.join(self.icons_path , 'record_on.PNG'))
 
             self.button_record = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white",
                                         font=('arial', 12, 'bold'),
-                                        text="record", bg="black", height=icon_height, width=icon_width,
+                                        text="record", bg="black", height=self.icon_height , width=self.icon_width,
                                         image=self.icon_record_off,
                                         command=lambda: self._record_view())
             self.button_record.pack(side='left')
 
         if setup['image']:
             # load image button button_load_image
-            self.icon_image = PhotoImage(file=os.path.join(icons_path, 'image.PNG'))
+            self.icon_image = PhotoImage(file=os.path.join(self.icons_path , 'image.PNG'))
             self.button_image_load = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white",
                                             font=('arial', 12, 'bold'),
                                             text="Load Image", bg="black", image=self.icon_image,
-                                            height=icon_height, width=icon_width,
+                                            height=self.icon_height , width=self.icon_width,
                                             command=lambda: self.load_image())
             self.button_image_load.pack(side='left')
 
         if setup['algo']:
             # load image button button_load_image
-            # self.icon_algo = PhotoImage( file=os.path.join( icons_path, 'algo.PNG' ) )
+            # self.icon_algo = PhotoImage( file=os.path.join( self.icons_path , 'algo.PNG' ) )
             self.button_run_algo = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white",
                                           font=('arial', 12, 'bold'),
                                           text="Run algo", bg="black", height=1, width=8,

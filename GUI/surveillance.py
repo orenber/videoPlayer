@@ -73,29 +73,36 @@ class Surveillance(VideoPlayer):
         [can.bind("<Configure>", self._resize) for can in self.dynamic_panel.canvas_image]
 
         # load image button button_load_image
-        # self.icon_algo = PhotoImage( file=os.path.join( icons_path, 'algo.PNG' ) )
-        self.button_movement_detection = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white",
+        self.icon_movement_detect = PhotoImage(file=os.path.join(self.icons_path , 'motion-sensor.PNG' ) )
+        self.button_movement_detection = Button(self.control_frame, padx=10, pady=10, bd=8,
+                                                fg="white",
                                                 font=('arial', 12, 'bold'),
-                                                text="movement", bg="black", height=1, width=8,
+                                                text="movement", bg="black",
+                                                image= self.icon_movement_detect,
+                                                height=self.icon_height,
+                                                width=self.icon_width,
                                                 name="button_movement_detection",
                                                 command=lambda: self._button_movement_detection_view())
         self.button_movement_detection.pack(side='left')
 
         # load image button_load_image
-        # self.icon_algo = PhotoImage( file=os.path.join( icons_path, 'algo.PNG' ) )
+        self.icon_face_detect = PhotoImage(file=os.path.join(self.icons_path, 'face-recognition.PNG'))
         self.button_face_detection = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white",
                                             font=('arial', 12, 'bold'),
-                                            text="face", bg="black", height=1, width=8,
+                                            text="face", bg="black",
+                                            image = self.icon_face_detect,
+                                            height=self.icon_height,
+                                            width=self.icon_width,
                                             name="button_face_detection",
                                             command=lambda: self._button_face_detection_view())
         self.button_face_detection.pack(side='left')
 
         # load image button button_load_image
-        # self.icon_algo = PhotoImage( file=os.path.join( icons_path, 'algo.PNG' ) )
+
         self.button_profile_face_detection = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white",
-                                                    font=('arial', 12, 'bold'),
-                                                    text="body", bg="black", height=1, width=8,
-                                                    name='button_profile_face_detection',
+                                                    font = ('arial', 12, 'bold'),
+                                                    text = "body", bg="black", height=1, width=8,
+                                                    name = 'button_profile_face_detection',
                                                     command=lambda: self._button_profile_face_detection_view())
         self.button_profile_face_detection.pack(side='left')
 
