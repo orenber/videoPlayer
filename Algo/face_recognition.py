@@ -35,7 +35,6 @@ while(True):
     # go over all the face and plot the rectangle around
     for(x, y, w, h) in faces:
 
-        print(x, y, w, h)
         # detect ROI face
         roi_gray = gray[y:y+h, x:x+w]
         roi_color = frame[y:y+h, x:x+w]
@@ -43,11 +42,9 @@ while(True):
         # recognizer deep learned model predict keras tensorflow pytorch scikit learn
         id_, conf = recognizer.predict(roi_gray)
 
-        if conf >= 45:
+        if conf >= 47:
 
-           print(id_)
            name = labels[id_]
-           print(name)
            cv2.putText(frame, name, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1, color, stroke, cv2.LINE_AA)
 
         # crop the region of intrest ( faces in the images)
