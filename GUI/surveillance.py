@@ -1,14 +1,12 @@
 from GUI.videoPlayer import VideoPlayer
 from GUI.frameImg import FrameImg
 from GUI.dynamic_panel import DynamicPanel
-from GUI.message_photo import MessagePhoto
+
 import numpy as np
 import cv2
 from tkinter import *
 from tkinter import ttk
 from tkinter.simpledialog import askstring
-import keyboard
-import copy as copy
 
 from Utility.file_location import *
 from skimage import morphology
@@ -36,7 +34,6 @@ class Surveillance(VideoPlayer):
         self.pri_frame = FrameImg(np.zeros(self.STD_DIMS.get('0.3MP'), float))
         self.face = [{'detect': False, 'pos_label': (None, None), 'ROI': {'x': [None, None], 'y': [None, None]}}]
 
-
         # segment path
         path = os.path.dirname(cv2.__file__)
         face_frontal = os.path.join(path, 'data', 'haarcascade_frontalface_default.xml')
@@ -52,7 +49,11 @@ class Surveillance(VideoPlayer):
         self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
         # main panel
 
-        self.main_panel = Frame(width=1000, height=720, bg="gray24", relief="raised", name="main_panel")
+        self.main_panel = Frame(width=1000,
+                                height=720,
+                                bg="gray24",
+                                relief="raised",
+                                name="main_panel")
         self.main_panel.pack(side=TOP)
         self.main_panel.place(relx=0, rely=0, relwidth=1, relheight=1)
 
@@ -73,12 +74,12 @@ class Surveillance(VideoPlayer):
         [can.bind("<Configure>", self._resize) for can in self.dynamic_panel.canvas_image]
 
         # load image button button_load_image
-        self.icon_movement_detect = PhotoImage(file=os.path.join(self.icons_path , 'motion-sensor.PNG' ) )
+        self.icon_movement_detect = PhotoImage(file=os.path.join(self.icons_path, 'motion-sensor.PNG'))
         self.button_movement_detection = Button(self.control_frame, padx=10, pady=10, bd=8,
                                                 fg="white",
                                                 font=('arial', 12, 'bold'),
                                                 text="movement", bg="black",
-                                                image= self.icon_movement_detect,
+                                                image=self.icon_movement_detect,
                                                 height=self.icon_height,
                                                 width=self.icon_width,
                                                 name="button_movement_detection",
@@ -87,10 +88,12 @@ class Surveillance(VideoPlayer):
 
         # load image button_load_image
         self.icon_face_detect = PhotoImage(file=os.path.join(self.icons_path, 'face-recognition.PNG'))
-        self.button_face_detection = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white",
+        self.button_face_detection = Button(self.control_frame,
+                                            padx=10, pady=10, bd=8,
+                                            fg="white",
                                             font=('arial', 12, 'bold'),
                                             text="face", bg="black",
-                                            image = self.icon_face_detect,
+                                            image=self.icon_face_detect,
                                             height=self.icon_height,
                                             width=self.icon_width,
                                             name="button_face_detection",
@@ -99,10 +102,11 @@ class Surveillance(VideoPlayer):
 
         # load image button button_load_image
 
-        self.button_profile_face_detection = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white",
-                                                    font = ('arial', 12, 'bold'),
-                                                    text = "body", bg="black", height=1, width=8,
-                                                    name = 'button_profile_face_detection',
+        self.button_profile_face_detection = Button(self.control_frame, padx=10, pady=10, bd=8,
+                                                    fg="white",
+                                                    font=('arial', 12, 'bold'),
+                                                    text="body", bg="black", height=1, width=8,
+                                                    name='button_profile_face_detection',
                                                     command=lambda: self._button_profile_face_detection_view())
         self.button_profile_face_detection.pack(side='left')
 
@@ -168,8 +172,7 @@ class Surveillance(VideoPlayer):
 
         # creat/open folder and insert image inside
 
-    def lable_image(self,event):
-
+    def lable_image(self, _):
 
         if self.face[0]['detect']:
 
@@ -202,6 +205,7 @@ class Surveillance(VideoPlayer):
             while self._cap.isOpened():
 
                 if self._play:
+
                     # update the frame number
                     ret, image = self._cap.read()
 
@@ -268,8 +272,8 @@ class Surveillance(VideoPlayer):
 
         # detect the faces
         faces = self.face_cascade.detectMultiScale(gray_image, 1.1, 4)
-        self.face = [{'detect': False, 'pos_label': (None, None), 'ROI': {'x': [None, None], 'y': [None, None]}} for k
-                     in range(len(faces))]
+        self.face = [{'detect': False, 'pos_label': (None, None),
+                      'ROI': {'x': [None, None], 'y': [None, None]}} for _ in range(len(faces))]
         # Draw the rectangle around each face
         for count, (x, y, w, h) in enumerate(faces):
 
@@ -304,9 +308,6 @@ class Surveillance(VideoPlayer):
             self.save_frame(frame)
             self.frame_take -= 1
             cv2.imshow('record', frame)
-
-
-
 
         elif self.frame_take == 0:
             self._record_view_state(False)
