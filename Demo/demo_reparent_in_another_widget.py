@@ -2,7 +2,6 @@ from tkinter import*
 import numpy as np
 from GUI.videoPlayer import VideoPlayer
 from PIL import Image, ImageTk
-import os
 
 
 def extract_image(matrix_image: np.array):
