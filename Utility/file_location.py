@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 
 
-def full_file(file_folder: list = ()) -> str:
+def full_file(file_folder: object = ()) -> object:
     return os.path.abspath(os.path.join(os.pardir, *file_folder))
 
 

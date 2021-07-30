@@ -43,9 +43,11 @@ class Trainer(ttk.Frame):
         self._main_frame.pack(fill=BOTH, expand=1)
 
         # control Frame
-        self._frame_control = Frame(self._main_frame, bg="gray70")
-        self._frame_control.pack(side=RIGHT, fill=Y, expand=1)
+        self._frame_control = Frame(self._main_frame, bg="gray70",width=100)
+        self._frame_control.pack(side=RIGHT, fill=Y, expand=0)
 
+        self._frame_control_x = Frame( self._main_frame, bg="gray70")
+        self._frame_control_x.pack( side=BOTTOM, fill=X, expand=0 )
 
         # botton show images
         # icon open images folders
@@ -68,7 +70,7 @@ class Trainer(ttk.Frame):
                                     command=lambda: self.train_face_detection())
         self._button_train.pack(side=TOP)
         button_train_tooltip = Pmw.Balloon( self._frame_control)
-        button_train_tooltip.bind( self._button_train, "Training data" )
+        button_train_tooltip.bind(self._button_train, "Training data" )
 
         # create canvas
         self._canvas = Canvas(self._main_frame, bg="gray24")
@@ -83,11 +85,11 @@ class Trainer(ttk.Frame):
         scroll_bar_y_tooltip.bind(self._scroll_bar_y, "Scroll images in y direction")
 
         # add scrollbar in the x direction
-        self._scroll_bar_x = ttk.Scrollbar( self._main_frame,
+        self._scroll_bar_x = ttk.Scrollbar(self._frame_control_x,
                                             orient=HORIZONTAL,
                                             command=self._canvas.xview)
-        self._scroll_bar_x.pack(side=TOP, fill=X)
-        scroll_bar_x_tooltip = Pmw.Balloon( self._frame_control )
+        self._scroll_bar_x.pack(side=TOP, fill=X,expand=0)
+        scroll_bar_x_tooltip = Pmw.Balloon(self._frame_control_x)
         scroll_bar_x_tooltip.bind( self._scroll_bar_x, "Scroll images in x direction" )
 
         # Configure the canvas
@@ -97,8 +99,8 @@ class Trainer(ttk.Frame):
         # create another frame inside the canvas
         self._frame_display = Frame(self._canvas)
         # image gallery
-        matrix = {"col": [{"row": [0, 0, 0, 0, 0]},
-                          {"row": [0, 0, 0, 0, 0]}
+        matrix = {"col": [{"row": [0, 0, 0, 0, 0, 0, 0, 0, 0,0]},
+                          {"row": [0, 0, 0, 0, 0, 0, 0, 0, 0,0]}
                           ]}
 
         self._image_gallery = DynamicPanel(self._frame_display, matrix)
@@ -117,17 +119,27 @@ class Trainer(ttk.Frame):
         # sliding bar
 
     def show_images(self, label_images: dict):
-        pass
+
+        d = 10
+        n = 1
+        for label, images in label_images.items():
+
+            if len(label_images[label]) > 0:
+
+                index = d*(n-1)
+                n += 1
+                for image in images:
+                    self._image_gallery.update_image(image, index)
+                    index += 1
 
     def open_folders(self):
 
-        path_image_name = filedialog.askdirectory(title="Select the images folders"
-                                                   )
+        path_image_name = filedialog.askdirectory(title="Select the images folders")
 
         if len( path_image_name ) != 0:
             try:
                 self.collect_images(path_image_name)
-                self.show_images(self.imagest_dict)
+                self.show_images(self.label_images)
             except Exception as error:
                 print("Exception:", error )
 
@@ -153,23 +165,91 @@ class Trainer(ttk.Frame):
                     # image_resize = pil_image.resize(size, Image.ANTIALIAS)
                     # convert image to numpy array
                     image_array = np.array( pil_image, "uint8" )
-                    print(image_array)
-                    faces = self.face_cascade.detectMultiScale(image_array, scaleFactor=1.5, minNeighbors=5)
 
-                    for (x, y, w, h) in faces:
-                        roi = image_array[y:y + h, x:x + w]
-                        self.x_train.append(roi )
-                        self.y_labels.append(self.id_)
-                        self.label_images[str(self.id_)].append(roi)
+                    self.collect_faces(image_array)
+
         with open("labels.pickle", 'wb') as f:
             pickle.dump(self.label_ids, f)
+        
+        for label, image in zip(self.y_labels,self.x_train):
+            self.label_images[str(label)].append(image)
 
-    def train_face_detection(self,x_train: list, y_labels: list):
+    def crop_faces(self,image_array):
 
-        self.recognizer.train( x_train, np.array( y_labels ) )
-        self.recognizer.save( "trainner.yml" )
+        faces = self.face_cascade.detectMultiScale(image_array, scaleFactor=1.5, minNeighbors=5 )
+
+        for (x, y, w, h) in faces:
+            roi = image_array[y:y + h, x:x + w]
+            self.x_train.append(roi)
+            self.y_labels.append(self.id_)
+
+    def collect_faces(self,face_roi):
+
+        self.x_train.append(face_roi)
+        self.y_labels.append(self.id_)
+
+    def train_face_detection(self):
+
+        self.recognizer.train(self.x_train, np.array( self.y_labels))
+        self.recognizer.save("trainner.yml" )
 
         pass
+
+    def face_recognition(self):
+
+        # segment cv2 path
+
+        labels = {"person_name": 1}
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        stroke = 2
+        color = (255, 255, 255)
+
+        with open( "labels.pickle", 'rb' ) as f:
+            og_labels = pickle.load( f )
+            labels = {v: k for k, v in og_labels.items()}
+
+        cap = cv2.VideoCapture(0)
+
+        while (True):
+
+            # capture frame by frame
+            ret, frame = cap.read()
+            # convert BGR image to gray
+            gray = cv2.cvtColor( frame, cv2.COLOR_BGR2GRAY )
+            # detect faces in the image
+            faces = self.face_cascade.detectMultiScale( gray, scaleFactor=1.5, minNeighbors=5 )
+            # go over all the face and plot the rectangle around
+            for (x, y, w, h) in faces:
+
+                # detect ROI face
+                roi_gray = gray[y:y + h, x:x + w]
+                roi_color = frame[y:y + h, x:x + w]
+
+                # recognizer deep learned model predict keras tensorflow pytorch scikit learn
+                id_, conf = self.recognizer.predict(roi_gray)
+
+                if conf >= 47:
+                    name = labels[id_]
+                    cv2.putText(frame, name, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1, color, stroke, cv2.LINE_AA )
+
+                    # crop the region of intrest ( faces in the images)
+                    # cv2.imwrite(file_date(images_face_path, '.png'), roi_gray)
+                    # take the roi corrdinet x and y
+                    points_start = (x, y)
+                    points_end = (x + w, y + h)
+                    # draw rectangle around the faces
+                    cv2.rectangle( frame, points_start, points_end, (255, 0, 0), 3 )
+
+            # display image and plot
+            cv2.imshow( 'frame', frame )
+            # press quite to Exit the loop
+            if cv2.waitKey( 20 ) & 0xFF == ord( 'q' ):
+                break
+
+        # when everything done , realse the capture
+
+        cap.release()
+        cv2.destroyAllWindows()
 
 
 def main():

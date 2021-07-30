@@ -1,5 +1,8 @@
 from tkinter import *
 from tkinter import ttk
+import numpy as np
+from PIL import Image, ImageTk
+import cv2
 
 
 class DynamicPanel(ttk.Frame):
@@ -105,6 +108,30 @@ class DynamicPanel(ttk.Frame):
         [lab.config(relief="flat") for lab in self.label_image]
         [cav.config(highlightthickness=0, highlightbackground="black") for cav in self.canvas_image]
         pass
+
+    def update_image(self, image: np.array, position: int = 0):
+
+        image_pillow = self.matrix_to_pillow(image)
+        self.show_image(image_pillow, position)
+
+    def show_image(self, image, position: int = 0):
+        # resize image
+        image.thumbnail(image.size)
+        photo = ImageTk.PhotoImage(image=image)
+        # The Label widget is a standard Tkinter widget used to display a text or image on the screen.
+        self.label_image[position].config(image=photo)
+        self.label_image[position] = photo
+        # refresh image display
+
+    @staticmethod
+    def matrix_to_pillow(frame: np.array):
+
+        # convert to BGR
+        frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+        # convert matrix image to pillow image object
+        frame_pillow = Image.fromarray(frame_bgr)
+        return frame_pillow
+
 
 
 def main():

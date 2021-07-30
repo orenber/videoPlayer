@@ -21,6 +21,8 @@ class TestTrainer(TestCase):
         pass
 
     def test_collect_images(self):
+        self.training.collect_images()
+
         self.fail()
 
     def test_show_images(self):
