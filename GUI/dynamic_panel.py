@@ -133,7 +133,6 @@ class DynamicPanel(ttk.Frame):
         return frame_pillow
 
 
-
 def main():
 
     matrix = {"col": [{"row": [0, 0, 0]}, {"row": [1, 1, 1]}, {"row": [2, 2, 2]}]}

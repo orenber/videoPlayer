@@ -25,6 +25,8 @@ class Trainer(ttk.Frame):
         self.y_labels = []
         self.x_train = []
         self.label_images = {}
+
+        self._cap = cv2.VideoCapture()
         self.build_widget()
 
     def build_widget(self, parent: ttk.Frame = None):
@@ -69,13 +71,38 @@ class Trainer(ttk.Frame):
                                     image=self._icon_train,
                                     command=lambda: self.train_face_detection())
         self._button_train.pack(side=TOP)
-        button_train_tooltip = Pmw.Balloon( self._frame_control)
-        button_train_tooltip.bind(self._button_train, "Training data" )
+        button_train_tooltip = Pmw.Balloon(self._frame_control)
+        button_train_tooltip.bind(self._button_train, "Training data")
+
+        # botton run
+        # icon open images folders
+        self._icon_facial_recognition = PhotoImage(file=os.path.join( self._icons_path, 'facial-recognition.PNG'))
+        self._button_face_recognition = Button(self._frame_control,
+                                               text="Run Test",
+                                               image=self._icon_facial_recognition,
+                                               command=lambda: self.face_recognition())
+        self._button_face_recognition.pack(side=TOP)
+        button_face_recognition_tooltip = Pmw.Balloon(self._frame_control)
+        button_face_recognition_tooltip.bind(self._button_face_recognition, "Run Live Video face recognition")
+
+        # button stop live video
+        # icon open images folders
+        self._icon_stop = PhotoImage(file=os.path.join(self._icons_path, 'stop.PNG'))
+        self._button_stop_video = Button(self._frame_control,
+                                         text="Stop Video",
+                                         image=self._icon_stop,
+                                         command=lambda: self.stop_video())
+        self._button_stop_video.pack(side=TOP)
+
+        button_stop_video_tooltip = Pmw.Balloon(self._frame_control)
+        button_stop_video_tooltip.bind(self._button_stop_video, "Stop Live Video")
 
         # create canvas
-        self._canvas = Canvas(self._main_frame, bg="gray24")
-        self._canvas.pack(side=LEFT, fill=BOTH, expand=1)
-
+        self._canvas = Canvas(self._main_frame,
+                              bg="gray24")
+        self._canvas.pack(side=LEFT,
+                          fill=BOTH,
+                          expand=1)
         # add scrollbar to the canvas
         self._scroll_bar_y = ttk.Scrollbar(self._main_frame,
                                            orient=VERTICAL,
@@ -86,14 +113,15 @@ class Trainer(ttk.Frame):
 
         # add scrollbar in the x direction
         self._scroll_bar_x = ttk.Scrollbar(self._frame_control_x,
-                                            orient=HORIZONTAL,
-                                            command=self._canvas.xview)
+                                           orient=HORIZONTAL,
+                                           command=self._canvas.xview)
         self._scroll_bar_x.pack(side=TOP, fill=X,expand=0)
         scroll_bar_x_tooltip = Pmw.Balloon(self._frame_control_x)
         scroll_bar_x_tooltip.bind( self._scroll_bar_x, "Scroll images in x direction" )
 
         # Configure the canvas
-        self._canvas.configure(yscrollcommand=self._scroll_bar_y, xscrollcommand=self._scroll_bar_x)
+        self._canvas.configure(yscrollcommand=self._scroll_bar_y,
+                               xscrollcommand=self._scroll_bar_x)
         self._canvas.bind('<Configure>', lambda e: self._canvas.configure(scrollregion=self._canvas.bbox("all")))
 
         # create another frame inside the canvas
@@ -136,14 +164,14 @@ class Trainer(ttk.Frame):
 
         path_image_name = filedialog.askdirectory(title="Select the images folders")
 
-        if len( path_image_name ) != 0:
+        if len(path_image_name) != 0:
             try:
                 self.collect_images(path_image_name)
                 self.show_images(self.label_images)
             except Exception as error:
-                print("Exception:", error )
+                print("Exception:", error)
 
-    def collect_images(self,images_dir: str):
+    def collect_images(self, images_dir: str):
 
         for root, dirs, files in os.walk( images_dir ):
             for file in files:
@@ -159,12 +187,12 @@ class Trainer(ttk.Frame):
                     self.label_images[str(self.id_)] = []
 
                     # convert to gray scale
-                    pil_image = Image.open(path).convert( "L" )
+                    pil_image = Image.open(path).convert("L")
                     # resize images to the same size
-                    # size = (550, 550)
-                    # image_resize = pil_image.resize(size, Image.ANTIALIAS)
+                    size = (200, 200)
+                    image_resize = pil_image.resize(size, Image.ANTIALIAS)
                     # convert image to numpy array
-                    image_array = np.array( pil_image, "uint8" )
+                    image_array = np.array(image_resize, "uint8")
 
                     self.collect_faces(image_array)
 
@@ -174,7 +202,7 @@ class Trainer(ttk.Frame):
         for label, image in zip(self.y_labels,self.x_train):
             self.label_images[str(label)].append(image)
 
-    def crop_faces(self,image_array):
+    def crop_faces(self, image_array):
 
         faces = self.face_cascade.detectMultiScale(image_array, scaleFactor=1.5, minNeighbors=5 )
 
@@ -183,7 +211,7 @@ class Trainer(ttk.Frame):
             self.x_train.append(roi)
             self.y_labels.append(self.id_)
 
-    def collect_faces(self,face_roi):
+    def collect_faces(self, face_roi):
 
         self.x_train.append(face_roi)
         self.y_labels.append(self.id_)
@@ -198,26 +226,24 @@ class Trainer(ttk.Frame):
     def face_recognition(self):
 
         # segment cv2 path
-
-        labels = {"person_name": 1}
-        font = cv2.FONT_HERSHEY_SIMPLEX
         stroke = 2
         color = (255, 255, 255)
 
-        with open( "labels.pickle", 'rb' ) as f:
-            og_labels = pickle.load( f )
+        with open("labels.pickle", 'rb') as f:
+            og_labels = pickle.load(f)
             labels = {v: k for k, v in og_labels.items()}
 
-        cap = cv2.VideoCapture(0)
+        self._cap = cv2.VideoCapture(0)
 
-        while (True):
+        while self._cap.isOpened():
+
 
             # capture frame by frame
-            ret, frame = cap.read()
+            ret, frame = self._cap.read()
             # convert BGR image to gray
-            gray = cv2.cvtColor( frame, cv2.COLOR_BGR2GRAY )
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             # detect faces in the image
-            faces = self.face_cascade.detectMultiScale( gray, scaleFactor=1.5, minNeighbors=5 )
+            faces = self.face_cascade.detectMultiScale(gray, scaleFactor=1.5, minNeighbors=5)
             # go over all the face and plot the rectangle around
             for (x, y, w, h) in faces:
 
@@ -228,9 +254,9 @@ class Trainer(ttk.Frame):
                 # recognizer deep learned model predict keras tensorflow pytorch scikit learn
                 id_, conf = self.recognizer.predict(roi_gray)
 
-                if conf >= 47:
+                if conf >= 45:
                     name = labels[id_]
-                    cv2.putText(frame, name, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1, color, stroke, cv2.LINE_AA )
+                    cv2.putText(frame, name, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1, color, stroke, cv2.LINE_AA)
 
                     # crop the region of intrest ( faces in the images)
                     # cv2.imwrite(file_date(images_face_path, '.png'), roi_gray)
@@ -238,18 +264,33 @@ class Trainer(ttk.Frame):
                     points_start = (x, y)
                     points_end = (x + w, y + h)
                     # draw rectangle around the faces
-                    cv2.rectangle( frame, points_start, points_end, (255, 0, 0), 3 )
+                    cv2.rectangle(frame, points_start, points_end, (255, 0, 0), 1 )
 
             # display image and plot
             cv2.imshow( 'frame', frame )
             # press quite to Exit the loop
-            if cv2.waitKey( 20 ) & 0xFF == ord( 'q' ):
+            if cv2.waitKey(20) & 0xFF == ord( 'q' ):
                 break
 
         # when everything done , realse the capture
 
-        cap.release()
+        self._cap.release()
         cv2.destroyAllWindows()
+
+    def stop_video(self):
+
+        if self.play:
+            self._play = False
+            self._cap.release()
+
+        cv2.destroyAllWindows()
+
+
+
+
+        pass
+
+
 
 
 def main():
