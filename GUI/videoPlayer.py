@@ -9,6 +9,7 @@ from PIL import Image, ImageTk
 from Utility.image_procesing import resize_image_to_frame
 from Utility.file_location import *
 from GUI.frameImg import FrameImg
+import Pmw
 
 
 class VideoPlayer(ttk.Frame):
@@ -225,6 +226,8 @@ class VideoPlayer(ttk.Frame):
                                             text="> Load Video", bg='black', image=self.icon_play, height=self.icon_height ,
                                             width=self.icon_width, command=lambda: self.load_movie())
             self.button_live_video.pack(side='left')
+            button_live_video_tooltip = Pmw.Balloon(self.control_frame)
+            button_live_video_tooltip.bind(self.button_live_video, "Load video movie")
 
         # play camera
         if setup['camera']:
@@ -238,6 +241,8 @@ class VideoPlayer(ttk.Frame):
                                         width=self.icon_width,
                                         command=lambda: self._camera_view())
             self.button_camera.pack(side='left')
+            button_camera_tooltip = Pmw.Balloon(self.control_frame)
+            button_camera_tooltip.bind(self.button_camera, "Camera Play")
 
         if setup['pause']:
             # pause video button button_live_video
@@ -249,6 +254,8 @@ class VideoPlayer(ttk.Frame):
                                              height=self.icon_height , width=self.icon_width,
                                              command=lambda: self._pause_view())
             self.button_pause_video.pack(side='left')
+            button_pause_video_tooltip = Pmw.Balloon(self.control_frame)
+            button_pause_video_tooltip.bind(self.button_pause_video, "Pause video player")
 
         if setup['stop']:
             # stop video button button_live_video
@@ -259,6 +266,9 @@ class VideoPlayer(ttk.Frame):
                                             image=self.icon_stop,
                                             command=lambda: self.stop_player())
             self.button_stop_video.pack(side='left')
+            button_stop_video_tooltip = Pmw.Balloon(self.control_frame)
+            button_stop_video_tooltip.bind(self.button_stop_video, "Stop video player")
+
 
         if setup['record']:
             # record video
@@ -271,25 +281,36 @@ class VideoPlayer(ttk.Frame):
                                         image=self.icon_record_off,
                                         command=lambda: self._record_view())
             self.button_record.pack(side='left')
+            button_record_tooltip = Pmw.Balloon(self.control_frame)
+            button_record_tooltip.bind(self.button_record, "Record")
 
         if setup['image']:
             # load image button button_load_image
-            self.icon_image = PhotoImage(file=os.path.join(self.icons_path , 'image.PNG'))
+            self.icon_image = PhotoImage(file=os.path.join(self.icons_path, 'image.PNG'))
             self.button_image_load = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white",
                                             font=('arial', 12, 'bold'),
                                             text="Load Image", bg="black", image=self.icon_image,
-                                            height=self.icon_height , width=self.icon_width,
+                                            height=self.icon_height, width=self.icon_width,
                                             command=lambda: self.load_image())
             self.button_image_load.pack(side='left')
+            button_image_load_tooltip = Pmw.Balloon(self.control_frame)
+            button_image_load_tooltip.bind(self.button_image_load, "Load image")
 
         if setup['algo']:
             # load image button button_load_image
-            # self.icon_algo = PhotoImage( file=os.path.join( self.icons_path , 'algo.PNG' ) )
-            self.button_run_algo = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white",
+            self.icon_algo = PhotoImage( file=os.path.join( self.icons_path , 'ai.PNG'))
+            self.button_run_algo = Button(self.control_frame,
+                                          padx=10, pady=10,
+                                          bd=8,
+                                          fg="white",
                                           font=('arial', 12, 'bold'),
-                                          text="Run algo", bg="black", height=1, width=8,
+                                          text="Run algo", bg="black",
+                                          height=self.icon_height, width=self.icon_width,
+                                          image=self.icon_algo,
                                           command=lambda: self._extract())
             self.button_run_algo.pack(side='left')
+            button_run_algo_tooltip = Pmw.Balloon(self.control_frame)
+            button_run_algo_tooltip.bind(self.button_run_algo, "Run Algorithms")
 
         # edit box
         self.frame_counter = Label(self.control_frame, height=2, width=15, padx=10, pady=10, bd=8,
@@ -352,6 +373,12 @@ class VideoPlayer(ttk.Frame):
 
         else:
             self._record_view_state(False)
+
+
+
+
+
+
 
     def _record_view_state(self, state: bool = True):
 

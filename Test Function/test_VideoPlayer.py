@@ -94,6 +94,7 @@ class TestVideoPlayer(TestCase):
         self.test__init__(play=True, pause=True, stop=True)
 
         self.vid.load_movie()
+        self.vid.after(5000, self.vid.destroy)
         pass
 
     def test_play_movie(self):
