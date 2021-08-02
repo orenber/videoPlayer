@@ -14,3 +14,5 @@
 /.idea/VideoPlayer.iml
 /.idea/misc.xml
 /.idea/modules.xml
+/GUI/labels.pickle
+/GUI/trainner.yml
