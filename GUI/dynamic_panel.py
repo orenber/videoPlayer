@@ -94,7 +94,7 @@ class DynamicPanel(ttk.Frame):
                 self.label_image.append(Label(self.canvas_image[-1], bg="black",
                                         width=44, height=14))
                 self.label_image[-1].bind("<Button-1>", self._focus_label)
-                self.label_image[-1].pack(fill=BOTH, expand=True,padx=3, pady=3)
+                self.label_image[-1].pack(fill=BOTH, expand=True, padx=3, pady=3)
                 self.canvas_image[-1].pack(fill=BOTH, expand=True)
                 parent.add(self.canvas_image[len(self.canvas_image) - 1], stretch="always")
 
@@ -119,9 +119,11 @@ class DynamicPanel(ttk.Frame):
         image.thumbnail(image.size)
         photo = ImageTk.PhotoImage(image=image)
         # The Label widget is a standard Tkinter widget used to display a text or image on the screen.
-        self.label_image[position].config(image=photo)
-        self.label_image[position] = photo
+        board = self.label_image[position]
+        board.config(image=photo)
+        board.image = photo
         # refresh image display
+        board.update()
 
     @staticmethod
     def matrix_to_pillow(frame: np.array):

@@ -6,6 +6,9 @@ import cv2
 from time import sleep
 import tkinter
 import numpy as np
+import threading
+
+import time
 
 
 class TestVideoPlayer(TestCase):
@@ -94,7 +97,7 @@ class TestVideoPlayer(TestCase):
         self.test__init__(play=True, pause=True, stop=True)
 
         self.vid.load_movie()
-        self.vid.after(5000, self.vid.destroy)
+        #self.vid.after(5000, self.vid.destroy)
         pass
 
     def test_play_movie(self):
@@ -105,14 +108,28 @@ class TestVideoPlayer(TestCase):
         pass
 
     def test_camera_capture(self):
-        self.test__init__(play=True)
-
-        self.vid.camera_capture()
-        self.vid.destroy()
+        self.test__init__(play=True, camera=True)
+        c = threading.Thread(target=lambda: self.close_window())
+        t = threading.Thread(target=lambda: self.vid.camera_capture())
+        t.start()
+        c.start()
+        c.join()
+        t.join()
 
     def test_pause_player(self):
         self.test__init__(play=True, camera=True, pause=True)
+        t = threading.Thread(target=lambda: self.assert_button_camera_press())
+        c = threading.Thread(target=lambda: self.assert_button_pause_press())
+
+        t.start()
+        c.start()
+        t.join()
+        c.join(5)
+
+    def assert_button_camera_press(self):
         self.assertRaises(tkinter.TclError, lambda: self.vid._camera_view())
+
+    def assert_button_pause_press(self):
         self.assertRaises(tkinter.TclError, lambda: self.vid.pause_player())
 
     def test_stop_player(self):
@@ -166,6 +183,11 @@ class TestVideoPlayer(TestCase):
 
         self.vid.frame = self.image_test
         pass
+
+    def close_window(self):
+        print('destroy')
+        self.vid.destroy()
+
 
 
 def extract_image(matrix_image):

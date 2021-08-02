@@ -374,12 +374,6 @@ class VideoPlayer(ttk.Frame):
         else:
             self._record_view_state(False)
 
-
-
-
-
-
-
     def _record_view_state(self, state: bool = True):
 
         if state:

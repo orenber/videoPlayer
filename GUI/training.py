@@ -1,3 +1,5 @@
+import os
+
 from GUI.dynamic_panel import DynamicPanel
 from tkinter import *
 from tkinter import ttk, filedialog
@@ -20,14 +22,36 @@ class Trainer(ttk.Frame):
         self.face_frontal_path = os.path.join(self.path, 'data', 'haarcascade_frontalface_default.xml' )
         self.face_cascade = cv2.CascadeClassifier(self.face_frontal_path)
 
+        self._path_images = full_file(["Resources", "images","faces"])
         self.current_id = 0
         self.label_ids = {}
         self.y_labels = []
         self.x_train = []
         self.label_images = {}
+        self._id = 0
+
+        self._confident = 45
+        self._training = False
+        self._image_size = (200,200)
 
         self._cap = cv2.VideoCapture()
         self.build_widget()
+
+    @property
+    def training(self) -> bool:
+        return self._training
+
+    @training.setter
+    def training(self, train: bool = False):
+        self._training = train
+
+    @property
+    def confident(self) -> int:
+        return self._confident
+
+    @confident.setter
+    def confident(self, conf: int = 45) -> None:
+        self._confident = conf
 
     def build_widget(self, parent: ttk.Frame = None):
 
@@ -69,14 +93,14 @@ class Trainer(ttk.Frame):
         self._button_train = Button(self._frame_control,
                                     text="Train",
                                     image=self._icon_train,
-                                    command=lambda: self.train_face_detection())
+                                    command=lambda: self._view_train_face_detection())
         self._button_train.pack(side=TOP)
         button_train_tooltip = Pmw.Balloon(self._frame_control)
-        button_train_tooltip.bind(self._button_train, "Training data")
+        button_train_tooltip.bind(self._button_train, "Training data Mode")
 
         # botton run
         # icon open images folders
-        self._icon_facial_recognition = PhotoImage(file=os.path.join( self._icons_path, 'facial-recognition.PNG'))
+        self._icon_facial_recognition = PhotoImage(file=os.path.join(self._icons_path, 'facial-recognition.PNG'))
         self._button_face_recognition = Button(self._frame_control,
                                                text="Run Test",
                                                image=self._icon_facial_recognition,
@@ -127,24 +151,20 @@ class Trainer(ttk.Frame):
         # create another frame inside the canvas
         self._frame_display = Frame(self._canvas)
         # image gallery
-        matrix = {"col": [{"row": [0, 0, 0, 0, 0, 0, 0, 0, 0,0]},
-                          {"row": [0, 0, 0, 0, 0, 0, 0, 0, 0,0]}
-                          ]}
+        matrix = {"col": [{"row": 22*[0] }]}
 
         self._image_gallery = DynamicPanel(self._frame_display, matrix)
         # Add that new frame to aWindow in The Canvas
         self._canvas.create_window((0, 0), window=self._frame_display, anchor="nw")
         # build open file folder button
 
-        # build frame images
-
-        # build scrollbar
-
-        # build to frame control
-
-        # build open file folder folder button
-
-        # sliding bar
+    def _view_train_face_detection(self):
+        if self._button_train.cget('relief') == 'raised':
+            self.training = True
+            self._button_train.config(bg='black', relief=SUNKEN)
+        elif self._button_train.cget('relief') == SUNKEN:
+            self.training = False
+            self._button_train.config(bg='white', relief=RAISED)
 
     def show_images(self, label_images: dict):
 
@@ -167,30 +187,42 @@ class Trainer(ttk.Frame):
         if len(path_image_name) != 0:
             try:
                 self.collect_images(path_image_name)
+                self.train_face_detection()
                 self.show_images(self.label_images)
+
             except Exception as error:
                 print("Exception:", error)
 
+    def reset_parameters(self):
+        self.current_id = 0
+        self.label_ids = {}
+        self.y_labels = []
+        self.x_train = []
+        self.label_images = {}
+        self._id = 0
+
     def collect_images(self, images_dir: str):
 
-        for root, dirs, files in os.walk( images_dir ):
+        self.reset_parameters()
+        self._path_images = images_dir
+
+        for root, dirs, files in os.walk(images_dir):
             for file in files:
                 if file.endswith("png") or file.endswith("jpg"):
                     path = os.path.join(root, file)
-                    label = os.path.basename(os.path.dirname(path)).replace( " ", ".").lower()
-                    print(label, path)
+                    label = os.path.basename(os.path.dirname(path)).replace(" ", ".").lower()
 
-                    if not label in self.label_ids:
+                    if  label not in self.label_ids:
                         self.label_ids[label] = self.current_id
                         self.current_id += 1
-                    self.id_ = self.label_ids[label]
-                    self.label_images[str(self.id_)] = []
+                    self._id = self.label_ids[label]
+                    self.label_images[str(self._id)] = []
 
                     # convert to gray scale
                     pil_image = Image.open(path).convert("L")
+
                     # resize images to the same size
-                    size = (200, 200)
-                    image_resize = pil_image.resize(size, Image.ANTIALIAS)
+                    image_resize = pil_image.resize(self._image_size, Image.ANTIALIAS)
                     # convert image to numpy array
                     image_array = np.array(image_resize, "uint8")
 
@@ -199,29 +231,41 @@ class Trainer(ttk.Frame):
         with open("labels.pickle", 'wb') as f:
             pickle.dump(self.label_ids, f)
         
-        for label, image in zip(self.y_labels,self.x_train):
+        for label, image in zip(self.y_labels, self.x_train):
             self.label_images[str(label)].append(image)
 
     def crop_faces(self, image_array):
 
-        faces = self.face_cascade.detectMultiScale(image_array, scaleFactor=1.5, minNeighbors=5 )
+        faces = self.face_cascade.detectMultiScale(image_array, scaleFactor=1.5, minNeighbors=5)
 
         for (x, y, w, h) in faces:
             roi = image_array[y:y + h, x:x + w]
             self.x_train.append(roi)
-            self.y_labels.append(self.id_)
+            self.y_labels.append(self._id)
 
     def collect_faces(self, face_roi):
 
         self.x_train.append(face_roi)
-        self.y_labels.append(self.id_)
+        self.y_labels.append(self._id)
 
     def train_face_detection(self):
 
-        self.recognizer.train(self.x_train, np.array( self.y_labels))
-        self.recognizer.save("trainner.yml" )
+        try:
+            self.recognizer.train(self.x_train, np.array(self.y_labels))
+            self.recognizer.save("trainner.yml")
+        except Exception as error:
+            print(error)
 
-        pass
+    def save_roi_faces(self, image: np.array, path: str=''):
+
+        try:
+            # crop the region of intrest ( faces in the images)
+            folder_unknown = full_file([self._path_images, 'unknown'])
+            create_folder_if_not_exist(folder_unknown)
+            cv2.imwrite(file_date(os.path.join(folder_unknown, "unknown"), '.png'), image)
+
+        except Exception as error:
+            print(error)
 
     def face_recognition(self):
 
@@ -237,7 +281,6 @@ class Trainer(ttk.Frame):
 
         while self._cap.isOpened():
 
-
             # capture frame by frame
             ret, frame = self._cap.read()
             # convert BGR image to gray
@@ -249,17 +292,17 @@ class Trainer(ttk.Frame):
 
                 # detect ROI face
                 roi_gray = gray[y:y + h, x:x + w]
-                roi_color = frame[y:y + h, x:x + w]
 
                 # recognizer deep learned model predict keras tensorflow pytorch scikit learn
                 id_, conf = self.recognizer.predict(roi_gray)
 
-                if conf >= 45:
+                if conf >= self._confident:
                     name = labels[id_]
-                    cv2.putText(frame, name, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1, color, stroke, cv2.LINE_AA)
+                    cv2.putText(frame, name, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), stroke, cv2.LINE_AA)
+                    if self._training:
+                        self.crop_faces(roi_gray)
+                        self.save_roi_faces(roi_gray)
 
-                    # crop the region of intrest ( faces in the images)
-                    # cv2.imwrite(file_date(images_face_path, '.png'), roi_gray)
                     # take the roi corrdinet x and y
                     points_start = (x, y)
                     points_end = (x + w, y + h)
