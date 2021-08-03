@@ -54,6 +54,10 @@ class Surveillance(VideoPlayer):
 
         self.master.geometry("950x720+0+0")
         self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+        notebook = ttk.Notebook(self.master)
+        notebook.pack(pady=10, expand=True)
+
         # main panel
 
         self.main_panel = Frame(width=1000,
@@ -63,6 +67,8 @@ class Surveillance(VideoPlayer):
                                 name="main_panel")
         self.main_panel.pack(side=TOP)
         self.main_panel.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+        notebook.add(self.main_panel)
 
         super()._build_widget(self.main_panel, setup)
 

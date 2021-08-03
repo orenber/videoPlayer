@@ -31,7 +31,7 @@ class VideoPlayer(ttk.Frame):
 
         # create logger
         self.log = setup_logger('Video Player')
-        self.log.info('start app')
+
         self.setup = self.set_setup(prop)
 
         ttk.Frame.__init__(self, parent)
