@@ -10,6 +10,7 @@ from tkinter.simpledialog import askstring
 
 from Utility.file_location import *
 from skimage import morphology
+import Pmw
 
 
 class Surveillance(VideoPlayer):
@@ -85,6 +86,8 @@ class Surveillance(VideoPlayer):
                                                 name="button_movement_detection",
                                                 command=lambda: self._button_movement_detection_view())
         self.button_movement_detection.pack(side='left')
+        button_movement_detection_tooltip = Pmw.Balloon(self.control_frame)
+        button_movement_detection_tooltip.bind(self.button_movement_detection, "Movement  detection")
 
         # load image button_load_image
         self.icon_face_detect = PhotoImage(file=os.path.join(self.icons_path, 'face-recognition.PNG'))
@@ -99,6 +102,8 @@ class Surveillance(VideoPlayer):
                                             name="button_face_detection",
                                             command=lambda: self._button_face_detection_view())
         self.button_face_detection.pack(side='left')
+        button_face_detection_tooltip = Pmw.Balloon(self.control_frame)
+        button_face_detection_tooltip.bind(self.button_face_detection, "Face detection")
 
         # load image button button_load_image
 
