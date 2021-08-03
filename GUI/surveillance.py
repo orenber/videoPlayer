@@ -9,6 +9,7 @@ from tkinter import ttk
 from tkinter.simpledialog import askstring
 
 from Utility.file_location import *
+from Utility.logger_setup import setup_logger
 from skimage import morphology
 import Pmw
 
@@ -23,6 +24,9 @@ class Surveillance(VideoPlayer):
                  ".MP4", 1}
 
     def __init__(self):
+
+        self.log = setup_logger("Surveillance Camera")
+
         super().__init__(image=True, play=True, camera=True, record=True)
 
         self.algo_stack = []
@@ -45,6 +49,8 @@ class Surveillance(VideoPlayer):
         self.profile_cascade = cv2.CascadeClassifier(face_profile)
 
     def _build_widget(self, parent: ttk.Frame = None, setup: dict = dict):
+
+        self.log.info("start build widget")
 
         self.master.geometry("950x720+0+0")
         self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
@@ -169,6 +175,7 @@ class Surveillance(VideoPlayer):
         super()._pause_view()
         # condition for crop ROI
         if self.face[0]['detect']:
+            self.log.info("detect Face")
 
             # if face detect and ther is labeling mode
 
@@ -202,6 +209,7 @@ class Surveillance(VideoPlayer):
 
     def run_frames(self):
 
+        self.log.info("run frame by frame")
         self.frame_number = 0
         self.frame_take = 0
 
@@ -243,7 +251,7 @@ class Surveillance(VideoPlayer):
                         break
                 self.board.update()
         except Exception as error:
-            print(error)
+            self.log.error(error)
         finally:
             self._cap.release()
             self._out.release()
@@ -318,8 +326,11 @@ class Surveillance(VideoPlayer):
             self._record_view_state(False)
 
     def save_frame(self, frame: np.array):
+        try:
 
-        self._out.write(frame)
+            self._out.write(frame)
+        except Exception as error:
+            self.log.error(error)
 
 
 def main():

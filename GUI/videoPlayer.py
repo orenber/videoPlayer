@@ -10,6 +10,7 @@ from Utility.image_procesing import resize_image_to_frame
 from Utility.file_location import *
 from GUI.frameImg import FrameImg
 import Pmw
+from Utility.logger_setup import setup_logger
 
 
 class VideoPlayer(ttk.Frame):
@@ -29,6 +30,8 @@ class VideoPlayer(ttk.Frame):
     def __init__(self, parent: ttk.Frame = None, **prop: tuple):
 
         # create logger
+        self.log = setup_logger('Video Player')
+        self.log.info('start app')
         self.setup = self.set_setup(prop)
 
         ttk.Frame.__init__(self, parent)
@@ -452,6 +455,7 @@ class VideoPlayer(ttk.Frame):
 
     def load_movie(self):
         if not self.play:
+
             self.button_live_video.config(relief='sunken')
             movie_filename = filedialog.askopenfilename(initialdir=self.__initial_dir_movie,
                                                         title="Select the movie to play",
@@ -463,7 +467,7 @@ class VideoPlayer(ttk.Frame):
                 try:
                     self.play_movie(movie_filename)
                 except Exception as error:
-                    print("Exception:", error)
+                    self.log.exception("Exception:", error)
 
                 finally:
                     self.button_live_video.config(bg='black', relief='raised')
@@ -508,6 +512,7 @@ class VideoPlayer(ttk.Frame):
         if self.play:
             self._play = False
             self._cap.release()
+            self.log.info("stop player")
 
             if self._record:
                 # in the case the record in on - stop the recording
@@ -524,20 +529,26 @@ class VideoPlayer(ttk.Frame):
             self._out = cv2.VideoWriter(file, self._source, self._frame_rate, self.frame.size, 0)
 
     def save_frame(self, frame):
-        # convert two images to gray scale
 
-        self._out.write(cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY))
+        try:
+            self.log.info("convert RGB to Gray Image and save image")
+            self._out.write(cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY))
+        except EXCEPTION as error:
+            self.log.exception(error)
 
     def load_image(self):
 
         file_name = filedialog.askopenfilename(initialdir=self.__initial_dir, title="Select the RGB image",
                                                filetypes=(("jpeg files", "*.jpg"), ("all files", "*.*")))
+
+        self.log.info("Load image file :" + file_name)
+
         self.__initial_dir = os.path.dirname(os.path.abspath(file_name))
         if len(file_name) != 0:
             try:
                 self.frame = Image.open(file_name)
             except Exception as error:
-                print("Exception:", error)
+                self.log.exception(error)
 
             self.resize_image_show(self._frame)
     
@@ -578,6 +589,7 @@ class VideoPlayer(ttk.Frame):
         if messagebox.askokcancel("Quit", "Do you want to quit?"):
             self.stop_player()
             self.master.destroy()
+            self.log.info("close main application")
 
 
 def main():

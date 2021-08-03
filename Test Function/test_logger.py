@@ -1,5 +1,5 @@
 from unittest import TestCase
-from Utility.logger import LOGGER
+from Utility.logger_setup import LOGGER
 
 
 class TestLOGGER(TestCase):
