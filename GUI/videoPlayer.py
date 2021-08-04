@@ -272,7 +272,6 @@ class VideoPlayer(ttk.Frame):
             button_stop_video_tooltip = Pmw.Balloon(self.control_frame)
             button_stop_video_tooltip.bind(self.button_stop_video, "Stop video player")
 
-
         if setup['record']:
             # record video
             self.icon_record_off = PhotoImage(file=os.path.join(self.icons_path , 'record_off.PNG'))

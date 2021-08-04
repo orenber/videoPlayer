@@ -1,6 +1,7 @@
 from GUI.videoPlayer import VideoPlayer
 from GUI.frameImg import FrameImg
 from GUI.dynamic_panel import DynamicPanel
+from GUI.training import Trainer
 
 import numpy as np
 import cv2
@@ -10,15 +11,12 @@ from tkinter.simpledialog import askstring
 
 from Utility.file_location import *
 from Utility.logger_setup import setup_logger
+from Utility.color_names import COLOR
 from skimage import morphology
 import Pmw
 
 
 class Surveillance(VideoPlayer):
-
-    COLOR = {'red':   (0, 0, 255),
-             'blue':  (255, 0, 0),
-             'green': (0, 255, 0)}
 
     FILE_TYPE = {".AVI", 0,
                  ".MP4", 1}
@@ -38,7 +36,7 @@ class Surveillance(VideoPlayer):
 
         self.pri_frame = FrameImg(np.zeros(self.STD_DIMS.get('0.3MP'), float))
         self.face = [{'detect': False, 'pos_label': (None, None), 'ROI': {'x': [None, None], 'y': [None, None]}}]
-
+        self.faces_names = []
         # segment path
         path = os.path.dirname(cv2.__file__)
         face_frontal = os.path.join(path, 'data', 'haarcascade_frontalface_default.xml')
@@ -56,21 +54,28 @@ class Surveillance(VideoPlayer):
         self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
 
         notebook = ttk.Notebook(self.master)
-        notebook.pack(pady=10, expand=True)
+        notebook.pack(fill=BOTH, expand=True)
 
         # main panel
 
-        self.main_panel = Frame(width=1000,
+        self.main_frame = Frame(width=1000,
                                 height=720,
                                 bg="gray24",
                                 relief="raised",
-                                name="main_panel")
-        self.main_panel.pack(side=TOP)
-        self.main_panel.place(relx=0, rely=0, relwidth=1, relheight=1)
+                                name="main_frame")
+        self.main_frame.pack(side=TOP)
+        self.main_frame.place(relx=0, rely=0, relwidth=1, relheight=1)
 
-        notebook.add(self.main_panel)
+        self.training_frame = Frame(bg="gray24",
+                                    relief="raised",
+                                    name="training_frame")
+        self.training_frame.pack(side=RIGHT)
 
-        super()._build_widget(self.main_panel, setup)
+        notebook.add(self.main_frame, text="Surveillance Camera")
+        notebook.add(self.training_frame, text="Training")
+        self.trainer = Trainer(self.training_frame)
+
+        super()._build_widget(self.main_frame, setup)
 
         self.canvas_image.unbind("<Configure>")
 
@@ -102,7 +107,7 @@ class Surveillance(VideoPlayer):
         button_movement_detection_tooltip.bind(self.button_movement_detection, "Movement  detection")
 
         # load image button_load_image
-        self.icon_face_detect = PhotoImage(file=os.path.join(self.icons_path, 'face-recognition.PNG'))
+        self.icon_face_detect = PhotoImage(file=os.path.join(self.icons_path, 'face_detection.PNG'))
         self.button_face_detection = Button(self.control_frame,
                                             padx=10, pady=10, bd=8,
                                             fg="white",
@@ -118,14 +123,20 @@ class Surveillance(VideoPlayer):
         button_face_detection_tooltip.bind(self.button_face_detection, "Face detection")
 
         # load image button button_load_image
-
-        self.button_profile_face_detection = Button(self.control_frame, padx=10, pady=10, bd=8,
-                                                    fg="white",
-                                                    font=('arial', 12, 'bold'),
-                                                    text="body", bg="black", height=1, width=8,
-                                                    name='button_profile_face_detection',
-                                                    command=lambda: self._button_profile_face_detection_view())
-        self.button_profile_face_detection.pack(side='left')
+        self.icon_face_recognition = PhotoImage(file=os.path.join(self.icons_path, 'face_recognition.PNG'))
+        self.button_face_recognition = Button(self.control_frame,
+                                              padx=10, pady=10, bd=8,
+                                              fg="white",
+                                              font=('arial', 12, 'bold'),
+                                              text="body", bg="black",
+                                              image=self.icon_face_recognition,
+                                              height=self.icon_height,
+                                              width=self.icon_width,
+                                              name='button_face_recognition',
+                                              command=lambda: self._button_face_recognition_view())
+        self.button_face_recognition.pack(side='left')
+        button_face_recognition_tooltip = Pmw.Balloon(self.control_frame)
+        button_face_recognition_tooltip.bind(self.button_face_recognition, "Face recognition")
 
     def _focus_label(self):
 
@@ -153,17 +164,17 @@ class Surveillance(VideoPlayer):
             self.algo_list(False, self.face_detection)
             self.button_face_detection.config(bg='black', relief='raised')
 
-    def _button_profile_face_detection_view(self):
+    def _button_face_recognition_view(self):
 
-        if self.button_profile_face_detection.cget('relief') == 'raised':
+        if self.button_face_recognition.cget('relief') == 'raised':
+            self.faces_names = self.trainer.load_labels()
+            self.algo_list(True, self.face_recognition)
+            self.button_face_recognition.config(bg='white', relief='sunken')
 
-            self.algo_list(True, self.profile_detection)
-            self.button_profile_face_detection.config(bg='white', relief='sunken')
+        elif self.button_face_recognition.cget('relief') == 'sunken':
 
-        elif self.button_profile_face_detection.cget('relief') == 'sunken':
-
-            self.algo_list(False, self.profile_detection)
-            self.button_profile_face_detection.config(bg='black', relief='raised')
+            self.algo_list(False, self.face_recognition)
+            self.button_face_recognition.config(bg='black', relief='raised')
 
     def algo_list(self, add: bool = False, algo=None):
 
@@ -200,12 +211,12 @@ class Surveillance(VideoPlayer):
             crop_image = self.frame.image[y[0]:y[1], x[0]:x[1]]
             cv2.imshow('ROI', crop_image)
 
-            lable_image = askstring("label", "label the ROI image")
-            print(lable_image)
+            label_image = askstring("label", "label the ROI image")
+            print(label_image)
             try:
-                images_face_path = full_file(["Resources", "images", "faces", lable_image])
+                images_face_path = full_file(["Resources", "images", "faces", label_image])
                 create_folder_if_not_exist(images_face_path)
-                path_file = images_face_path + '\\' + file_date(lable_image, ".png")
+                path_file = os.path.join(images_face_path, file_date(label_image, ".png"))
                 cv2.imwrite(path_file, crop_image)
                 cv2.destroyAllWindows()
             except Exception as error:
@@ -257,7 +268,7 @@ class Surveillance(VideoPlayer):
                         break
                 self.board.update()
         except Exception as error:
-            self.log.error(error)
+            self.log.exception(error)
         finally:
             self._cap.release()
             self._out.release()
@@ -297,20 +308,31 @@ class Surveillance(VideoPlayer):
         for count, (x, y, w, h) in enumerate(faces):
 
             self.face[count] = {'detect': True, 'ROI': {'x': (x, x + w), 'y': (y, y + h)}, 'pos_label': (x + 6, y - 6)}
-            cv2.rectangle(self.frame.image, (x, y), (x+w, y+h), self.COLOR['blue'], 2)
+            cv2.rectangle(self.frame.image, (x, y), (x+w, y+h), COLOR['blue'], 2)
             cv2.putText(self.frame.image, 'Face', self.face[count]['pos_label'],
-                        cv2.FONT_HERSHEY_DUPLEX, 0.5, self.COLOR['green'], 1)
-            # Display
+                        cv2.FONT_HERSHEY_DUPLEX, 0.5, COLOR['green'], 1)
 
-    def profile_detection(self, gray_image: np.array):
+    def face_recognition(self, gray_image: np.array):
+        # detect faces in the image
+        faces = self.face_cascade.detectMultiScale(gray_image, scaleFactor=1.5, minNeighbors=5)
+        # go over all the face and plot the rectangle around
+        for (x, y, w, h) in faces:
 
-        profile = self.profile_cascade.detectMultiScale(gray_image, 1.1, 1)
-        # To draw a rectangle on each profile_faces
-        for (x, y, w, h) in profile:
-            cv2.rectangle(self.frame.image, (x, y), (x+w, y+h), self.COLOR['blue'], 2)
-            font = cv2.FONT_HERSHEY_DUPLEX
-            cv2.putText(self.frame.image, 'Profile', (x + 6, y - 6), font, 0.5, self.COLOR['green'], 1)
-            # Display frames in a window
+            # detect ROI face
+            roi_gray = gray_image[y:y + h, x:x + w]
+
+            # recognizer deep learned model predict keras tensorflow pytorch scikit learn
+            id_, conf = self.trainer.recognizer.predict(roi_gray)
+            if conf >= self.trainer.confident:
+                name = self.faces_names[id_]
+
+                # take the roi corrdinet x and y
+                points_start = (x, y)
+                points_end = (x + w, y + h)
+                cv2.putText(self.frame.image, name, points_start,
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, COLOR['white'], 2, cv2.LINE_AA)
+                # draw rectangle around the faces
+                cv2.rectangle(self.frame.image, points_start, points_end, COLOR['blue'], 2)
 
     def record_movement(self, frame: np.array, image_noise_movement: np.array):
 

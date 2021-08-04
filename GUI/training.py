@@ -15,14 +15,14 @@ class Trainer(ttk.Frame):
 
     def __init__(self, parent: ttk.Frame = None):
 
-        ttk.Frame.__init__( self, parent)
+        ttk.Frame.__init__(self, parent)
 
         self.recognizer = cv2.face.LBPHFaceRecognizer_create()
         self.path = os.path.dirname(cv2.__file__)
         self.face_frontal_path = os.path.join(self.path, 'data', 'haarcascade_frontalface_default.xml' )
         self.face_cascade = cv2.CascadeClassifier(self.face_frontal_path)
 
-        self._path_images = full_file(["Resources", "images","faces"])
+        self._path_images = full_file(["Resources", "images", "faces"])
         self.current_id = 0
         self.label_ids = {}
         self.y_labels = []
@@ -32,10 +32,10 @@ class Trainer(ttk.Frame):
 
         self._confident = 45
         self._training = False
-        self._image_size = (200,200)
+        self._image_size = (200, 200)
 
         self._cap = cv2.VideoCapture()
-        self.build_widget()
+        self.build_widget(parent)
 
     @property
     def training(self) -> bool:
@@ -60,7 +60,6 @@ class Trainer(ttk.Frame):
             self.master.geometry("470x700+0+0")
         else:
             self.master = parent
-            Pmw.initialize(self.master)
 
         self._icons_path = full_file(["Icons"])
 
@@ -100,7 +99,7 @@ class Trainer(ttk.Frame):
 
         # botton run
         # icon open images folders
-        self._icon_facial_recognition = PhotoImage(file=os.path.join(self._icons_path, 'facial-recognition.PNG'))
+        self._icon_facial_recognition = PhotoImage(file=os.path.join(self._icons_path, 'face_recognition.PNG'))
         self._button_face_recognition = Button(self._frame_control,
                                                text="Run Test",
                                                image=self._icon_facial_recognition,
@@ -139,9 +138,9 @@ class Trainer(ttk.Frame):
         self._scroll_bar_x = ttk.Scrollbar(self._frame_control_x,
                                            orient=HORIZONTAL,
                                            command=self._canvas.xview)
-        self._scroll_bar_x.pack(side=TOP, fill=X,expand=0)
+        self._scroll_bar_x.pack(side=TOP, fill=X, expand=0)
         scroll_bar_x_tooltip = Pmw.Balloon(self._frame_control_x)
-        scroll_bar_x_tooltip.bind( self._scroll_bar_x, "Scroll images in x direction" )
+        scroll_bar_x_tooltip.bind(self._scroll_bar_x, "Scroll images in x direction" )
 
         # Configure the canvas
         self._canvas.configure(yscrollcommand=self._scroll_bar_y,
@@ -151,7 +150,7 @@ class Trainer(ttk.Frame):
         # create another frame inside the canvas
         self._frame_display = Frame(self._canvas)
         # image gallery
-        matrix = {"col": [{"row": 22*[0] }]}
+        matrix = {"col": [{"row": 22*[0]}]}
 
         self._image_gallery = DynamicPanel(self._frame_display, matrix)
         # Add that new frame to aWindow in The Canvas
@@ -267,15 +266,21 @@ class Trainer(ttk.Frame):
         except Exception as error:
             print(error)
 
+    @staticmethod
+    def load_labels()->list:
+
+        with open("labels.pickle", 'rb') as f:
+            og_labels = pickle.load(f)
+            labels = {v: k for k, v in og_labels.items()}
+        return labels
+
     def face_recognition(self):
 
         # segment cv2 path
         stroke = 2
         color = (255, 255, 255)
 
-        with open("labels.pickle", 'rb') as f:
-            og_labels = pickle.load(f)
-            labels = {v: k for k, v in og_labels.items()}
+        labels = self.load_labels()
 
         self._cap = cv2.VideoCapture(0)
 
@@ -328,12 +333,7 @@ class Trainer(ttk.Frame):
 
         cv2.destroyAllWindows()
 
-
-
-
         pass
-
-
 
 
 def main():
