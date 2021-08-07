@@ -2,6 +2,7 @@ from unittest import TestCase
 from Utility.file_location import file_date, full_file, create_folder_if_not_exist
 import os
 
+
 class Test(TestCase):
     def test_file_date(self):
         file_name = file_date("test_file_date", '.txt')

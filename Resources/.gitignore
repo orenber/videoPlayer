@@ -9,6 +9,7 @@
 /.vs/videoPlayer/config/applicationhost.config
 /Resources/images/faces/Konstanza/*.png
 /Resources/images/faces/Oren/*.png
+/Resources/images/faces/Ella/*.png
 /Resources/Record/*.AVI
 /.idea/vcs.xml
 /.idea/VideoPlayer.iml
