@@ -8,6 +8,7 @@ import numpy as np
 from PIL import Image, ImageTk
 from Utility.image_procesing import resize_image_to_frame
 from Utility.file_location import *
+from Utility.clock import Clock,Stopper
 from GUI.frameImg import FrameImg
 import Pmw
 from Utility.logger_setup import setup_logger
@@ -198,8 +199,13 @@ class VideoPlayer(ttk.Frame):
         self.canvas_image.bind("<Configure>", self._resize)
         self.canvas_image_height = int(self.canvas_image.config("height")[4])
         self.canvas_image_width = int(self.canvas_image.config("width")[4])
-        self.rec = Label(self.canvas_image, text="", fg="Red", bg="black", font=('arial', 14, 'bold'))
-        self.rec.pack(anchor=NW)
+        self.frame_top = Frame(self.canvas_image, bg="black",)
+        self.frame_top.pack(side=TOP,fill=X)
+        self.rec = Label( self.frame_top, text="", fg="Red", bg="black", font=('arial', 14, 'bold'))
+        self.rec.pack(anchor=NW,side='left')
+        self.rec_timer = Label( self.frame_top, fg="white", bg="black", font=('arial', 14, 'bold'))
+        self.rec_timer.pack(anchor =NW,side='left')
+        self.clock = Stopper(self.rec_timer)
         self.board = Label(self.canvas_image, bg="black", width=44, height=14)
         self.board.pack(fill=BOTH, expand=True)
 
@@ -352,6 +358,7 @@ class VideoPlayer(ttk.Frame):
         if self.setup['record']:
             self._record_view_state(False)
 
+
     def _record_view(self):
 
         if self.play:
@@ -380,10 +387,17 @@ class VideoPlayer(ttk.Frame):
 
         if state:
             self.button_record.config(image=self.icon_record_on, relief='sunken')
-            self.rec.config(text="REC")
+            self.rec.config(text="REC ")
+
+            self.clock.start()
         else:
             self.button_record.config(image=self.icon_record_off, relief='raised')
+            self.clock.stop()
             self.rec.config(text="")
+            self.rec_timer.config(text="")
+
+
+
 
     def _update_progress(self, frame_pass: int = 0, frames_numbers: int = None):
 
@@ -530,7 +544,7 @@ class VideoPlayer(ttk.Frame):
     def save_frame(self, frame):
 
         try:
-            self.log.info("convert RGB to Gray Image and save image")
+
             self._out.write(cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY))
         except EXCEPTION as error:
             self.log.exception(error)
