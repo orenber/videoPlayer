@@ -63,6 +63,7 @@ class VideoPlayer(ttk.Frame):
         self._file_type_record = ".AVI"
         self._file_name_record = "Record"
         self._output_path_record = full_file(['Resources', 'Record', self._file_name_record])
+        create_folder_if_not_exist(self._output_path_record)
 
         # public
       
@@ -538,6 +539,7 @@ class VideoPlayer(ttk.Frame):
     def camera_recording(self, file: str = file_date("output", ".avi")):
 
         if self.play:
+            self.log.info("camera recording to file : " + file)
             self._source = cv2.VideoWriter_fourcc(*'XVID')
             self._out = cv2.VideoWriter(file, self._source, self._frame_rate, self.frame.size, 0)
 
