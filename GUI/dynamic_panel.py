@@ -22,9 +22,21 @@ class DynamicPanel(ttk.Frame):
         self._label_current = Label
         self._label_link = Label
         self._command = []
+        self._parent = []
+        self._active_parent = PanedWindow
+        self._names = {}
 
         self._build_widget(parent, matrix)
         self.current_label_image = self.label_image[0]
+
+    @property
+    def names(self):
+        return self._names
+
+    def set_names(self, name, index: int = -1):
+        self._names[index] = name
+        self._parent[index]
+
 
     @property
     def command(self):
@@ -43,6 +55,16 @@ class DynamicPanel(ttk.Frame):
     @property
     def current_label_image(self) -> Label:
         return self._label_current
+
+    @property
+    def active_parent(self) -> PanedWindow:
+        return self._active_parent
+
+    @active_parent.setter
+    def active_parent(self,num: int = -1):
+        self._active_parent = self._parent[num]
+
+
 
     @label_link.setter
     def label_link(self, widget: Label):
@@ -74,29 +96,35 @@ class DynamicPanel(ttk.Frame):
             self.panel_main.pack(side=TOP, fill=BOTH, expand=1)
             parent_panel = self.panel_main
 
-        for cell in new_cell:
+        for index, cell in enumerate(new_cell):
             print(cell)
             key, new_cell = list(cell.items())[0]
             col_num = len(cell[key])
 
             if key in signals:
-
-                panel = PanedWindow(parent_panel, bd=3, relief="raised", bg="gray", orient=self.direction[key])
+                self._label_frame.append(LabelFrame(parent_panel, text = self._names[index]))
+                panel = PanedWindow(self._label_frame[index], bd=3, relief="raised", bg="gray", orient=self.direction[key])
                 panel.pack(side=TOP, fill=BOTH, expand=1)
-                parent_panel.add(panel, stretch="always")
-                parent = panel
+                parent_panel.add(self._label_frame[index], stretch="always")
+                self._parent.append(panel)
+                self.active_parent = len(self._parent)-1
 
             else:
-                parent = parent_panel
+                self._parent.append(parent_panel)
+                self.active_parent = len(self._parent)-1
 
             for _ in range(0, col_num):
-                self.canvas_image.append(Canvas(parent, bg="black", highlightthickness=0))
-                self.label_image.append(Label(self.canvas_image[-1], bg="black",
-                                        width=44, height=14))
-                self.label_image[-1].bind("<Button-1>", self._focus_label)
-                self.label_image[-1].pack(fill=BOTH, expand=True, padx=3, pady=3)
-                self.canvas_image[-1].pack(fill=BOTH, expand=True)
-                parent.add(self.canvas_image[len(self.canvas_image) - 1], stretch="always")
+                self.add_cell()
+
+    def add_cell(self):
+        self.canvas_image.append(Canvas(self.active_parent, bg="black", highlightthickness=0))
+        self.label_image.append(Label(self.canvas_image[-1], bg="black",
+                                      width=44, height=14))
+        self.label_image[-1].bind("<Button-1>", self._focus_label)
+        self.label_image[-1].pack(fill=BOTH, expand=True, padx=3, pady=3)
+        self.canvas_image[-1].pack(fill=BOTH, expand=True)
+        self.active_parent.add(self.canvas_image[len(self.canvas_image) - 1], stretch="always")
+
 
     def _focus_label(self, event):
         self.update_default_panel()
@@ -137,9 +165,9 @@ class DynamicPanel(ttk.Frame):
 
 def main():
 
-    matrix = {"col": [{"row": [0, 0, 0]}, {"row": [1, 1, 1]}, {"row": [2, 2, 2]}]}
+    matrix = {"row": [{"col": [0, 0, 0]}, {"col": [1, 1, 1]}, {"col": [2, 2, 2]}]}
     pan = DynamicPanel(Tk(), matrix)
-
+    pan.set_names({0:"oren"})
     pan.mainloop()
 
     pass

@@ -150,7 +150,7 @@ class Trainer(ttk.Frame):
         # create another frame inside the canvas
         self._frame_display = Frame(self._canvas)
         # image gallery
-        matrix = {"col": [{"row": 22*[0]}]}
+        matrix = {"col": [{"row": 22*[0]},{"row": 22*[0]}]}
 
         self._image_gallery = DynamicPanel(self._frame_display, matrix)
         # Add that new frame to aWindow in The Canvas
