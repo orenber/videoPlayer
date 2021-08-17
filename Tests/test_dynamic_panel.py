@@ -51,8 +51,8 @@ class TestDynamicPanel(TestCase):
     def test_set_names(self):
         matrix = self.matrix
         self.test__init__(Tk, matrix)
-        self.dyn.set_names({0: "Oren"})
-        self.dyn.mainloop()
+        self.dyn.set_names({0: "Oren", 2:"Efat"})
+        self.dyn.update()
 
     def test_add_cell(self):
         matrix = self.matrix

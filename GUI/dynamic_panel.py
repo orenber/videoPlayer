@@ -21,10 +21,11 @@ class DynamicPanel(ttk.Frame):
         self._canvas_current = Canvas
         self._label_current = Label
         self._label_link = Label
+        self._label_frame = []
         self._command = []
         self._parent = []
         self._active_parent = PanedWindow
-        self._names = {}
+        self._names = dict.fromkeys(list(range(0, len(matrix[self.key]))))
 
         self._build_widget(parent, matrix)
         self.current_label_image = self.label_image[0]
@@ -33,9 +34,14 @@ class DynamicPanel(ttk.Frame):
     def names(self):
         return self._names
 
-    def set_names(self, name, index: int = -1):
-        self._names[index] = name
-        self._parent[index]
+    @names.setter
+    def names(self, names: dict):
+        self._names = names
+
+    def set_names(self, names: dict):
+        self._names.update(names)
+        for key, name in self._names.items():
+            self._label_frame[key].config(text=name)
 
 
     @property
@@ -102,10 +108,12 @@ class DynamicPanel(ttk.Frame):
             col_num = len(cell[key])
 
             if key in signals:
-                self._label_frame.append(LabelFrame(parent_panel, text = self._names[index]))
+
+                label = LabelFrame(parent_panel, text = self._names[index])
+                self._label_frame.append(label)
                 panel = PanedWindow(self._label_frame[index], bd=3, relief="raised", bg="gray", orient=self.direction[key])
                 panel.pack(side=TOP, fill=BOTH, expand=1)
-                parent_panel.add(self._label_frame[index], stretch="always")
+                parent_panel.add(label, stretch="always")
                 self._parent.append(panel)
                 self.active_parent = len(self._parent)-1
 
