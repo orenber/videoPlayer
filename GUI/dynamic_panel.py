@@ -27,7 +27,7 @@ class DynamicPanel(ttk.Frame):
         self._active_parent = PanedWindow
         self._names = dict.fromkeys(list(range(0, len(matrix[self.key]))))
 
-        self._build_widget(parent, matrix)
+        self._build_widget(matrix, parent)
         self.current_label_image = self.label_image[0]
 
     @property
@@ -49,7 +49,9 @@ class DynamicPanel(ttk.Frame):
             # if the key is in the list update value
             self._names.update(names)
             for key, name in self._names.items():
-                self._label_frame[key].config(text=name)
+                if key < len(self._label_frame):
+                    # if the key is in the list update value
+                    self._label_frame[key].config(text=name)
 
 
     @property
@@ -78,8 +80,6 @@ class DynamicPanel(ttk.Frame):
     def active_parent(self,num: int = -1):
         self._active_parent = self._parent[num]
 
-
-
     @label_link.setter
     def label_link(self, widget: Label):
         self._label_link = widget
@@ -100,12 +100,21 @@ class DynamicPanel(ttk.Frame):
 
     def _build_widget(self, parent=Tk, matrix: dict = {"row": [{"ncol": [1, 1]}]}):
 
+        self._update_widget(parent, matrix)
+
+    def update_widget(self, parent=Tk, matrix: dict = {"row": [{"ncol": [1, 1]}]}):
+
+        self.parent_panel.place_forget()
+        self.parent_panel.destroy()
+
+        self._update_widget(matrix,parent)
+        pass
+
+    def _update_widget(self,parent,matrix ):
+
         key, new_cell = list(matrix.items())[0]
-
         signals = list(self.direction.keys())
-
         if key in signals:
-
             self.panel_main = PanedWindow(parent, bd=3, relief="raised", bg="gray", orient=self.direction[key])
             self.panel_main.pack(side=TOP, fill=BOTH, expand=1)
             self.parent_panel = self.panel_main
@@ -128,7 +137,7 @@ class DynamicPanel(ttk.Frame):
 
     def add_section(self, key: str = "no_row", index: int = -1 ):
 
-        label = LabelFrame(self.parent_panel, text= self._names[index])
+        label = LabelFrame(self.parent_panel)
         self._label_frame.append(label)
         panel = PanedWindow(self._label_frame[index], bd=3, relief="raised", bg="gray", orient=self.direction[key])
         panel.pack(side=TOP, fill=BOTH, expand=1)

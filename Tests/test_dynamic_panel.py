@@ -6,7 +6,7 @@ from tkinter import *
 class TestDynamicPanel(TestCase):
 
     def setUp(self) -> None:
-        self.matrix = {"col": [{"col": [0, 0, 0]}, {"col": [1, 1, 1]}, {"col": [2, 2, 2]}]}
+        self.matrix = {"row": [{"col": [0, 0, 0]}, {"col": [1, 1, 1]}, {"col": [2, 2, 2]}]}
         return
 
     def test__init__(self, tk, matrix):
@@ -47,6 +47,18 @@ class TestDynamicPanel(TestCase):
     def test__build_widget(self):
         self.fail()
 
+    def test_update_widget(self):
+
+        matrix = {"row": [{"col": [0, 0, 0]}, {"row": [2, 2, 2,3]}]}
+
+        self.test__init__(Tk, matrix)
+        self.dyn.update()
+        self.dyn.update_widget(self.matrix)
+        self.dyn.update()
+
+
+
+
     def test_names(self):
         matrix = self.matrix
         self.test__init__(Tk, matrix)
@@ -64,13 +76,13 @@ class TestDynamicPanel(TestCase):
         names = self.dyn.names
         print(names)
 
-        self.dyn.update()
+        self.dyn.mainloop()
 
     def test_set_names(self):
         matrix = self.matrix
         self.test__init__(Tk, matrix)
-        self.dyn.set_names({0: "Oren", 1: "Efat"})
-        self.dyn.update()
+        self.dyn.set_names({0: "Oren", 2: "Efat"})
+        self.dyn.mainloop()
 
     def test_add_cell(self):
         matrix = self.matrix
@@ -78,9 +90,8 @@ class TestDynamicPanel(TestCase):
         self.test__init__(Tk, matrix)
         self.dyn.add_cell(0)
         self.dyn.add_cell(2)
-        self.dyn.update()
-        self.dyn.add_cell(1)
-        self.dyn.update()
+
+        self.dyn.mainloop()
 
     def test__focus_label(self):
         self.fail()
@@ -101,6 +112,10 @@ class TestDynamicPanel(TestCase):
         matrix = self.matrix
 
         self.test__init__(Tk, matrix)
-        self.dyn.add_section('row',{3: 'Amir'})
-        self.dyn.update()
+        self.dyn.add_section('row', 3)
+        self.dyn.add_section('col', 4)
+        self.dyn.add_cell(3)
+        self.dyn.add_cell(0)
+        self.dyn.add_cell(4)
+        self.dyn.add_cell(4)
         self.dyn.mainloop()
