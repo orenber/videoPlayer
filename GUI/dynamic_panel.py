@@ -39,9 +39,17 @@ class DynamicPanel(ttk.Frame):
         self._names = names
 
     def set_names(self, names: dict):
-        self._names.update(names)
-        for key, name in self._names.items():
-            self._label_frame[key].config(text=name)
+        # if the key is not in the list insert new value
+        input_list = list(names.keys())
+        store_list = list(self._names.keys())
+        diff = list(set(input_list) - set(store_list))
+        for index in diff:
+            self._names[index] = names[index]
+        else:
+            # if the key is in the list update value
+            self._names.update(names)
+            for key, name in self._names.items():
+                self._label_frame[key].config(text=name)
 
 
     @property
@@ -100,7 +108,7 @@ class DynamicPanel(ttk.Frame):
 
             self.panel_main = PanedWindow(parent, bd=3, relief="raised", bg="gray", orient=self.direction[key])
             self.panel_main.pack(side=TOP, fill=BOTH, expand=1)
-            parent_panel = self.panel_main
+            self.parent_panel = self.panel_main
 
         for index, cell in enumerate(new_cell):
             print(cell)
@@ -109,22 +117,27 @@ class DynamicPanel(ttk.Frame):
 
             if key in signals:
 
-                label = LabelFrame(parent_panel, text = self._names[index])
-                self._label_frame.append(label)
-                panel = PanedWindow(self._label_frame[index], bd=3, relief="raised", bg="gray", orient=self.direction[key])
-                panel.pack(side=TOP, fill=BOTH, expand=1)
-                parent_panel.add(label, stretch="always")
-                self._parent.append(panel)
-                self.active_parent = len(self._parent)-1
+                self.add_section(key,index)
 
             else:
-                self._parent.append(parent_panel)
+                self._parent.append(self.parent_panel)
                 self.active_parent = len(self._parent)-1
 
             for _ in range(0, col_num):
                 self.add_cell()
 
-    def add_cell(self):
+    def add_section(self, key: str = "no_row", index: int = -1 ):
+
+        label = LabelFrame(self.parent_panel, text= self._names[index])
+        self._label_frame.append(label)
+        panel = PanedWindow(self._label_frame[index], bd=3, relief="raised", bg="gray", orient=self.direction[key])
+        panel.pack(side=TOP, fill=BOTH, expand=1)
+        self.parent_panel.add(label, stretch="always")
+        self._parent.append(panel)
+        self.active_parent = len(self._parent) - 1
+
+    def add_cell(self,index: int =-1):
+        self.active_parent = index
         self.canvas_image.append(Canvas(self.active_parent, bg="black", highlightthickness=0))
         self.label_image.append(Label(self.canvas_image[-1], bg="black",
                                       width=44, height=14))
@@ -132,7 +145,6 @@ class DynamicPanel(ttk.Frame):
         self.label_image[-1].pack(fill=BOTH, expand=True, padx=3, pady=3)
         self.canvas_image[-1].pack(fill=BOTH, expand=True)
         self.active_parent.add(self.canvas_image[len(self.canvas_image) - 1], stretch="always")
-
 
     def _focus_label(self, event):
         self.update_default_panel()

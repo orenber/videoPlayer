@@ -10,7 +10,6 @@ class TestDynamicPanel(TestCase):
         return
 
     def test__init__(self, tk, matrix):
-
         self.dyn = DynamicPanel(Tk(), matrix)
         self.assertIsInstance(self.dyn, DynamicPanel, "this is not DynamicPanel instance")
 
@@ -48,24 +47,40 @@ class TestDynamicPanel(TestCase):
     def test__build_widget(self):
         self.fail()
 
+    def test_names(self):
+        matrix = self.matrix
+        self.test__init__(Tk, matrix)
+        self.dyn.names = {0: "Oren", 1: "Hadass", 2: "Leora"}
+        names = self.dyn.names
+        print(names)
+        self.dyn.mainloop()
+        self.assertDictEqual(names,self.dyn.names, "dictionary is not the same")
+
+    def test_names(self):
+        matrix = self.matrix
+        self.test__init__(Tk, matrix)
+        self.dyn.names = {0: "Oren", 1: "Hadass", 2: "Leora"}
+        self.dyn.set_names({0: "Oren", 1: "Efat", 3: "Amir"})
+        names = self.dyn.names
+        print(names)
+
+        self.dyn.update()
+
     def test_set_names(self):
         matrix = self.matrix
         self.test__init__(Tk, matrix)
-        self.dyn.set_names({0: "Oren", 2:"Efat"})
+        self.dyn.set_names({0: "Oren", 1: "Efat"})
         self.dyn.update()
 
     def test_add_cell(self):
         matrix = self.matrix
 
         self.test__init__(Tk, matrix)
-        self.dyn.active_parent = 0
-        self.dyn.add_cell()
-        self.dyn.add_cell()
+        self.dyn.add_cell(0)
+        self.dyn.add_cell(2)
         self.dyn.update()
-        self.dyn.add_cell()
+        self.dyn.add_cell(1)
         self.dyn.update()
-
-
 
     def test__focus_label(self):
         self.fail()
@@ -81,3 +96,11 @@ class TestDynamicPanel(TestCase):
 
     def test_matrix_to_pillow(self):
         self.fail()
+
+    def test_add_section(self):
+        matrix = self.matrix
+
+        self.test__init__(Tk, matrix)
+        self.dyn.add_section('row',{3: 'Amir'})
+        self.dyn.update()
+        self.dyn.mainloop()

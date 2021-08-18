@@ -6,7 +6,9 @@ from GUI.training import Trainer
 import numpy as np
 import cv2
 from tkinter import *
+from tkinter.tix import *
 from tkinter import ttk
+
 from tkinter.simpledialog import askstring
 
 from Utility.file_location import *
@@ -52,6 +54,7 @@ class Surveillance(VideoPlayer):
 
         self.master.geometry("950x720+0+0")
         self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
+
 
         notebook = ttk.Notebook(self.master)
         notebook.pack(fill=BOTH, expand=True)
@@ -103,8 +106,7 @@ class Surveillance(VideoPlayer):
                                                 name="button_movement_detection",
                                                 command=lambda: self._button_movement_detection_view())
         self.button_movement_detection.pack(side='left')
-        button_movement_detection_tooltip = Pmw.Balloon(self.control_frame)
-        button_movement_detection_tooltip.bind(self.button_movement_detection, "Movement  detection")
+        self.balloon.bind_widget(self.button_movement_detection,balloonmsg = "Movement  detection")
 
         # load image button_load_image
         self.icon_face_detect = PhotoImage(file=os.path.join(self.icons_path, 'face_detection.PNG'))
