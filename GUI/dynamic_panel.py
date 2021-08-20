@@ -27,7 +27,7 @@ class DynamicPanel(ttk.Frame):
         self._active_parent = PanedWindow
         self._names = dict.fromkeys(list(range(0, len(matrix[self.key]))))
 
-        self._build_widget(matrix, parent)
+        self._build_widget(parent,matrix)
         self.current_label_image = self.label_image[0]
 
     @property
@@ -107,10 +107,10 @@ class DynamicPanel(ttk.Frame):
         self.parent_panel.place_forget()
         self.parent_panel.destroy()
 
-        self._update_widget(matrix,parent)
+        self._update_widget(parent,matrix)
         pass
 
-    def _update_widget(self,parent,matrix ):
+    def _update_widget(self,parent,matrix):
 
         key, new_cell = list(matrix.items())[0]
         signals = list(self.direction.keys())

@@ -1,5 +1,6 @@
 import copy
 from tkinter import *
+import Pmw
 from tkinter import filedialog, ttk, messagebox
 from time import monotonic as timer # or time.time if it is not available
 
@@ -8,9 +9,9 @@ import numpy as np
 from PIL import Image, ImageTk
 from Utility.image_procesing import resize_image_to_frame
 from Utility.file_location import *
-from Utility.clock import Clock,Stopper
+from Utility.clock import Clock, Stopper
 from GUI.frameImg import FrameImg
-import Pmw
+
 from Utility.logger_setup import setup_logger
 
 
@@ -187,6 +188,7 @@ class VideoPlayer(ttk.Frame):
         else:
             self.main_panel = parent
 
+
         # main panel
         self.main_panel.config(bg="black")
 
@@ -236,8 +238,7 @@ class VideoPlayer(ttk.Frame):
                                             text="> Load Video", bg='black', image=self.icon_play, height=self.icon_height ,
                                             width=self.icon_width, command=lambda: self.load_movie())
             self.button_live_video.pack(side='left')
-            button_live_video_tooltip = Pmw.Balloon(self.control_frame)
-            button_live_video_tooltip.bind(self.button_live_video, "Load video movie")
+            #tip.bind_widget(self.button_live_video, ballonmsg = "Load video movie")
 
         # play camera
         if setup['camera']:
@@ -251,8 +252,8 @@ class VideoPlayer(ttk.Frame):
                                         width=self.icon_width,
                                         command=lambda: self._camera_view())
             self.button_camera.pack(side='left')
-            button_camera_tooltip = Pmw.Balloon(self.control_frame)
-            button_camera_tooltip.bind(self.button_camera, "Camera Play")
+
+            #tip.bind_widget(self.button_camera,ballonmsg="Camera Play")
 
         if setup['pause']:
             # pause video button button_live_video
@@ -264,8 +265,8 @@ class VideoPlayer(ttk.Frame):
                                              height=self.icon_height , width=self.icon_width,
                                              command=lambda: self._pause_view())
             self.button_pause_video.pack(side='left')
-            button_pause_video_tooltip = Pmw.Balloon(self.control_frame)
-            button_pause_video_tooltip.bind(self.button_pause_video, "Pause video player")
+
+            # self.tip.bind_widget(self.button_pause_video, ballonmsg="Pause video player")
 
         if setup['stop']:
             # stop video button button_live_video
@@ -278,6 +279,7 @@ class VideoPlayer(ttk.Frame):
             self.button_stop_video.pack(side='left')
             button_stop_video_tooltip = Pmw.Balloon(self.control_frame)
             button_stop_video_tooltip.bind(self.button_stop_video, "Stop video player")
+
 
         if setup['record']:
             # record video

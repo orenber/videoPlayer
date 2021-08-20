@@ -106,7 +106,8 @@ class Surveillance(VideoPlayer):
                                                 name="button_movement_detection",
                                                 command=lambda: self._button_movement_detection_view())
         self.button_movement_detection.pack(side='left')
-        self.balloon.bind_widget(self.button_movement_detection,balloonmsg = "Movement  detection")
+        button_movement_detection_tooltip = Pmw.Balloon( self.control_frame )
+        button_movement_detection_tooltip.bind( self.button_movement_detection, "Movement  detection" )
 
         # load image button_load_image
         self.icon_face_detect = PhotoImage(file=os.path.join(self.icons_path, 'face_detection.PNG'))
