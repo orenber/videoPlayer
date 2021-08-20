@@ -134,13 +134,15 @@ class TestVideoPlayer(TestCase):
 
     def test_stop_player(self):
         self.test__init__(play=True, stop=True)
-        # open file
-        self.assertRaises(tkinter.TclError, lambda: self.vid.play_movie(self.move_test))
-        self.vid.stop_player()
+        self.assertRaises( tkinter.TclError, lambda: self.vid.play_movie( self.move_test ) )
+        self.vid.button_stop_video.after(15000, self.vid.stop_player)
+
+
         pass
 
     def test_camera_recording(self):
         self.test__init__(play=True, stop=True, record=True)
+        self.button.re
         # open file
         self.assertRaises(tkinter.TclError, lambda: self.vid.play_movie(self.move_test))
         self.assertRaises(tkinter.TclError, lambda: self.vid._record_view())

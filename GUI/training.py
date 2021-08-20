@@ -327,7 +327,7 @@ class Trainer(ttk.Frame):
 
     def stop_video(self):
 
-        if self.play:
+        if self._play:
             self._play = False
             self._cap.release()
 
