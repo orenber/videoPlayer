@@ -4,6 +4,7 @@ from GUI.dynamic_panel import DynamicPanel
 from tkinter import *
 from tkinter import ttk, filedialog
 from Utility.file_location import *
+from Utility.logger_setup import setup_logger
 import cv2
 from PIL import Image
 import numpy as np
@@ -14,7 +15,7 @@ import Pmw
 class Trainer(ttk.Frame):
 
     def __init__(self, parent: ttk.Frame = None):
-
+        self.log = setup_logger('Trainer')
         ttk.Frame.__init__(self, parent)
 
         self.recognizer = cv2.face.LBPHFaceRecognizer_create()
@@ -25,6 +26,7 @@ class Trainer(ttk.Frame):
         self._path_images = full_file(["Resources", "images", "faces"])
         self.current_id = 0
         self.label_ids = {}
+        self.ids_label ={}
         self.y_labels = []
         self.x_train = []
         self.label_images = {}
@@ -150,7 +152,7 @@ class Trainer(ttk.Frame):
         # create another frame inside the canvas
         self._frame_display = Frame(self._canvas)
         # image gallery
-        matrix = {"col": [{"row": 22*[0]},{"row": 22*[0]}]}
+        matrix = {"col": [{"nrow": 0*[0]}]}
 
         self._image_gallery = DynamicPanel(self._frame_display, matrix)
         # Add that new frame to aWindow in The Canvas
@@ -167,17 +169,38 @@ class Trainer(ttk.Frame):
 
     def show_images(self, label_images: dict):
 
-        d = 10
-        n = 1
+        # get label n        um
+
+        # get images num
+
+        # build matrix
+        matrix = self.get_matrix_gallery(label_images)
+        # update image gallery
+        self._image_gallery.update_widget(matrix)
+
+        # set label names
+        self._image_gallery.set_names(self.ids_label)
+
+        # show images on the canvas
         for label, images in label_images.items():
+            row_index =0
+            for image in images:
+                self._image_gallery.update_image( image, row_index )
+                row_index += 1
+        pass
 
-            if len(label_images[label]) > 0:
+    @staticmethod
+    def get_matrix_gallery(label_images:dict)->dict:
 
-                index = d*(n-1)
-                n += 1
-                for image in images:
-                    self._image_gallery.update_image(image, index)
-                    index += 1
+        row_nums = map(len, label_images.values())
+        rows = max(list(row_nums))
+        matrix = {"col": []}
+        for col_count,keys in enumerate(list(label_images.keys())):
+            matrix['col'].append({'row': [col_count] * rows} )
+
+        return matrix
+
+
 
     def open_folders(self):
 
@@ -190,7 +213,7 @@ class Trainer(ttk.Frame):
                 self.show_images(self.label_images)
 
             except Exception as error:
-                print("Exception:", error)
+                self.log.exception(error)
 
     def reset_parameters(self):
         self.current_id = 0
@@ -199,6 +222,7 @@ class Trainer(ttk.Frame):
         self.x_train = []
         self.label_images = {}
         self._id = 0
+        self.ids_label = {}
 
     def collect_images(self, images_dir: str):
 
@@ -212,6 +236,8 @@ class Trainer(ttk.Frame):
                     label = os.path.basename(os.path.dirname(path)).replace(" ", ".").lower()
 
                     if label not in self.label_ids:
+
+                        self.ids_label[self.current_id] = label
                         self.label_ids[label] = self.current_id
                         self.current_id += 1
                     self._id = self.label_ids[label]
