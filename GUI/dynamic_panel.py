@@ -14,21 +14,21 @@ class DynamicPanel(ttk.Frame):
         ttk.Frame.__init__(self, parent)
 
         self.key, self.new_cell = list(matrix.items())[0]
-
+        self.main_frame = ttk.Frame
         self.canvas_image = []
         self.label_image = []
 
         self._canvas_current = Canvas
         self._label_current = Label
         self._label_link = Label
-        self._label_frame = []
+        self._label_frame =  [[0] * 1] * 1
         self._command = []
         self._parent = []
         self._active_parent = PanedWindow
         self._names = dict.fromkeys(list(range(0, len(matrix[self.key]))))
 
-        self._build_widget(matrix, parent)
-        self.current_label_image = self.label_image[0]
+        self._build_widget(parent,matrix)
+       #self.current_label_image = self.label_image[0]
 
     @property
     def names(self):
@@ -76,7 +76,7 @@ class DynamicPanel(ttk.Frame):
         return self._active_parent
 
     @active_parent.setter
-    def active_parent(self,num: int = -1):
+    def active_parent(self, num: int = -1):
         self._active_parent = self._parent[num]
 
     @label_link.setter
@@ -99,17 +99,34 @@ class DynamicPanel(ttk.Frame):
 
     def _build_widget(self, parent=Tk, matrix: dict = {"row": [{"ncol": [1, 1]}]}):
 
-        self._update_widget(parent, matrix)
+        self.main_frame = ttk.Frame(parent, name ="main_frame_parent")
 
-    def update_widget(self, parent=Tk, matrix: dict = {"row": [{"ncol": [1, 1]}]}):
+        self.main_frame.pack( fill=BOTH, expand=1 )
 
-        self.parent_panel.place_forget()
-        self.parent_panel.destroy()
+        self._update_widget(self.main_frame, matrix)
 
-        self._update_widget(matrix,parent)
+    def update_widget(self, matrix: dict = {"row": [{"ncol": [1, 1]}]}):
+
+        self.delete_widget_children(self.main_frame)
+        self.reset_parameters()
+
+        self.main_frame.place_forget()
+        self.main_frame.destroy()
+
+        self.main_frame = ttk.Frame(self.main_frame.master)
+        self.main_frame.pack( fill=BOTH, expand=1 )
+        self._update_widget(self.main_frame, matrix)
         pass
 
-    def _update_widget(self,parent,matrix ):
+    @staticmethod
+    def delete_widget_children(parent):
+        for child in parent.winfo_children():
+            child.destroy()
+
+    def reset_parameters(self):
+        self._label_frame = []
+
+    def _update_widget(self, parent, matrix):
 
         key, new_cell = list(matrix.items())[0]
         signals = list(self.direction.keys())
