@@ -172,7 +172,6 @@ class Trainer(ttk.Frame):
         # get label n        um
 
         # get images num
-
         # build matrix
         matrix = self.get_matrix_gallery(label_images)
         # update image gallery
@@ -184,8 +183,9 @@ class Trainer(ttk.Frame):
         # show images on the canvas
         for label, images in label_images.items():
             row_index =0
+            id_column = int(label)
             for image in images:
-                self._image_gallery.update_image( image, row_index )
+                self._image_gallery.update_image( image,id_column ,row_index )
                 row_index += 1
         pass
 

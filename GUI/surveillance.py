@@ -1,3 +1,5 @@
+import logging
+
 from GUI.videoPlayer import VideoPlayer
 from GUI.frameImg import FrameImg
 from GUI.dynamic_panel import DynamicPanel
@@ -223,7 +225,7 @@ class Surveillance(VideoPlayer):
                 cv2.imwrite(path_file, crop_image)
                 cv2.destroyAllWindows()
             except Exception as error:
-                print(error)
+                self.log.error(error)
             finally:
                 self.dynamic_panel.current_label_image.unbind("<Button>")
 

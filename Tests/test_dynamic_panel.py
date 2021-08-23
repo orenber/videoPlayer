@@ -58,8 +58,10 @@ class TestDynamicPanel(TestCase):
 
         self.test__init__(Tk,matrix )
         self.dyn.update()
-        self.dyn.update_widget( self.matrix)
+        self.dyn.update_widget(self.matrix)
         self.dyn.update()
+
+
 
     def test_names_1(self):
         matrix = self.matrix
@@ -110,20 +112,21 @@ class TestDynamicPanel(TestCase):
         image_pillow = Image.open(image_file )
         image_test = np.array(image_pillow)
 
-        self.dyn.update_image(image_test,1 )
+        self.dyn.update_image(image_test,1,1)
         self.dyn.update()
         pass
 
     def test_show_image(self):
-        self.test__init__( Tk, self.matrix )
+        self.test__init__(Tk, self.matrix )
 
         # load image
         images_path = os.path.abspath( os.path.join( os.pardir, 'Resources', 'images' ) )
         image_file = os.path.join( images_path, '301-F.jpg' )
         self.image_test = Image.open( image_file )
 
-        self.dyn.show_image(self.image_test ,1)
+        self.dyn.show_image(self.image_test, 1, 1)
         self.dyn.update()
+
 
     def test_matrix_to_pillow(self):
         self.fail()
