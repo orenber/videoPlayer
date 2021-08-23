@@ -53,7 +53,6 @@ class DynamicPanel(ttk.Frame):
                     # if the key is in the list update value
                     self._label_frame[key].config(text=name)
 
-
     @property
     def command(self):
         return self._command
