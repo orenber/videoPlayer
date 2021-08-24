@@ -57,7 +57,6 @@ class Surveillance(VideoPlayer):
         self.master.geometry("950x720+0+0")
         self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
 
-
         notebook = ttk.Notebook(self.master)
         notebook.pack(fill=BOTH, expand=True)
 
@@ -91,7 +90,6 @@ class Surveillance(VideoPlayer):
         self.board.place_forget()
         self.board.destroy()
         self.board = self.dynamic_panel.current_label_image
-        self.board.pack(fill=BOTH, expand=True)
 
         self.dynamic_panel.command = lambda: self._focus_label()
         [can.bind("<Configure>", self._resize) for can in self.dynamic_panel.canvas_image]
@@ -109,7 +107,7 @@ class Surveillance(VideoPlayer):
                                                 command=lambda: self._button_movement_detection_view())
         self.button_movement_detection.pack(side='left')
         button_movement_detection_tooltip = Pmw.Balloon( self.control_frame )
-        button_movement_detection_tooltip.bind( self.button_movement_detection, "Movement  detection" )
+        button_movement_detection_tooltip.bind( self.button_movement_detection, "Movement  detection")
 
         # load image button_load_image
         self.icon_face_detect = PhotoImage(file=os.path.join(self.icons_path, 'face_detection.PNG'))
@@ -152,10 +150,12 @@ class Surveillance(VideoPlayer):
         if self.button_movement_detection.cget('relief') == 'raised':
             self.algo_list(True, self.movement_detection)
             self.button_movement_detection.config(bg='white', relief='sunken')
+            self.log.info("Movement detection is On")
 
         elif self.button_movement_detection.cget('relief') == 'sunken':
             self.algo_list(False, self.movement_detection)
             self.button_movement_detection.config(bg='black', relief='raised')
+            self.log.info("Movement detection is Off")
 
     def _button_face_detection_view(self):
 
@@ -163,11 +163,13 @@ class Surveillance(VideoPlayer):
 
             self.algo_list(True, self.face_detection)
             self.button_face_detection.config(bg='white', relief='sunken')
+            self.log.info("Face detection is on")
 
         elif self.button_face_detection.cget('relief') == 'sunken':
 
             self.algo_list(False, self.face_detection)
             self.button_face_detection.config(bg='black', relief='raised')
+            self.log.info("Face detection is Off")
 
     def _button_face_recognition_view(self):
 
@@ -175,11 +177,13 @@ class Surveillance(VideoPlayer):
             self.faces_names = self.trainer.load_labels()
             self.algo_list(True, self.face_recognition)
             self.button_face_recognition.config(bg='white', relief='sunken')
+            self.log.info("Face recognition is on")
 
         elif self.button_face_recognition.cget('relief') == 'sunken':
 
             self.algo_list(False, self.face_recognition)
             self.button_face_recognition.config(bg='black', relief='raised')
+            self.log.info("Face recognition is off")
 
     def algo_list(self, add: bool = False, algo=None):
 
@@ -220,7 +224,7 @@ class Surveillance(VideoPlayer):
             print(label_image)
             try:
                 images_face_path = full_file(["Resources", "images", "faces", label_image])
-                create_folder_if_not_exist(images_face_path)
+                create_folder_if_not_exist(str(images_face_path))
                 path_file = os.path.join(images_face_path, file_date(label_image, ".png"))
                 cv2.imwrite(path_file, crop_image)
                 cv2.destroyAllWindows()

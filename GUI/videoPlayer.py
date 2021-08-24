@@ -309,7 +309,7 @@ class VideoPlayer(ttk.Frame):
 
         if setup['algo']:
             # load image button button_load_image
-            self.icon_algo = PhotoImage( file=os.path.join( self.icons_path , 'ai.PNG'))
+            self.icon_algo = PhotoImage( file=os.path.join(self.icons_path , 'ai.PNG'))
             self.button_run_algo = Button(self.control_frame,
                                           padx=10, pady=10,
                                           bd=8,
@@ -374,7 +374,7 @@ class VideoPlayer(ttk.Frame):
                     self._record_view_state(self._record)
 
                 except Exception as error:
-                    print(error)
+                    self.log.exception(error)
                     self._record = False
                     self._record_view_state(self._record)
 
@@ -462,7 +462,7 @@ class VideoPlayer(ttk.Frame):
                 # refresh image display
                 self.board.update()
         except Exception as error:
-            print(error)
+            self.log.exception(error)
         finally:
             self._cap.release()
             self._out.release()
@@ -480,24 +480,29 @@ class VideoPlayer(ttk.Frame):
                                                                    ("all files", "*.*")))
             if len(movie_filename) != 0:
                 self.__initial_dir_movie = os.path.dirname(os.path.abspath(movie_filename))
+                self.log.info('Load movie: ' + movie_filename)
                 try:
                     self.play_movie(movie_filename)
                 except Exception as error:
-                    self.log.exception("Exception:", error)
+                    self.log.exception( error )
 
                 finally:
                     self.button_live_video.config(bg='black', relief='raised')
             else:
+                self.log.info('Cancel load movie ')
                 self.button_live_video.config(bg='black', relief='raised')
+
 
     def play_movie(self, movie_filename: str):
 
         try:
             self._cap = cv2.VideoCapture(movie_filename)
             self._frames_numbers = int(self._cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            self.log.info('play movie: ' + movie_filename +
+                          'frame_number: '+ str(self._frames_numbers))
 
         except Exception as error:
-            print("Exception:", error)
+            self.log.exception(error)
 
         self.progressbar["maximum"] = self._frames_numbers
         self._play = True
@@ -509,6 +514,7 @@ class VideoPlayer(ttk.Frame):
         self._play = True
         self.camera = True
         self._frames_numbers = 1
+        self.log.info("Camera is on")
 
         if self._play:
             self.run_frames()
@@ -534,6 +540,7 @@ class VideoPlayer(ttk.Frame):
                 # in the case the record in on - stop the recording
                 self._out.release()
                 self.record = False
+                self.log.info( "stop recording")
 
             cv2.destroyAllWindows()
             self._update_progress(0, 0)
@@ -550,7 +557,7 @@ class VideoPlayer(ttk.Frame):
         try:
 
             self._out.write(cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY))
-        except EXCEPTION as error:
+        except Exception as error:
             self.log.exception(error)
 
     def load_image(self):
@@ -568,6 +575,9 @@ class VideoPlayer(ttk.Frame):
                 self.log.exception(error)
 
             self.resize_image_show(self._frame)
+        else:
+            self.log.warning("Cancel loading file")
+
     
     def resize_image_show(self, frame: FrameImg):
 

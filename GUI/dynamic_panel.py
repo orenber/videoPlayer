@@ -17,18 +17,19 @@ class DynamicPanel(ttk.Frame):
         self.main_frame = ttk.Frame
         self.canvas_image = []
         self.label_image = []
+        self.sub_frame = []
 
         self._canvas_current = Canvas
         self._label_current = Label
         self._label_link = Label
-        self._label_frame =  [[0] * 1] * 1
+        self._label_frame = []
         self._command = []
         self._parent = []
         self._active_parent = PanedWindow
         self._names = dict.fromkeys(list(range(0, len(matrix[self.key]))))
 
         self._build_widget(parent,matrix)
-       #self.current_label_image = self.label_image[0]
+        #
 
     @property
     def names(self):
@@ -52,7 +53,6 @@ class DynamicPanel(ttk.Frame):
                 if key < len(self._label_frame):
                     # if the key is in the list update value
                     self._label_frame[key].config(text=name)
-
 
     @property
     def command(self):
@@ -107,17 +107,21 @@ class DynamicPanel(ttk.Frame):
         self._update_widget(self.main_frame, matrix)
 
     def update_widget(self, matrix: dict = {"row": [{"ncol": [1, 1]}]}):
+        try:
+            self.delete_widget_children(self.main_frame)
+            self.reset_parameters()
 
-        self.delete_widget_children(self.main_frame)
-        self.reset_parameters()
+            self.main_frame.place_forget()
+            self.main_frame.destroy()
 
-        self.main_frame.place_forget()
-        self.main_frame.destroy()
+            self.main_frame = ttk.Frame(self.main_frame.master)
+            self.main_frame.pack(fill=BOTH, expand=1)
+            self._update_widget(self.main_frame, matrix)
 
-        self.main_frame = ttk.Frame(self.main_frame.master)
-        self.main_frame.pack( fill=BOTH, expand=1 )
-        self._update_widget(self.main_frame, matrix)
-        pass
+        except Exception as error:
+            print(error)
+
+
 
     @staticmethod
     def delete_widget_children(parent):
@@ -125,7 +129,18 @@ class DynamicPanel(ttk.Frame):
             child.destroy()
 
     def reset_parameters(self):
+
+        self.canvas_image = []
+        self.label_image = []
+        self.sub_frame = []
+
+        self._canvas_current = Canvas
+        self._label_current = Label
+        self._label_link = Label
         self._label_frame = []
+        self._command = []
+        self._parent = []
+        self._active_parent = PanedWindow
 
     def _update_widget(self, parent, matrix):
 
@@ -142,17 +157,20 @@ class DynamicPanel(ttk.Frame):
             col_num = len(cell[key])
 
             if key in signals:
-                self.la
-                self.add_section(key,index)
+
+                self.add_section(key, index)
 
             else:
                 self._parent.append(self.parent_panel)
                 self.active_parent = len(self._parent)-1
 
-            for _ in range(0, col_num):
-                self.add_cell()
+            for cell_index in range(0, col_num):
+                self.add_cell(index)
 
-    def add_section(self, key: str = "no_row", index: int = -1 ):
+        if len(self.label_image ) > 0:
+            self.current_label_image = self.label_image[0]
+
+    def add_section(self, key: str = "no_row", index: int = -1):
 
         label = LabelFrame(self.parent_panel)
         self._label_frame.append(label)
@@ -161,8 +179,9 @@ class DynamicPanel(ttk.Frame):
         self.parent_panel.add(label, stretch="always")
         self._parent.append(panel)
         self.active_parent = len(self._parent) - 1
+        self.sub_frame.append([])
 
-    def add_cell(self,index: int =-1):
+    def add_cell(self,index:int = -1):
         self.active_parent = index
         self.canvas_image.append(Canvas(self.active_parent, bg="black", highlightthickness=0))
         self.label_image.append(Label(self.canvas_image[-1], bg="black",
@@ -171,8 +190,7 @@ class DynamicPanel(ttk.Frame):
         self.label_image[-1].pack(fill=BOTH, expand=True, padx=3, pady=3)
         self.canvas_image[-1].pack(fill=BOTH, expand=True)
         self.active_parent.add(self.canvas_image[len(self.canvas_image) - 1], stretch="always")
-        self.sct[index].append(index)
-
+        self.sub_frame[index].append(self.label_image[-1])
 
     def _focus_label(self, event):
         self.update_default_panel()
@@ -185,17 +203,17 @@ class DynamicPanel(ttk.Frame):
         [cav.config(highlightthickness=0, highlightbackground="black") for cav in self.canvas_image]
         pass
 
-    def update_image(self, image: np.array, position: int = 0):
+    def update_image(self, image: np.array, part:int = 0, cell_index: int = 0):
 
         image_pillow = self.matrix_to_pillow(image)
-        self.show_image(image_pillow, position)
+        self.show_image(image_pillow, part, cell_index)
 
-    def show_image(self, image, position: int = 0):
+    def show_image(self, image, part: int = 0, cell_index: int = 0):
         # resize image
         image.thumbnail(image.size)
         photo = ImageTk.PhotoImage(image=image)
         # The Label widget is a standard Tkinter widget used to display a text or image on the screen.
-        board = self.label_image[position]
+        board = self.sub_frame[part][cell_index]
         board.config(image=photo)
         board.image = photo
         # refresh image display

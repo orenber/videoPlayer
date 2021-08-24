@@ -40,8 +40,6 @@ class TestDynamicPanel(TestCase):
         self.test__init__()
         self.dyn.active_parent
 
-    def test_active_parent(self):
-        self.fail()
 
     def test_current_canvas(self):
         self.fail()
@@ -56,12 +54,10 @@ class TestDynamicPanel(TestCase):
 
         matrix = {"row": [{"col": [0, 0, 0]}, {"row": [2, 2, 2,3]}]}
 
-        self.test__init__(Tk,matrix )
+        self.test__init__(Tk, matrix)
         self.dyn.update()
         self.dyn.update_widget(self.matrix)
         self.dyn.update()
-
-
 
     def test_names_1(self):
         matrix = self.matrix
@@ -77,7 +73,7 @@ class TestDynamicPanel(TestCase):
         self.dyn.names = {0: "Oren", 1: "Hadass", 2: "Leora"}
         self.dyn.set_names({0: "Oren", 1: "Efat", 3: "Amir"})
         names = self.dyn.names
-        self.assertDictEqual(names, self.dyn.names, "dictionary is not the same" )
+        self.assertDictEqual(names, self.dyn.names, "dictionary is not the same")
         print(names)
 
     def test_set_names(self):
@@ -120,13 +116,12 @@ class TestDynamicPanel(TestCase):
         self.test__init__(Tk, self.matrix )
 
         # load image
-        images_path = os.path.abspath( os.path.join( os.pardir, 'Resources', 'images' ) )
-        image_file = os.path.join( images_path, '301-F.jpg' )
-        self.image_test = Image.open( image_file )
+        images_path = os.path.abspath(os.path.join( os.pardir, 'Resources', 'images'))
+        image_file = os.path.join(images_path, '301-F.jpg')
+        self.image_test = Image.open(image_file)
 
         self.dyn.show_image(self.image_test, 1, 1)
         self.dyn.update()
-
 
     def test_matrix_to_pillow(self):
         self.fail()
