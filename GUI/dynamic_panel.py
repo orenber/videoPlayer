@@ -142,7 +142,7 @@ class DynamicPanel(ttk.Frame):
             col_num = len(cell[key])
 
             if key in signals:
-
+                self.la
                 self.add_section(key,index)
 
             else:
@@ -171,6 +171,8 @@ class DynamicPanel(ttk.Frame):
         self.label_image[-1].pack(fill=BOTH, expand=True, padx=3, pady=3)
         self.canvas_image[-1].pack(fill=BOTH, expand=True)
         self.active_parent.add(self.canvas_image[len(self.canvas_image) - 1], stretch="always")
+        self.sct[index].append(index)
+
 
     def _focus_label(self, event):
         self.update_default_panel()
