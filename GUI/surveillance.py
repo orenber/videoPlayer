@@ -5,6 +5,7 @@ from GUI.frameImg import FrameImg
 from GUI.dynamic_panel import DynamicPanel
 from GUI.training import Trainer
 
+
 import numpy as np
 import cv2
 from tkinter import *
@@ -14,6 +15,7 @@ from tkinter import ttk
 from tkinter.simpledialog import askstring
 
 from Utility.file_location import *
+from Utility.text_to_spech import TextToSpeech
 from Utility.logger_setup import setup_logger
 from Utility.color_names import COLOR
 from skimage import morphology
@@ -42,6 +44,9 @@ class Surveillance(VideoPlayer):
         self.pri_frame = FrameImg(np.zeros(self.STD_DIMS.get('0.3MP'), float))
         self.face = [{'detect': False, 'pos_label': (None, None), 'ROI': {'x': [None, None], 'y': [None, None]}}]
         self.faces_names = []
+        self._last_id = None
+        self._event_count = 0
+        self._threshold_event = 150
 
         # segment path
         path = os.path.dirname(cv2.__file__)
@@ -51,6 +56,28 @@ class Surveillance(VideoPlayer):
         # cascade classifier
         self.face_cascade = cv2.CascadeClassifier(face_frontal)
         self.profile_cascade = cv2.CascadeClassifier(face_profile)
+        self.speak = TextToSpeech()
+
+    def call_event_counter(self, trigger_id:int=123):
+
+        if self._last_id == trigger_id:
+            self._event_count += 1
+
+        else:
+            # restart counter
+            self._event_count -= 1
+
+        if self._threshold_event < self._event_count:
+            # restart counter
+            self._event_count = 0
+            # call event
+            name = self.faces_names[trigger_id]
+            self.speak.greeting(name)
+            self.speak.ask()
+            self.speak.run()
+
+        # remember the last id
+        self._last_id = trigger_id
 
     def _build_widget(self, parent: ttk.Frame = None, setup: dict = dict):
 
@@ -178,7 +205,6 @@ class Surveillance(VideoPlayer):
             self.set_gray_image = True
             self.button_mask_detection.config(bg='black', relief='raised')
             self.log.info("Mask detection is Off")
-
 
     def _button_movement_detection_view(self):
 
@@ -378,6 +404,7 @@ class Surveillance(VideoPlayer):
                             cv2.FONT_HERSHEY_SIMPLEX, 1, COLOR['white'], 2, cv2.LINE_AA)
                 # draw rectangle around the faces
                 cv2.rectangle(self.frame.image, points_start, points_end, COLOR['blue'], 2)
+                self.call_event_counter(id_)
 
     def mask_detection(self, rgb_image:np.array):
 
