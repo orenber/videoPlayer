@@ -6,5 +6,5 @@ voices = engine.getProperty('voices')
 for voice in voices:
     engine.setProperty('voice', voice.id)
     engine.say("Hello Oren, welcome back!..")
-    engine.say("Please, put your mask on !")
+    engine.say("Please, put your mask on .., You have 20 seconds to comply....")
 engine.runAndWait()
