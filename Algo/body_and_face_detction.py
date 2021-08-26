@@ -4,8 +4,6 @@ import time
 import numpy as np
 import multiprocessing
 
-
-
 # segment path
 
 path = os.path.dirname(cv2.__file__)
@@ -21,14 +19,13 @@ cap = cv2.VideoCapture(0)
 # cap = cv2.VideoCapture('filename.mp4')
 color_image = np.zeros((480,640,3),  dtype=np.double)
 
-def body_detection(gray_image,color_image):
+def body_detection( gray_image, color_image):
     body = body_cascade.detectMultiScale(gray_image , 1.1 , 2)
     for (x , y, w , h) in body:
         cv2.rectangle(color_image , (x , y) , (x+w , y + h) , (0 , 255 , 255) , 2)
 
 
-
-def face_detection(gray_image,color_image):
+def face_detection(gray_image, color_image):
     # Detect the faces
     faces = face_cascade.detectMultiScale(gray_image, 1.1, 4)
     # Draw the rectangle around each face
@@ -39,9 +36,6 @@ def face_detection(gray_image,color_image):
 # pass in thread function 
 algo_thread  = []
 
-
-
- 
 
 while True:
     # Read the frame
