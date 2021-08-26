@@ -34,6 +34,7 @@ class Surveillance(VideoPlayer):
         self.algo_stack = []
         self.frame_take = 0
         self.frame_number = 0
+        self.set_gray_image = True
 
         self._file_name_record = "movement_detect"
         self._output_path_record = full_file(['Resources', 'Record', self._file_name_record])
@@ -41,6 +42,7 @@ class Surveillance(VideoPlayer):
         self.pri_frame = FrameImg(np.zeros(self.STD_DIMS.get('0.3MP'), float))
         self.face = [{'detect': False, 'pos_label': (None, None), 'ROI': {'x': [None, None], 'y': [None, None]}}]
         self.faces_names = []
+
         # segment path
         path = os.path.dirname(cv2.__file__)
         face_frontal = os.path.join(path, 'data', 'haarcascade_frontalface_default.xml')
@@ -109,7 +111,7 @@ class Surveillance(VideoPlayer):
         button_movement_detection_tooltip = Pmw.Balloon( self.control_frame )
         button_movement_detection_tooltip.bind( self.button_movement_detection, "Movement  detection")
 
-        # load image button_load_image
+        # load image button_face_detect
         self.icon_face_detect = PhotoImage(file=os.path.join(self.icons_path, 'face_detection.PNG'))
         self.button_face_detection = Button(self.control_frame,
                                             padx=10, pady=10, bd=8,
@@ -125,7 +127,7 @@ class Surveillance(VideoPlayer):
         button_face_detection_tooltip = Pmw.Balloon(self.control_frame)
         button_face_detection_tooltip.bind(self.button_face_detection, "Face detection")
 
-        # load image button button_load_image
+        # load image button button_ace_recognition
         self.icon_face_recognition = PhotoImage(file=os.path.join(self.icons_path, 'face_recognition.PNG'))
         self.button_face_recognition = Button(self.control_frame,
                                               padx=10, pady=10, bd=8,
@@ -141,9 +143,42 @@ class Surveillance(VideoPlayer):
         button_face_recognition_tooltip = Pmw.Balloon(self.control_frame)
         button_face_recognition_tooltip.bind(self.button_face_recognition, "Face recognition")
 
+        # load image button button_ace_recognition
+        self.icon_mask_detection = PhotoImage(file=os.path.join(self.icons_path, 'mask.PNG'))
+        self.button_mask_detection = Button(self.control_frame,
+                                            padx=10, pady=10, bd=8,
+                                            fg="white",
+                                            font=('arial', 12, 'bold'),
+                                            text="body", bg="black",
+                                            image=self.icon_mask_detection,
+                                            height=self.icon_height,
+                                            width=self.icon_width,
+                                            name='button_mask_detection',
+                                            command=lambda: self._button_mask_detection_view())
+        self.button_mask_detection.pack(side='left')
+        button_mask_detection_tooltip = Pmw.Balloon(self.control_frame)
+        button_mask_detection_tooltip.bind(self.button_mask_detection, "Mask detection")
+
     def _focus_label(self):
 
         self.board = self.dynamic_panel.current_label_image
+
+    def _button_mask_detection_view(self):
+
+        if self.button_mask_detection.cget('relief') == 'raised':
+
+            self.set_gray_image = False
+            self.algo_list(True, self.mask_detection)
+            self.button_mask_detection.config(bg='white', relief='sunken')
+            self.log.info("Mask detection is On")
+
+        elif self.button_mask_detection.cget('relief') == 'sunken':
+
+            self.algo_list(False, self.mask_detection)
+            self.set_gray_image = True
+            self.button_mask_detection.config(bg='black', relief='raised')
+            self.log.info("Mask detection is Off")
+
 
     def _button_movement_detection_view(self):
 
@@ -262,11 +297,12 @@ class Surveillance(VideoPlayer):
 
                         if algo_nums:
 
-                            # convert two images to gray scale
-                            gray_image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+                            if self.set_gray_image:
+                                # convert two images to gray scale
+                                image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
 
                             for n in range(0, algo_nums):
-                                algo_list[n](gray_image)
+                                algo_list[n](image)
 
                         # self.face_detection(frame_gray)
                         # convert matrix image to pillow image object
@@ -342,6 +378,34 @@ class Surveillance(VideoPlayer):
                             cv2.FONT_HERSHEY_SIMPLEX, 1, COLOR['white'], 2, cv2.LINE_AA)
                 # draw rectangle around the faces
                 cv2.rectangle(self.frame.image, points_start, points_end, COLOR['blue'], 2)
+
+    def mask_detection(self, rgb_image:np.array):
+
+        # detect faces in the frame and determine if they are wearing a
+        # face mask or not
+        (locs, preds) = self.trainer.mask_detector.detect_and_predict_mask(rgb_image)
+
+        # loop over the detected face locations and their corresponding
+        # locations
+        for (box, pred) in zip(locs, preds ):
+
+            # unpack the bounding box and predictions
+            (startX, startY, endX, endY) = box
+            (mask, withoutMask) = pred
+
+            # determine the class label and color we'll use to draw
+            # the bounding box and text
+            label = "Mask" if mask > withoutMask else "No Mask"
+            color = (0, 255, 0) if label == "Mask" else (0, 0, 255)
+
+            # include the probability in the label
+            label = "{}: {:.2f}%".format( label, max( mask, withoutMask ) * 100 )
+
+            # display the label and bounding box rectangle on the output
+            # frame
+            cv2.putText(self.frame.image, label, (startX, startY - 10),
+                      cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2 )
+            cv2.rectangle(self.frame.image, (startX, startY), (endX, endY), color, 2 )
 
     def record_movement(self, frame: np.array, image_noise_movement: np.array):
 

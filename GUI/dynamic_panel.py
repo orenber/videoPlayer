@@ -100,9 +100,9 @@ class DynamicPanel(ttk.Frame):
 
     def _build_widget(self, parent=Tk, matrix: dict = {"row": [{"ncol": [1, 1]}]}):
 
-        self.main_frame = ttk.Frame(parent, name ="main_frame_parent")
+        self.main_frame = ttk.Frame(parent, name="main_frame_parent")
 
-        self.main_frame.pack( fill=BOTH, expand=1 )
+        self.main_frame.pack(fill=BOTH, expand=1)
 
         self._update_widget(self.main_frame, matrix)
 
@@ -120,8 +120,6 @@ class DynamicPanel(ttk.Frame):
 
         except Exception as error:
             print(error)
-
-
 
     @staticmethod
     def delete_widget_children(parent):
@@ -167,7 +165,7 @@ class DynamicPanel(ttk.Frame):
             for cell_index in range(0, col_num):
                 self.add_cell(index)
 
-        if len(self.label_image ) > 0:
+        if len(self.label_image) > 0:
             self.current_label_image = self.label_image[0]
 
     def add_section(self, key: str = "no_row", index: int = -1):
@@ -203,7 +201,7 @@ class DynamicPanel(ttk.Frame):
         [cav.config(highlightthickness=0, highlightbackground="black") for cav in self.canvas_image]
         pass
 
-    def update_image(self, image: np.array, part:int = 0, cell_index: int = 0):
+    def update_image(self, image: np.array, part: int = 0, cell_index: int = 0):
 
         image_pillow = self.matrix_to_pillow(image)
         self.show_image(image_pillow, part, cell_index)

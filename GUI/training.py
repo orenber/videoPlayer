@@ -10,6 +10,7 @@ from PIL import Image
 import numpy as np
 import pickle
 import Pmw
+from Algo.detect_mask_video import MaskDetection
 
 
 class Trainer(ttk.Frame):
@@ -22,8 +23,8 @@ class Trainer(ttk.Frame):
         self.path = os.path.dirname(cv2.__file__)
         self.face_frontal_path = os.path.join(self.path, 'data', 'haarcascade_frontalface_default.xml' )
         self.face_cascade = cv2.CascadeClassifier(self.face_frontal_path)
+        self._path_images = full_file( ["Resources", "images", "faces"] )
 
-        self._path_images = full_file(["Resources", "images", "faces"])
         self.current_id = 0
         self.label_ids = {}
         self.ids_label ={}
@@ -37,7 +38,12 @@ class Trainer(ttk.Frame):
         self._image_size = (200, 200)
 
         self._cap = cv2.VideoCapture()
-        self.build_widget(parent)
+        try:
+            self.mask_detector = MaskDetection()
+        except Exception as error:
+            self.log.exception(error)
+        finally:
+            self.build_widget(parent)
 
     @property
     def training(self) -> bool:
@@ -108,7 +114,20 @@ class Trainer(ttk.Frame):
                                                command=lambda: self.face_recognition())
         self._button_face_recognition.pack(side=TOP)
         button_face_recognition_tooltip = Pmw.Balloon(self._frame_control)
-        button_face_recognition_tooltip.bind(self._button_face_recognition, "Run Live Video face recognition")
+        button_face_recognition_tooltip.bind(self._button_face_recognition, "Run live video face recognition")
+
+
+        # button mask live detection
+        self._icon_mask = PhotoImage(file=os.path.join(self._icons_path, 'mask.PNG'))
+        self._button_mask_video = Button(self._frame_control,
+                                         text="Mask Video",
+                                         image=self._icon_mask,
+                                         command=lambda: self.mask_detector_live_camera())
+        self._button_mask_video.pack(side=TOP)
+
+        button_mask_video_tooltip = Pmw.Balloon(self._frame_control)
+        button_mask_video_tooltip.bind(self._button_mask_video, "Run face mask detection live video")
+
 
         # button stop live video
         # icon open images folders
@@ -142,7 +161,8 @@ class Trainer(ttk.Frame):
                                            command=self._canvas.xview)
         self._scroll_bar_x.pack(side=TOP, fill=X, expand=0)
         scroll_bar_x_tooltip = Pmw.Balloon(self._frame_control_x)
-        scroll_bar_x_tooltip.bind(self._scroll_bar_x, "Scroll images in x direction" )
+        scroll_bar_x_tooltip.bind(self._scroll_bar_x, "Scroll images in x direction")
+
 
         # Configure the canvas
         self._canvas.configure(yscrollcommand=self._scroll_bar_y,
@@ -199,8 +219,6 @@ class Trainer(ttk.Frame):
             matrix['col'].append({'row': [col_count] * rows} )
 
         return matrix
-
-
 
     def open_folders(self):
 
@@ -349,6 +367,10 @@ class Trainer(ttk.Frame):
 
         self._cap.release()
         cv2.destroyAllWindows()
+
+    def mask_detector_live_camera(self):
+
+        self.mask_detector.run_live_mask_detection()
 
     def stop_video(self):
 
