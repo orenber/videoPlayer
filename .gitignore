@@ -2,9 +2,8 @@
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
-*.log
-*.AVI
-*.png
+
+
 /.idea/VideoPlayer.iml
 /.idea/misc.xml
 /.idea/modules.xml

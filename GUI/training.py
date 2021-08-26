@@ -1,6 +1,6 @@
 import os
 
-from GUI.dynamic_panel import DynamicPanel
+from dynamic_panel import DynamicPanel
 from tkinter import *
 from tkinter import ttk, filedialog
 from Utility.file_location import *
@@ -10,7 +10,11 @@ from PIL import Image
 import numpy as np
 import pickle
 import Pmw
-from Algo.detect_mask_video import MaskDetection
+
+try:
+    from Algo.detect_mask_video import MaskDetection
+except Exception as error:
+    print(error)
 
 
 class Trainer(ttk.Frame):

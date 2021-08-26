@@ -22,7 +22,7 @@ class MaskDetection:
         mask_detector_model_path = full_file(["Resources", "face_detector", "mask_detector.model"])
         self.maskNet = load_model(mask_detector_model_path)
 
-    def detect_and_predict_mask(self, frame:np.ndarray):
+    def detect_and_predict_mask(self, frame: np.ndarray):
         # grab the dimensions of the frame and then construct a blob
         # from it
         (h, w) = frame.shape[:2]
@@ -88,10 +88,10 @@ class MaskDetection:
         # initialize the video stream
         print("[INFO] starting video stream...")
 
-        self.vs = VideoStream( src=0 ).start()
+        vs = VideoStream(src=0).start()
 
         # loop over the frames from the video stream
-        while self.vs.stream:
+        while True:
             # grab the frame from the threaded video stream and resize it
             # to have a maximum width of 400 pixels
             frame = self.vs.read()
@@ -131,15 +131,14 @@ class MaskDetection:
 
         # do a bit of cleanup
         cv2.destroyAllWindows()
-        self.vs.stop()
+        vs.stop()
 
-
-    def show_image(self,frame):
+    @staticmethod
+    def show_image(frame):
         # show the output frame
-        cv2.imshow("Frame", frame )
+        cv2.imshow("Frame", frame)
 
 
-        
 def main():
     mask = MaskDetection()
     mask.run_live_mask_detection()
