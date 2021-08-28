@@ -86,6 +86,12 @@ class Surveillance(VideoPlayer):
         self.master.geometry("950x720+0+0")
         self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
 
+        # Title bar Title
+        self.master.title("SurveillanceCamera")
+        # Title Bar Icon
+        self.icons_path = full_file( ["Icons","webcamera.ico" ])
+        self.master.iconbitmap( self.icons_path)
+
         notebook = ttk.Notebook(self.master)
         notebook.pack(fill=BOTH, expand=True)
 
