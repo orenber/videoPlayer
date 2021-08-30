@@ -14,8 +14,6 @@ class TestVideoPlayer( TestCase ):
     def test__init__(self, **atr):
         self.vid = VideoPlayer( **atr )
         self.vid.update()
-        sleep( 1 )
-
         return
 
     def setUp(self):
@@ -229,6 +227,7 @@ class TestVideoPlayer( TestCase ):
     def test_load_image(self):
         self.test__init__( image=True, play=False, stop=False, pause=False )
         self.vid.load_image(self.image_file)
+        self.vid.update()
 
         pass
 

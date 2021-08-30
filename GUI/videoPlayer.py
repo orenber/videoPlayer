@@ -28,12 +28,14 @@ class VideoPlayer(ttk.Frame):
                 "0.9MP":  (1280, 720)
     }
 
-    def __init__(self, parent: ttk.Frame = None, **prop: tuple):
+    def __init__(self, parent: ttk.Frame = None, **kwargs: tuple):
 
         # create logger
         self.log = setup_logger('Video Player')
 
-        self.setup = self.set_setup(prop)
+
+
+        self.setup = self.set_setup(kwargs)
 
         ttk.Frame.__init__(self, parent)
 
@@ -465,17 +467,18 @@ class VideoPlayer(ttk.Frame):
         except Exception as error:
             self.log.exception(error)
         finally:
+            self.log.info("release video")
             self._cap.release()
             self._out.release()
             self.record = False
             cv2.destroyAllWindows()
             self._button_view_off()
 
-    def load_movie(self,movie_filename:str=''):
+    def load_movie(self,movie_filename: str=''):
         if not self.play:
 
             self.button_play_video.config(relief='sunken')
-            if len( movie_filename ) == 0:
+            if len(movie_filename) == 0:
                 movie_filename = filedialog.askopenfilename(initialdir=self.__initial_dir_movie,
                                                             title="Select the movie to play",
                                                             filetypes=(("AVI files", "*.AVI"),
@@ -567,7 +570,7 @@ class VideoPlayer(ttk.Frame):
             self.log.exception(error)
 
     def load_image(self,file_name:str=""):
-        if len( file_name ) == 0:
+        if len(file_name) == 0:
             file_name = filedialog.askopenfilename(initialdir=self.__initial_dir, title="Select the RGB image",
                                                    filetypes=(("jpeg files", "*.jpg"), ("all files", "*.*")))
 

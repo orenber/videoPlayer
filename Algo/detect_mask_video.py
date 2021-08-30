@@ -31,7 +31,6 @@ class MaskDetection:
         # pass the blob through the network and obtain the face detections
         self.faceNet.setInput(blob)
         detections = self.faceNet.forward()
-        print(detections.shape)
 
         # initialize our list of faces, their corresponding locations,
         # and the list of predictions from our face mask network
