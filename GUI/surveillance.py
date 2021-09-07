@@ -177,7 +177,7 @@ class Surveillance(VideoPlayer):
         self.button_face_recognition.pack(side='left')
         button_face_recognition_tooltip = Pmw.Balloon(self.control_frame)
         button_face_recognition_tooltip.bind(self.button_face_recognition, "Face recognition")
-        self.button_face_recognition["state"] = "disabled"
+        #self.button_face_recognition["state"] = "disabled"
 
         # load image button button_ace_recognition
         self.icon_mask_detection = PhotoImage(file=os.path.join(self.icons_path, 'mask.PNG'))

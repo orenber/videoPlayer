@@ -5,6 +5,7 @@ from tkinter import *
 from tkinter import ttk, filedialog
 from Utility.file_location import *
 from Utility.logger_setup import setup_logger
+from Utility.color_names import COLOR
 import cv2
 from PIL import Image
 import numpy as np
@@ -238,6 +239,11 @@ class Trainer(ttk.Frame):
             self.training = False
             self._button_train.config(bg='white', relief=RAISED)
 
+
+
+
+
+
     def show_images(self, label_images: dict):
 
         # get label n        um
@@ -371,56 +377,72 @@ class Trainer(ttk.Frame):
             labels = {v: k for k, v in og_labels.items()}
         return labels
 
-    def face_recognition(self):
+    def face_recognition(self, gray_image: np.array):
 
-        # segment cv2 path
-        stroke = 2
-        color = (255, 255, 255)
 
-        labels = self.load_labels()
+        # detect faces in the image
+        faces = self.face_cascade.detectMultiScale(gray_image, scaleFactor=1.5, minNeighbors=5)
+        # go over all the face and plot the rectangle around
+        for (x, y, w, h) in faces:
 
-        self._cap = cv2.VideoCapture(0)
+            # detect ROI face
+            roi_gray = gray_image[y:y + h, x:x + w]
 
-        while self._cap.isOpened():
+            # recognizer deep learned model predict keras tensorflow pytorch scikit learn
+            id_, conf = self.recognizer.predict(roi_gray)
 
-            # capture frame by frame
-            ret, frame = self._cap.read()
-            # convert BGR image to gray
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            # detect faces in the image
-            faces = self.face_cascade.detectMultiScale(gray, scaleFactor=1.5, minNeighbors=5)
-            # go over all the face and plot the rectangle around
-            for (x, y, w, h) in faces:
+            if conf >= self._confident:
+                name = self.faces_names[id_]
+                if self._training:
+                    self.crop_faces(roi_gray)
+                    self.save_roi_faces(roi_gray)
 
-                # detect ROI face
-                roi_gray = gray[y:y + h, x:x + w]
-
-                # recognizer deep learned model predict keras tensorflow pytorch scikit learn
-                id_, conf = self.recognizer.predict(roi_gray)
-
-                if conf >= self._confident:
-                    name = labels[id_]
-                    cv2.putText(frame, name, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), stroke, cv2.LINE_AA)
-                    if self._training:
-                        self.crop_faces(roi_gray)
-                        self.save_roi_faces(roi_gray)
-
-                    # take the roi corrdinet x and y
-                    points_start = (x, y)
-                    points_end = (x + w, y + h)
-                    # draw rectangle around the faces
-                    cv2.rectangle(frame, points_start, points_end, (255, 0, 0), 1 )
+                # take the roi corrdinet x and y
+                points_start = (x, y)
+                points_end = (x + w, y + h)
+                cv2.putText( self.frame.image, name, points_start,
+                             cv2.FONT_HERSHEY_SIMPLEX, 1, COLOR['white'], 2, cv2.LINE_AA )
+                # draw rectangle around the faces
+                cv2.rectangle( self.frame.image, points_start, points_end, COLOR['blue'], 2 )
+                self.call_event_counter( id_ )
 
             # display image and plot
-            cv2.imshow( 'frame', frame )
+            cv2.imshow( 'frame',  self.frame.image )
             # press quite to Exit the loop
             if cv2.waitKey(20) & 0xFF == ord( 'q' ):
-                break
+               break
 
         # when everything done , realse the capture
 
         self._cap.release()
         cv2.destroyAllWindows()
+
+    def mask_detection(self, rgb_image: np.array):
+
+        # detect faces in the frame and determine if they are wearing a
+        # face mask or not
+        (locs, preds) = self.mask_detector.detect_and_predict_mask(rgb_image)
+
+        # loop over the detected face locations and their corresponding
+        # locations
+        for (box, pred) in zip(locs, preds):
+
+            # unpack the bounding box and predictions
+            (startX, startY, endX, endY) = box
+            (mask, withoutMask) = pred
+
+            # determine the class label and color we'll use to draw
+            # the bounding box and text
+            label = "Mask" if mask > withoutMask else "No Mask"
+            color = (0, 255, 0) if label == "Mask" else (0, 0, 255)
+
+            # include the probability in the label
+            label = "{}: {:.2f}%".format(label, max( mask, withoutMask ) * 100)
+
+            # display the label and bounding box rectangle on the output
+            # frame
+            cv2.putText(self.frame.image, label, (startX, startY - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2)
+            cv2.rectangle(self.frame.image, (startX, startY), (endX, endY), color, 2)
 
     def load_movie(self,movie_filename: str=''):
 
@@ -492,7 +514,7 @@ class Trainer(ttk.Frame):
 
                         # take the image and sand it to the list of function to analyze process
                         algo_list = self.algo_stack
-                        algo_nums = len( algo_list )
+                        algo_nums = len(algo_list)
 
                         if algo_nums:
 
@@ -522,11 +544,6 @@ class Trainer(ttk.Frame):
             self._cap.release()
             self._out.release()
             cv2.destroyAllWindows()
-
-
-    def mask_detector_live_camera(self):
-
-        self.mask_detector.run_live_mask_detection()
 
     def stop_video(self):
 
