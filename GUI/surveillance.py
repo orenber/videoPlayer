@@ -46,7 +46,7 @@ class Surveillance(VideoPlayer):
         self.faces_names = []
         self._last_id = None
         self._event_count = 0
-        self._threshold_event = 150
+        self._threshold_event = 120
 
         # segment path
         path = os.path.dirname(cv2.__file__)

@@ -21,12 +21,10 @@ class TestVideoPlayer(TestCase):
         return
 
     def setUp(self):
-        images_path = os.path.abspath(os.path.join(os.pardir, 'Resources', 'images'))
-        image_file = os.path.join(images_path, '301-F.jpg')
+        image_file = full_file('301-F.jpg')
         self.image_test = Image.open(image_file)
+        movie_file = full_file('carplate30.mp4','movies')
 
-        movie_path = os.path.abspath(os.path.join(os.pardir, 'Resources', 'movies'))
-        movie_file = os.path.join(movie_path, 'carplate30.mp4')
         self.move_test = movie_file
 
     def test_image_size_camera(self):
@@ -56,8 +54,7 @@ class TestVideoPlayer(TestCase):
         self.assertTrue(self.vid.record)
 
         # play record
-        movie_path = os.path.abspath(os.path.join(os.pardir, 'Test Function'))
-        recorded_file = os.path.join(movie_path, 'output.avi')
+        recorded_file = full_file('output.avi','Record')
         self.vid.play_movie(recorded_file)
 
         pass
@@ -136,16 +133,20 @@ class TestVideoPlayer(TestCase):
         self.test__init__(play=True, stop=True)
         self.assertRaises( tkinter.TclError, lambda: self.vid.play_movie(self.move_test))
         self.vid.button_stop_video.after(15000, self.vid.stop_player)
-
-
         pass
 
     def test_camera_recording(self):
-        self.test__init__(play=True, stop=True, record=True)
-        self.button.re
-        # open file
-        self.assertRaises(tkinter.TclError, lambda: self.vid.play_movie(self.move_test))
-        self.assertRaises(tkinter.TclError, lambda: self.vid._record_view())
+
+        self.test__init__(play=True, stop=True, camera=True, record=True)
+        # record
+        self.vid.button_record.after(5000, self.vid._record_view)
+
+        # camera recording
+        file_test = full_file("test_camera_recording_video")
+        self.vid.camera_recording(file_test)
+
+        # check the file record
+        self.vid.play_movie(file_test)
 
     def test_save_frame(self):
 
@@ -189,6 +190,11 @@ class TestVideoPlayer(TestCase):
     def close_window(self):
         print('destroy')
         self.vid.destroy()
+
+def full_file(file:str, folder:str = 'images')->str:
+    images_path = os.path.abspath(os.path.join(os.pardir, 'Resources', folder))
+    file_path = os.path.join(images_path, file)
+    return file_path
 
 
 
