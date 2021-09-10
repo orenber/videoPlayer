@@ -1,5 +1,5 @@
 import logging
-
+from GUI.splash_screen import Splash
 from GUI.videoPlayer import VideoPlayer
 from GUI.frameImg import FrameImg
 from GUI.dynamic_panel import DynamicPanel
@@ -9,7 +9,6 @@ from GUI.training import Trainer
 import numpy as np
 import cv2
 from tkinter import *
-from tkinter.tix import *
 from tkinter import ttk
 
 from tkinter.simpledialog import askstring
@@ -21,7 +20,6 @@ from Utility.color_names import COLOR
 from skimage import morphology
 import Pmw
 
-
 class Surveillance(VideoPlayer):
 
     FILE_TYPE = {".AVI", 0,
@@ -30,6 +28,7 @@ class Surveillance(VideoPlayer):
     def __init__(self):
 
         self.log = setup_logger("Surveillance Camera")
+
 
         super().__init__(image=True, play=True, camera=True, record=True)
 
@@ -58,6 +57,7 @@ class Surveillance(VideoPlayer):
         self.profile_cascade = cv2.CascadeClassifier(face_profile)
         self.speak = TextToSpeech()
 
+
     def call_event_counter(self, trigger_id:int=123):
 
         if self._last_id == trigger_id:
@@ -81,10 +81,18 @@ class Surveillance(VideoPlayer):
 
     def _build_widget(self, parent: ttk.Frame = None, setup: dict = dict):
 
+
         self.log.info("start build widget")
 
         self.master.geometry("950x720+0+0")
         self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+        # Title bar Title
+        self.master.title("SurveillanceCamera")
+        # Title Bar Icon
+        self.icons_path = full_file( ["Icons","webcamera.ico" ])
+        self.master.iconbitmap( self.icons_path)
+
 
         notebook = ttk.Notebook(self.master)
         notebook.pack(fill=BOTH, expand=True)
@@ -169,6 +177,7 @@ class Surveillance(VideoPlayer):
         self.button_face_recognition.pack(side='left')
         button_face_recognition_tooltip = Pmw.Balloon(self.control_frame)
         button_face_recognition_tooltip.bind(self.button_face_recognition, "Face recognition")
+        #self.button_face_recognition["state"] = "disabled"
 
         # load image button button_ace_recognition
         self.icon_mask_detection = PhotoImage(file=os.path.join(self.icons_path, 'mask.PNG'))
@@ -185,6 +194,7 @@ class Surveillance(VideoPlayer):
         self.button_mask_detection.pack(side='left')
         button_mask_detection_tooltip = Pmw.Balloon(self.control_frame)
         button_mask_detection_tooltip.bind(self.button_mask_detection, "Mask detection")
+
 
     def _focus_label(self):
 
@@ -406,7 +416,7 @@ class Surveillance(VideoPlayer):
                 cv2.rectangle(self.frame.image, points_start, points_end, COLOR['blue'], 2)
                 self.call_event_counter(id_)
 
-    def mask_detection(self, rgb_image:np.array):
+    def mask_detection(self, rgb_image: np.array):
 
         # detect faces in the frame and determine if they are wearing a
         # face mask or not
@@ -414,7 +424,7 @@ class Surveillance(VideoPlayer):
 
         # loop over the detected face locations and their corresponding
         # locations
-        for (box, pred) in zip(locs, preds ):
+        for (box, pred) in zip(locs, preds):
 
             # unpack the bounding box and predictions
             (startX, startY, endX, endY) = box
@@ -426,13 +436,12 @@ class Surveillance(VideoPlayer):
             color = (0, 255, 0) if label == "Mask" else (0, 0, 255)
 
             # include the probability in the label
-            label = "{}: {:.2f}%".format( label, max( mask, withoutMask ) * 100 )
+            label = "{}: {:.2f}%".format(label, max( mask, withoutMask ) * 100)
 
             # display the label and bounding box rectangle on the output
             # frame
-            cv2.putText(self.frame.image, label, (startX, startY - 10),
-                      cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2 )
-            cv2.rectangle(self.frame.image, (startX, startY), (endX, endY), color, 2 )
+            cv2.putText(self.frame.image, label, (startX, startY - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2)
+            cv2.rectangle(self.frame.image, (startX, startY), (endX, endY), color, 2)
 
     def record_movement(self, frame: np.array, image_noise_movement: np.array):
 
