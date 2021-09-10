@@ -100,7 +100,7 @@ class Trainer(ttk.Frame):
         self._main_frame.pack(fill=BOTH, expand=1)
 
         # control Frame
-        self._frame_control = Frame(self._main_frame, bg="gray70",width=100)
+        self._frame_control = Frame(self._main_frame, bg="gray70", width=100)
         self._frame_control.pack(side=RIGHT, fill=Y, expand=0)
 
         self._frame_control_x = Frame( self._main_frame, bg="gray70")
@@ -139,7 +139,7 @@ class Trainer(ttk.Frame):
         self._button_face_recognition = Button(self._frame_control,
                                                text="Run Test",
                                                image=self._icon_facial_recognition,
-                                               command=lambda: self.face_recognition())
+                                               command=lambda: self._view_button_face_recognition)
         self._button_face_recognition.pack(side=TOP)
         self._button_face_recognition["state"] = "disabled"
         button_face_recognition_tooltip = Pmw.Balloon(self._frame_control)
@@ -148,14 +148,14 @@ class Trainer(ttk.Frame):
 
         # button mask live detection
         self._icon_mask = PhotoImage(file=os.path.join(self._icons_path, 'mask.PNG'))
-        self._button_mask_video = Button(self._frame_control,
+        self._button_mask_detection = Button(self._frame_control,
                                          text="Mask Video",
                                          image=self._icon_mask,
-                                         command=lambda: self.mask_detector_live_camera())
-        self._button_mask_video.pack(side=TOP)
+                                         command=lambda: self._view_button_mask_detection)
+        self._button_mask_detection.pack(side=TOP)
 
         button_mask_video_tooltip = Pmw.Balloon(self._frame_control)
-        button_mask_video_tooltip.bind(self._button_mask_video, "Run face mask detection live video")
+        button_mask_video_tooltip.bind(self._button_mask_detection, "Run face mask detection live video")
 
 
         if self.setup['play']:
@@ -230,16 +230,38 @@ class Trainer(ttk.Frame):
             elif algo in self.algo_stack:
                 self.algo_stack.remove(algo)
 
-
     def _view_train_face_detection(self):
         if self._button_train.cget('relief') == 'raised':
             self.training = True
-            self._button_train.config(bg='black', relief=SUNKEN)
+            self._button_train.config( relief=SUNKEN)
         elif self._button_train.cget('relief') == SUNKEN:
             self.training = False
-            self._button_train.config(bg='white', relief=RAISED)
+            self._button_train.config( relief=RAISED)
 
+    def _view_button_face_recognition(self):
+        if self._button_face_recognition.cget('relief') == RAISED:
+            self.algo_list(True, self.face_recognition)
 
+            self._button_face_recognition.config(relief=SUNKEN)
+            self.log.info("Face recognition is on")
+
+        elif self._button_face_recognition.cget('relief') == SUNKEN:
+            self.algo_list(False, self.face_recognition)
+            self._button_face_recognition.config(relief=RAISED)
+            self.log.info("Face recognition is off")
+
+    def _view_button_mask_detection(self):
+        if self._button_mask_detection.cget('relief') == RAISED:
+            self.algo_list(True, self.mask_detection)
+
+            self._button_mask_detection.config(relief=SUNKEN)
+            self.log.info("Mask detection is on")
+
+        elif self._button_mask_detection.cget('relief') == SUNKEN:
+            self.algo_list(False, self.mask_detection)
+            self._button_mask_detection.config(relief=RAISED)
+            self.log.info("Mask detection is off")
+            
 
 
 
@@ -434,7 +456,7 @@ class Trainer(ttk.Frame):
             # determine the class label and color we'll use to draw
             # the bounding box and text
             label = "Mask" if mask > withoutMask else "No Mask"
-            color = (0, 255, 0) if label == "Mask" else (0, 0, 255)
+            color = COLOR["green"] if label == "Mask" else COLOR["red"]
 
             # include the probability in the label
             label = "{}: {:.2f}%".format(label, max( mask, withoutMask ) * 100)
@@ -462,16 +484,16 @@ class Trainer(ttk.Frame):
                 self.log.exception(error)
 
             finally:
-                self.button_play_video.config(bg='black', relief='raised')
+                self.button_play_video.config( relief='raised')
         else:
             self.log.info('Cancel load movie ')
-            self.button_play_video.config(bg='black', relief='raised')
+            self.button_play_video.config(relief='raised')
 
     def _camera_view(self):
 
-        self.button_camera.config(bg='white', relief='sunken')
+        self.button_camera.config( relief='sunken')
         self.camera_capture()
-        self.button_camera.config(bg='black', relief='raised')
+        self.button_camera.config(relief='raised')
 
     def camera_capture(self):
 

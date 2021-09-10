@@ -29,7 +29,7 @@ class TestVideoPlayer( TestCase ):
         self.test__init__( play=True, camera=True, record=True )
         print(self.vid.frame_rate)
         self.vid.frame_rate = 30
-        self.assertEqual(self.vid.frame_rate,30,"frame rate did not change")
+        self.assertEqual(self.vid.frame_rate,30 ,"frame rate did not change")
 
     def test_file_name_record(self):
         self.test__init__( play=True, camera=True, record=True )
@@ -123,10 +123,10 @@ class TestVideoPlayer( TestCase ):
 
     def test__pause_view(self):
         self.test__init__( play=True, pause=True )
-        self.vid.button_pause_video.after( 1000, self.vid._pause_view )
-        self.vid.button_pause_video.after( 2000, self.vid._pause_view )
-        self.vid.button_pause_video.after( 3000, self.vid._pause_view )
-        self.vid.button_pause_video.after( 3500, self.vid._pause_view )
+        self.vid.button_pause_video.after(1000, self.vid._pause_view )
+        self.vid.button_pause_video.after(2000, self.vid._pause_view )
+        self.vid.button_pause_video.after(3000, self.vid._pause_view )
+        self.vid.button_pause_video.after(3500, self.vid._pause_view )
 
         # play video
         self.vid.play_movie( self.move_test )
