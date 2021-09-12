@@ -20,6 +20,7 @@ from Utility.color_names import COLOR
 from skimage import morphology
 import Pmw
 
+
 class Surveillance(VideoPlayer):
 
     FILE_TYPE = {".AVI", 0,

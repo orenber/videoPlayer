@@ -1,6 +1,7 @@
 import os
 
 from GUI.dynamic_panel import DynamicPanel
+from GUI.videoPlayer import VideoPlayer
 from tkinter import *
 from tkinter import ttk, filedialog
 from Utility.file_location import *
@@ -18,11 +19,12 @@ except Exception as error:
     print(error)
 
 
-class Trainer(ttk.Frame):
+class Trainer(VideoPlayer):
 
     def __init__(self, parent: ttk.Frame = None, **kwargs):
         self.log = setup_logger('Trainer')
         self.setup = self.set_setup(kwargs)
+        super().__init__(play=True, camera=True)
 
         ttk.Frame.__init__(self, parent)
 
@@ -31,12 +33,12 @@ class Trainer(ttk.Frame):
         self.face_frontal_path = os.path.join(self.path, 'data', 'haarcascade_frontalface_default.xml' )
         self.face_cascade = cv2.CascadeClassifier(self.face_frontal_path)
         self._path_images = full_file( ["Resources", "images", "faces"] )
-        self.__initial_dir = "/"
-        self.__initial_dir_movie = "/"
+
+        self.set_gray_image = True
 
         self.current_id = 0
         self.label_ids = {}
-        self.ids_label ={}
+        self.ids_label = {}
         self.y_labels = []
         self.x_train = []
         self.label_images = {}
@@ -47,19 +49,13 @@ class Trainer(ttk.Frame):
         self._training = False
         self._image_size = (200, 200)
 
-        self._camera_port = 0
-        self._cap = cv2.VideoCapture()
-        self._source = 0
-
-        self._out = cv2.VideoWriter()
-
-        self._cap = cv2.VideoCapture()
         try:
             self.mask_detector = MaskDetection()
         except Exception as error:
             self.log.exception(error)
         finally:
-            self.build_widget(parent)
+            # build widget
+            self._build_widget(parent,self.setup)
 
     @property
     def training(self) -> bool:
@@ -85,7 +81,7 @@ class Trainer(ttk.Frame):
         setup.update(prop)
         return setup
 
-    def build_widget(self, parent: ttk.Frame = None):
+    def _build_widget(self, parent: ttk.Frame = None, setup: dict = dict):
 
         if parent == None:
 
@@ -129,17 +125,13 @@ class Trainer(ttk.Frame):
         button_train_tooltip = Pmw.Balloon(self._frame_control)
         button_train_tooltip.bind(self._button_train, "Training data Mode")
 
-
-
-
-
         # botton run
         # icon open images folders
         self._icon_facial_recognition = PhotoImage(file=os.path.join(self._icons_path, 'face_recognition.PNG'))
         self._button_face_recognition = Button(self._frame_control,
                                                text="Run Test",
                                                image=self._icon_facial_recognition,
-                                               command=lambda: self._view_button_face_recognition)
+                                               command=lambda: self._view_button_face_recognition())
         self._button_face_recognition.pack(side=TOP)
         self._button_face_recognition["state"] = "disabled"
         button_face_recognition_tooltip = Pmw.Balloon(self._frame_control)
@@ -151,7 +143,7 @@ class Trainer(ttk.Frame):
         self._button_mask_detection = Button(self._frame_control,
                                          text="Mask Video",
                                          image=self._icon_mask,
-                                         command=lambda: self._view_button_mask_detection)
+                                         command=lambda: self._view_button_mask_detection())
         self._button_mask_detection.pack(side=TOP)
 
         button_mask_video_tooltip = Pmw.Balloon(self._frame_control)
@@ -240,6 +232,7 @@ class Trainer(ttk.Frame):
 
     def _view_button_face_recognition(self):
         if self._button_face_recognition.cget('relief') == RAISED:
+
             self.algo_list(True, self.face_recognition)
 
             self._button_face_recognition.config(relief=SUNKEN)
@@ -247,11 +240,13 @@ class Trainer(ttk.Frame):
 
         elif self._button_face_recognition.cget('relief') == SUNKEN:
             self.algo_list(False, self.face_recognition)
+
             self._button_face_recognition.config(relief=RAISED)
             self.log.info("Face recognition is off")
 
     def _view_button_mask_detection(self):
         if self._button_mask_detection.cget('relief') == RAISED:
+            self.set_gray_image = False
             self.algo_list(True, self.mask_detection)
 
             self._button_mask_detection.config(relief=SUNKEN)
@@ -259,12 +254,9 @@ class Trainer(ttk.Frame):
 
         elif self._button_mask_detection.cget('relief') == SUNKEN:
             self.algo_list(False, self.mask_detection)
+            self.set_gray_image = True
             self._button_mask_detection.config(relief=RAISED)
             self.log.info("Mask detection is off")
-            
-
-
-
 
     def show_images(self, label_images: dict):
 
@@ -378,18 +370,18 @@ class Trainer(ttk.Frame):
             self.recognizer.train(self.x_train, np.array(self.y_labels))
             self.recognizer.save("trainner.yml")
         except Exception as error:
-            print(error)
+            self.log.debug(error)
 
     def save_roi_faces(self, image: np.array, path: str=''):
 
         try:
-            # crop the region of intrest ( faces in the images)
+            # crop the region of interest ( faces in the images)
             folder_unknown = full_file([self._path_images, 'unknown'])
             create_folder_if_not_exist(folder_unknown)
             cv2.imwrite(file_date(os.path.join(folder_unknown, "unknown"), '.png'), image)
 
         except Exception as error:
-            print(error)
+            self.log.debug(error)
 
     @staticmethod
     def load_labels()->list:
@@ -400,7 +392,6 @@ class Trainer(ttk.Frame):
         return labels
 
     def face_recognition(self, gray_image: np.array):
-
 
         # detect faces in the image
         faces = self.face_cascade.detectMultiScale(gray_image, scaleFactor=1.5, minNeighbors=5)
@@ -466,7 +457,7 @@ class Trainer(ttk.Frame):
             cv2.putText(self.frame.image, label, (startX, startY - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2)
             cv2.rectangle(self.frame.image, (startX, startY), (endX, endY), color, 2)
 
-    def load_movie(self,movie_filename: str=''):
+    def load_movie(self, movie_filename: str = ''):
 
         self.button_play_video.config(relief='sunken')
         if len(movie_filename) == 0:
@@ -491,7 +482,7 @@ class Trainer(ttk.Frame):
 
     def _camera_view(self):
 
-        self.button_camera.config( relief='sunken')
+        self.button_camera.config(relief='sunken')
         self.camera_capture()
         self.button_camera.config(relief='raised')
 
@@ -500,7 +491,6 @@ class Trainer(ttk.Frame):
         self.log.info("Camera is on")
 
         self.run_frames()
-
 
     def play_movie(self, movie_filename: str):
 
@@ -519,9 +509,7 @@ class Trainer(ttk.Frame):
 
     def run_frames(self):
 
-        self.log.info( "run frame by frame" )
-        self.frame_number = 0
-        self.frame_take = 0
+        self.log.info("run frame by frame")
 
         try:
 
@@ -550,18 +538,17 @@ class Trainer(ttk.Frame):
                         # self.face_detection(frame_gray)
                         # convert matrix image to pillow image object
                         # display image and plot
-                        cv2.imshow( 'frame', image )
+                        cv2.imshow('frame', image)
                         # press quite to Exit the loop
-                        if cv2.waitKey( 20 ) & 0xFF == ord( 'q' ):
+                        if cv2.waitKey(20) & 0xFF == ord('q'):
                             break
-
 
                         # refresh image display
                     elif not ret:
                         break
 
         except Exception as error:
-            self.log.exception( error )
+            self.log.exception(error)
         finally:
             self._cap.release()
             self._out.release()

@@ -33,8 +33,6 @@ class VideoPlayer(ttk.Frame):
         # create logger
         self.log = setup_logger('Video Player')
 
-
-
         self.setup = self.set_setup(kwargs)
 
         ttk.Frame.__init__(self, parent)
