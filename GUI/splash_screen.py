@@ -5,12 +5,12 @@ from Utility.file_location import *
 
 class Splash():
 
-    def __init__(self,parent=Tk ,**kargs):
+    def __init__(self,parent=Tk() ,**kargs):
 
         self._frame_size =()
-        self._title = "Surveillance camera"
-        self._product_name = "AI Camera"
-        self._icon_image = full_file( ["Icons","webcamera.ico" ])
+        self._title = "AEye Camera"
+        self._product_name = "AEye Camera"
+        self._icon_image = full_file(["Icons","webcamera.ico"])
         self.splash_root = parent
         self.build_widget()
 
@@ -37,9 +37,6 @@ class Splash():
                                         bg="white",
                                         text=self._product_name )
         self.label_poduct_name.pack(pady=20)
-
-
-
 
 
 def main():

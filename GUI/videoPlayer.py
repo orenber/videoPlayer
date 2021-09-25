@@ -174,6 +174,14 @@ class VideoPlayer(ttk.Frame):
         if isinstance(algo, bool):
             self._algo = algo
 
+    # Show the window
+    def show(self):
+        self.master.deiconify()
+
+    # Hide the window
+    def hide(self):
+        self.master.withdraw()
+
     # private
     def _build_widget(self, parent: ttk.Frame = None, setup: dict = dict):
 
@@ -441,6 +449,7 @@ class VideoPlayer(ttk.Frame):
         return setup
 
     def run_frames(self):
+        self.progressbar["maximum"] = self._frames_numbers
         frame_pass = 0
         try:
             while self._cap.isOpened():
@@ -507,7 +516,7 @@ class VideoPlayer(ttk.Frame):
         except Exception as error:
             self.log.exception(error)
 
-        self.progressbar["maximum"] = self._frames_numbers
+
         self._play = True
 
         self.run_frames()
@@ -629,6 +638,9 @@ def main():
     vid = VideoPlayer(image=True, play=True, camera=True, record=True, algo=True)
     vid.command = lambda frame: extract_image(frame)
     vid.image_size_camera = '0.02MP'
+    vid.update()
+    vid.hide()
+    vid.show()
     vid.mainloop()
 
 

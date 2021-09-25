@@ -1,7 +1,7 @@
-import os
 
 from GUI.dynamic_panel import DynamicPanel
 from GUI.videoPlayer import VideoPlayer
+
 from tkinter import *
 from tkinter import ttk, filedialog
 from Utility.file_location import *
@@ -32,10 +32,13 @@ class Trainer(VideoPlayer):
         self.path = os.path.dirname(cv2.__file__)
         self.face_frontal_path = os.path.join(self.path, 'data', 'haarcascade_frontalface_default.xml' )
         self.face_cascade = cv2.CascadeClassifier(self.face_frontal_path)
-        self._path_images = full_file( ["Resources", "images", "faces"] )
+        self._path_images = full_file(["Resources", "images", "faces"])
 
         self.set_gray_image = True
 
+        self.face = [{'detect': False, 'pos_label': (None, None), 'ROI': {'x': [None, None], 'y': [None, None]}}]
+        self.faces_names = []
+        self._last_id = None
         self.current_id = 0
         self.label_ids = {}
         self.ids_label = {}
@@ -53,9 +56,6 @@ class Trainer(VideoPlayer):
             self.mask_detector = MaskDetection()
         except Exception as error:
             self.log.exception(error)
-        finally:
-            # build widget
-            self._build_widget(parent,self.setup)
 
     @property
     def training(self) -> bool:
@@ -82,7 +82,7 @@ class Trainer(VideoPlayer):
         return setup
 
     def _build_widget(self, parent: ttk.Frame = None, setup: dict = dict):
-
+        self.hide()
         if parent == None:
 
             self.master.geometry("470x700+0+0")
@@ -102,17 +102,40 @@ class Trainer(VideoPlayer):
         self._frame_control_x = Frame( self._main_frame, bg="gray70")
         self._frame_control_x.pack( side=BOTTOM, fill=X, expand=0 )
 
-        # botton show images
-        # icon open images folders
-        self._icons_open = PhotoImage(file=os.path.join(self._icons_path, 'folder_open.PNG'))
-        self._button_open_images = Button(self._frame_control,
-                                          text="Open",
-                                          image=self._icons_open,
-                                          command=lambda: self.open_folders(),
-                                          relief='raised')
-        self._button_open_images.pack(side=TOP)
-        button_open_tooltip = Pmw.Balloon(self._frame_control)
-        button_open_tooltip.bind(self._button_open_images, "Open images main folders")
+        if self.setup['play']:
+            # play video button button_live_video
+            self.icon_play = PhotoImage( file=os.path.join( self._icons_path, 'play.PNG' ) )
+            self.button_play_video = Button( self._frame_control,
+                                             text="Load Video",
+                                             image=self.icon_play,
+                                             command=lambda: self.load_movie() )
+            self.button_play_video.pack( side=TOP )
+            button_camera_tooltip = Pmw.Balloon( self._frame_control )
+            button_camera_tooltip.bind( self.button_play_video, "Load video and play" )
+
+            # play camera
+        if self.setup['camera']:
+            self.icon_camera = PhotoImage( file=os.path.join( self._icons_path, 'camera.PNG' ) )
+            self.button_camera = Button( self._frame_control,
+                                         text="camera",
+                                         image=self.icon_camera,
+                                         command=lambda: self._camera_view())
+            self.button_camera.pack( side=TOP )
+            button_camera_tooltip = Pmw.Balloon( self._frame_control)
+            button_camera_tooltip.bind( self.button_camera, "Camera player")
+
+            # load image button_face_detect
+        self.icon_face_detect = PhotoImage(file=os.path.join(self._icons_path, 'face_detection.PNG'))
+        self.button_face_detection = Button(self._frame_control,
+                                            text="face",
+                                            image=self.icon_face_detect,
+                                            name="button_face_detection",
+                                            command=lambda: self._view_button_face_detection())
+        self.button_face_detection.pack(side=TOP)
+        button_face_detection_tooltip = Pmw.Balloon(self._frame_control)
+        button_face_detection_tooltip.bind(self.button_face_detection, "Face detection")
+
+
 
         # botton train algo
         # icon open images folders
@@ -124,6 +147,18 @@ class Trainer(VideoPlayer):
         self._button_train.pack(side=TOP)
         button_train_tooltip = Pmw.Balloon(self._frame_control)
         button_train_tooltip.bind(self._button_train, "Training data Mode")
+
+        # botton show images
+        # icon open images folders
+        self._icons_open = PhotoImage(file=os.path.join(self._icons_path, 'folder_open.PNG'))
+        self._button_open_images = Button(self._frame_control,
+                                          text="Open",
+                                          image=self._icons_open,
+                                          command=lambda: self.open_folders(),
+                                          relief='raised')
+        self._button_open_images.pack(side=TOP)
+        button_open_tooltip = Pmw.Balloon(self._frame_control)
+        button_open_tooltip.bind(self._button_open_images, "Open images main folders")
 
         # botton run
         # icon open images folders
@@ -150,27 +185,7 @@ class Trainer(VideoPlayer):
         button_mask_video_tooltip.bind(self._button_mask_detection, "Run face mask detection live video")
 
 
-        if self.setup['play']:
-            # play video button button_live_video
-            self.icon_play = PhotoImage(file=os.path.join(self._icons_path, 'play.PNG'))
-            self.button_play_video = Button(self._frame_control,
-                                            text="Load Video",
-                                            image=self.icon_play,
-                                            command=lambda: self.load_movie())
-            self.button_play_video.pack(side=TOP)
-            button_camera_tooltip = Pmw.Balloon(self._frame_control)
-            button_camera_tooltip.bind(self.button_play_video, "Load video and play")
 
-        # play camera
-        if self.setup['camera']:
-            self.icon_camera = PhotoImage(file=os.path.join(self._icons_path, 'camera.PNG'))
-            self.button_camera = Button(self._frame_control,
-                                        text="camera",
-                                        image = self.icon_camera,
-                                        command=lambda: self._camera_view())
-            self.button_camera.pack(side=TOP)
-            button_camera_tooltip = Pmw.Balloon( self._frame_control )
-            button_camera_tooltip.bind(self.button_camera, "Camera player" )
 
         # create canvas
         self._canvas = Canvas(self._main_frame,
@@ -208,7 +223,8 @@ class Trainer(VideoPlayer):
         self._image_gallery = DynamicPanel(self._frame_display, matrix)
         # Add that new frame to aWindow in The Canvas
         self._canvas.create_window((0, 0), window=self._frame_display, anchor="nw")
-        # build open file folder button
+
+        self.show()
 
     def algo_list(self, add: bool = False, algo=None):
 
@@ -222,6 +238,20 @@ class Trainer(VideoPlayer):
             elif algo in self.algo_stack:
                 self.algo_stack.remove(algo)
 
+    def _view_button_face_detection(self):
+
+        if self.button_face_detection.cget('relief') == 'raised':
+
+            self.algo_list(True, self.face_detection)
+            self.button_face_detection.config(bg='white', relief='sunken')
+            self.log.info("Face detection is on")
+
+        elif self.button_face_detection.cget('relief') == 'sunken':
+
+            self.algo_list(False, self.face_detection)
+            self.button_face_detection.config(bg='black', relief='raised')
+            self.log.info("Face detection is Off")
+
     def _view_train_face_detection(self):
         if self._button_train.cget('relief') == 'raised':
             self.training = True
@@ -232,13 +262,14 @@ class Trainer(VideoPlayer):
 
     def _view_button_face_recognition(self):
         if self._button_face_recognition.cget('relief') == RAISED:
-
+            self.faces_names = self.load_labels()
             self.algo_list(True, self.face_recognition)
 
             self._button_face_recognition.config(relief=SUNKEN)
             self.log.info("Face recognition is on")
 
         elif self._button_face_recognition.cget('relief') == SUNKEN:
+
             self.algo_list(False, self.face_recognition)
 
             self._button_face_recognition.config(relief=RAISED)
@@ -306,7 +337,6 @@ class Trainer(VideoPlayer):
                 self._button_face_recognition["state"] = "disable"
                 self.log.exception(error)
 
-
     def reset_parameters(self):
         self.current_id = 0
         self.label_ids = {}
@@ -315,6 +345,7 @@ class Trainer(VideoPlayer):
         self.label_images = {}
         self._id = 0
         self.ids_label = {}
+
 
     def collect_images(self, images_dir: str):
 
@@ -391,6 +422,26 @@ class Trainer(VideoPlayer):
             labels = {v: k for k, v in og_labels.items()}
         return labels
 
+    def face_detection(self, gray_image: np.array):
+
+        # detect the faces
+        faces = self.face_cascade.detectMultiScale(gray_image, 1.1, 4)
+        self.face = [{'detect': False, 'pos_label': (None, None),
+                      'ROI': {'x': [None, None], 'y': [None, None]}} for _ in range(len(faces))]
+        # Draw the rectangle around each face
+        for count, (x, y, w, h) in enumerate(faces):
+
+            if self._training:
+                # detect ROI face
+                roi = gray_image[y:y + h, x:x + w]
+                self.crop_faces(roi)
+                self.save_roi_faces(roi)
+
+            self.face[count] = {'detect': True, 'ROI': {'x': (x, x + w), 'y': (y, y + h)}, 'pos_label': (x + 6, y - 6)}
+            cv2.rectangle(self.frame.image, (x, y), (x+w, y+h), COLOR['blue'], 2)
+            cv2.putText(self.frame.image, 'Face', self.face[count]['pos_label'],
+                        cv2.FONT_HERSHEY_DUPLEX, 0.5, COLOR['green'], 1)
+
     def face_recognition(self, gray_image: np.array):
 
         # detect faces in the image
@@ -406,29 +457,16 @@ class Trainer(VideoPlayer):
 
             if conf >= self._confident:
                 name = self.faces_names[id_]
-                if self._training:
-                    self.crop_faces(roi_gray)
-                    self.save_roi_faces(roi_gray)
 
                 # take the roi corrdinet x and y
                 points_start = (x, y)
                 points_end = (x + w, y + h)
-                cv2.putText( self.frame.image, name, points_start,
+                cv2.putText(self.frame.image, name, points_start,
                              cv2.FONT_HERSHEY_SIMPLEX, 1, COLOR['white'], 2, cv2.LINE_AA )
                 # draw rectangle around the faces
                 cv2.rectangle( self.frame.image, points_start, points_end, COLOR['blue'], 2 )
-                self.call_event_counter( id_ )
 
-            # display image and plot
-            cv2.imshow( 'frame',  self.frame.image )
-            # press quite to Exit the loop
-            if cv2.waitKey(20) & 0xFF == ord( 'q' ):
-               break
 
-        # when everything done , realse the capture
-
-        self._cap.release()
-        cv2.destroyAllWindows()
 
     def mask_detection(self, rgb_image: np.array):
 
@@ -459,26 +497,7 @@ class Trainer(VideoPlayer):
 
     def load_movie(self, movie_filename: str = ''):
 
-        self.button_play_video.config(relief='sunken')
-        if len(movie_filename) == 0:
-            movie_filename = filedialog.askopenfilename(initialdir=self.__initial_dir_movie,
-                                                        title="Select the movie to play",
-                                                        filetypes=(("AVI files", "*.AVI"),
-                                                                   ("MP4 files", "*.MP4"),
-                                                                   ("all files", "*.*")))
-        if len(movie_filename) != 0:
-            self.__initial_dir_movie = os.path.dirname(os.path.abspath(movie_filename))
-            self.log.info('Load movie: ' + movie_filename)
-            try:
-                self.play_movie(movie_filename)
-            except Exception as error:
-                self.log.exception(error)
-
-            finally:
-                self.button_play_video.config( relief='raised')
-        else:
-            self.log.info('Cancel load movie ')
-            self.button_play_video.config(relief='raised')
+        super().load_movie(movie_filename)
 
     def _camera_view(self):
 
@@ -488,24 +507,12 @@ class Trainer(VideoPlayer):
 
     def camera_capture(self):
 
-        self.log.info("Camera is on")
+        super().camera_capture()
 
-        self.run_frames()
 
     def play_movie(self, movie_filename: str):
 
-        try:
-            self._cap = cv2.VideoCapture(movie_filename)
-            frames_numbers = int(self._cap.get(cv2.CAP_PROP_FRAME_COUNT))
-            self.log.info('play movie: ' + movie_filename+'\n' +
-                          'frame_number : ' + str(frames_numbers))
-
-        except Exception as error:
-            self.log.exception(error)
-
-        self._play = True
-
-        self.run_frames()
+        super().play_movie(movie_filename)
 
     def run_frames(self):
 
@@ -521,7 +528,7 @@ class Trainer(VideoPlayer):
                     ret, image = self._cap.read()
 
                     if ret:
-
+                        self.frame.image = image
                         # take the image and sand it to the list of function to analyze process
                         algo_list = self.algo_stack
                         algo_nums = len(algo_list)
@@ -529,16 +536,15 @@ class Trainer(VideoPlayer):
                         if algo_nums:
 
                             if self.set_gray_image:
-                                # convert two images to gray scale
-                                image = cv2.cvtColor( image, cv2.COLOR_RGB2GRAY )
+                                image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY )
 
-                            for n in range( 0, algo_nums ):
-                                algo_list[n]( image )
+                            for n in range(0, algo_nums):
+                                algo_list[n](image)
 
                         # self.face_detection(frame_gray)
                         # convert matrix image to pillow image object
                         # display image and plot
-                        cv2.imshow('frame', image)
+                        cv2.imshow('frame', self.frame.image)
                         # press quite to Exit the loop
                         if cv2.waitKey(20) & 0xFF == ord('q'):
                             break
@@ -550,15 +556,14 @@ class Trainer(VideoPlayer):
         except Exception as error:
             self.log.exception(error)
         finally:
-            self._cap.release()
-            self._out.release()
-            cv2.destroyAllWindows()
+            self.stop_video()
 
     def stop_video(self):
 
         if self._play:
             self._play = False
             self._cap.release()
+            self._out.release()
 
         cv2.destroyAllWindows()
 

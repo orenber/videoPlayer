@@ -1,5 +1,4 @@
 import logging
-from GUI.splash_screen import Splash
 from GUI.videoPlayer import VideoPlayer
 from GUI.frameImg import FrameImg
 from GUI.dynamic_panel import DynamicPanel
@@ -26,7 +25,7 @@ class Surveillance(VideoPlayer):
     FILE_TYPE = {".AVI", 0,
                  ".MP4", 1}
 
-    def __init__(self):
+    def __init__(self, parent: ttk.Frame = None, **kwargs):
 
         self.log = setup_logger("Surveillance Camera")
 
@@ -58,7 +57,6 @@ class Surveillance(VideoPlayer):
         self.profile_cascade = cv2.CascadeClassifier(face_profile)
         self.speak = TextToSpeech()
 
-
     def call_event_counter(self, trigger_id:int=123):
 
         if self._last_id == trigger_id:
@@ -82,7 +80,7 @@ class Surveillance(VideoPlayer):
 
     def _build_widget(self, parent: ttk.Frame = None, setup: dict = dict):
 
-
+        self.hide()
         self.log.info("start build widget")
 
         self.master.geometry("950x720+0+0")
@@ -95,8 +93,7 @@ class Surveillance(VideoPlayer):
         self.master.iconbitmap( self.icons_path)
 
 
-        notebook = ttk.Notebook(self.master)
-        notebook.pack(fill=BOTH, expand=True)
+
 
         # main panel
 
@@ -108,14 +105,8 @@ class Surveillance(VideoPlayer):
         self.main_frame.pack(side=TOP)
         self.main_frame.place(relx=0, rely=0, relwidth=1, relheight=1)
 
-        self.training_frame = Frame(bg="gray24",
-                                    relief="raised",
-                                    name="training_frame")
-        self.training_frame.pack(side=RIGHT)
 
-        notebook.add(self.main_frame, text="Surveillance Camera")
-        notebook.add(self.training_frame, text="Training")
-        self.trainer = Trainer(self.training_frame)
+
 
         super()._build_widget(self.main_frame, setup)
 
@@ -195,7 +186,7 @@ class Surveillance(VideoPlayer):
         self.button_mask_detection.pack(side='left')
         button_mask_detection_tooltip = Pmw.Balloon(self.control_frame)
         button_mask_detection_tooltip.bind(self.button_mask_detection, "Mask detection")
-
+        self.show()
 
     def _focus_label(self):
 
