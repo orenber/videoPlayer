@@ -1,11 +1,11 @@
 from unittest import TestCase
-from Utility.logger_setup import LOGGER
+from Utility.logger_setup import setup_logger
 
 
 class TestLOGGER(TestCase):
 
     def setUp(self):
-        self.logger = LOGGER("APP_TEST")
+        self.logger = setup_logger("APP_TEST")
 
         pass
 

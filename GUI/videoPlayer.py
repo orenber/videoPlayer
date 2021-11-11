@@ -2,14 +2,13 @@ import copy
 from tkinter import *
 import Pmw
 from tkinter import filedialog, ttk, messagebox
-from time import monotonic as timer # or time.time if it is not available
 
 import cv2
 import numpy as np
 from PIL import Image, ImageTk
 from Utility.image_procesing import resize_image_to_frame
 from Utility.file_location import *
-from Utility.clock import Clock, Stopper
+from Utility.clock import Stopper
 from GUI.frameImg import FrameImg
 
 from Utility.logger_setup import setup_logger
@@ -29,12 +28,12 @@ class VideoPlayer(ttk.Frame):
                 "0.9MP":  (1280, 720)
     }
 
-    def __init__(self, parent: ttk.Frame = None, **prop: tuple):
+    def __init__(self, parent: ttk.Frame = None, **kwargs: tuple):
 
         # create logger
         self.log = setup_logger('Video Player')
 
-        self.setup = self.set_setup(prop)
+        self.setup = self.set_setup(kwargs)
 
         ttk.Frame.__init__(self, parent)
 
@@ -57,14 +56,14 @@ class VideoPlayer(ttk.Frame):
 
         self._out = cv2.VideoWriter()
         self._image_size_camera = self.STD_DIMS.get('0.3MP')
-        self._size = self.STD_DIMS.get('0.3MP')
+        self._size_image = self.STD_DIMS.get('0.3MP')
         self._command = []
         self._frame_rate = 24.0
 
         self._file_type_record = ".AVI"
         self._file_name_record = "Record"
         self._output_path_record = full_file(['Resources', 'Record', self._file_name_record])
-        create_folder_if_not_exist(self._output_path_record)
+        create_folder_if_not_exist(str(self._output_path_record))
 
         # public
       
@@ -81,7 +80,7 @@ class VideoPlayer(ttk.Frame):
 
     @property
     def size(self) -> tuple:
-        return self._size
+        return self._size_image
 
     @property
     def image_size_camera(self) -> tuple:
@@ -175,6 +174,14 @@ class VideoPlayer(ttk.Frame):
         if isinstance(algo, bool):
             self._algo = algo
 
+    # Show the window
+    def show(self):
+        self.master.deiconify()
+
+    # Hide the window
+    def hide(self):
+        self.master.withdraw()
+
     # private
     def _build_widget(self, parent: ttk.Frame = None, setup: dict = dict):
 
@@ -188,7 +195,6 @@ class VideoPlayer(ttk.Frame):
         else:
             self.main_panel = parent
 
-
         # main panel
         self.main_panel.config(bg="black")
 
@@ -196,7 +202,6 @@ class VideoPlayer(ttk.Frame):
         self.icon_height = 50
         canvas_progressbar_height = 2
         # frame_height = int(self.main_panel.cget('height')/10-self.icon_height -canvas_progressbar_height)
-
         self.canvas_image = Canvas(self.main_panel, bg="black", highlightthickness=0)
         self.canvas_image.pack(fill=BOTH, expand=True, side=TOP)
         self.canvas_image.bind("<Configure>", self._resize)
@@ -204,10 +209,10 @@ class VideoPlayer(ttk.Frame):
         self.canvas_image_width = int(self.canvas_image.config("width")[4])
         self.frame_top = Frame(self.canvas_image, bg="black",)
         self.frame_top.pack(side=TOP, fill=X)
-        self.rec = Label( self.frame_top, text="", fg="Red", bg="black", font=('arial', 14, 'bold'))
+        self.rec = Label(self.frame_top, text="", fg="Red", bg="black", font=('arial', 14, 'bold'))
         self.rec.pack(anchor=NW, side='left')
         self.rec_timer = Label(self.frame_top, fg="white", bg="black", font=('arial', 14, 'bold'))
-        self.rec_timer.pack(anchor = NW, side='left')
+        self.rec_timer.pack(anchor=NW, side='left')
         self.clock = Stopper(self.rec_timer)
         self.board = Label(self.canvas_image, bg="black", width=44, height=14)
         self.board.pack(fill=BOTH, expand=True)
@@ -232,17 +237,23 @@ class VideoPlayer(ttk.Frame):
 
         if setup['play']:
             # play video button button_live_video
-            self.icon_play = PhotoImage(file=os.path.join(self.icons_path , 'play.PNG'))
-            self.button_live_video = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white",
+            self.icon_play = PhotoImage(file=os.path.join(self.icons_path, 'play.PNG'))
+            self.button_play_video = Button(self.control_frame,
+                                            padx=10, pady=10, bd=8, fg="white",
                                             font=('arial', 12, 'bold'),
-                                            text="> Load Video", bg='black', image=self.icon_play, height=self.icon_height ,
-                                            width=self.icon_width, command=lambda: self.load_movie())
-            self.button_live_video.pack(side='left')
-            #tip.bind_widget(self.button_live_video, ballonmsg = "Load video movie")
+                                            text="Load Video",
+                                            bg='black',
+                                            image=self.icon_play,
+                                            height=self.icon_height,
+                                            width=self.icon_width,
+                                            command=lambda: self.load_movie())
+            self.button_play_video.pack(side='left')
+            button_camera_tooltip = Pmw.Balloon(self.control_frame)
+            button_camera_tooltip.bind(self.button_play_video, "Load video and play")
 
         # play camera
         if setup['camera']:
-            self.icon_camera = PhotoImage(file=os.path.join(self.icons_path , 'camera.PNG'))
+            self.icon_camera = PhotoImage(file=os.path.join(self.icons_path, 'camera.PNG'))
             self.button_camera = Button(self.control_frame,
                                         padx=10, pady=10, bd=8, fg="white",
                                         font=('arial', 12, 'bold'),
@@ -252,21 +263,21 @@ class VideoPlayer(ttk.Frame):
                                         width=self.icon_width,
                                         command=lambda: self._camera_view())
             self.button_camera.pack(side='left')
-
-            #tip.bind_widget(self.button_camera,ballonmsg="Camera Play")
+            button_camera_tooltip = Pmw.Balloon( self.control_frame )
+            button_camera_tooltip.bind(self.button_camera, "Camera player" )
 
         if setup['pause']:
             # pause video button button_live_video
-            self.icon_pause = PhotoImage(file=os.path.join(self.icons_path , 'pause.PNG'))
+            self.icon_pause = PhotoImage(file=os.path.join(self.icons_path, 'pause.PNG'))
 
             self.button_pause_video = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white",
                                              font=('arial', 12, 'bold'),
                                              text="Pause", bg='black', image=self.icon_pause,
-                                             height=self.icon_height , width=self.icon_width,
+                                             height=self.icon_height, width=self.icon_width,
                                              command=lambda: self._pause_view())
             self.button_pause_video.pack(side='left')
-
-            # self.tip.bind_widget(self.button_pause_video, ballonmsg="Pause video player")
+            button_pause_video_tooltip = Pmw.Balloon( self.control_frame )
+            button_pause_video_tooltip.bind( self.button_pause_video, "Pause video player" )
 
         if setup['stop']:
             # stop video button button_live_video
@@ -280,15 +291,15 @@ class VideoPlayer(ttk.Frame):
             button_stop_video_tooltip = Pmw.Balloon(self.control_frame)
             button_stop_video_tooltip.bind(self.button_stop_video, "Stop video player")
 
-
         if setup['record']:
             # record video
-            self.icon_record_off = PhotoImage(file=os.path.join(self.icons_path , 'record_off.PNG'))
-            self.icon_record_on = PhotoImage(file=os.path.join(self.icons_path , 'record_on.PNG'))
+            self.icon_record_off = PhotoImage(file=os.path.join(self.icons_path, 'record_off.PNG'))
+            self.icon_record_on = PhotoImage(file=os.path.join(self.icons_path, 'record_on.PNG'))
 
             self.button_record = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white",
                                         font=('arial', 12, 'bold'),
-                                        text="record", bg="black", height=self.icon_height , width=self.icon_width,
+                                        text="record", bg="black",
+                                        height=self.icon_height, width=self.icon_width,
                                         image=self.icon_record_off,
                                         command=lambda: self._record_view())
             self.button_record.pack(side='left')
@@ -309,7 +320,7 @@ class VideoPlayer(ttk.Frame):
 
         if setup['algo']:
             # load image button button_load_image
-            self.icon_algo = PhotoImage( file=os.path.join( self.icons_path , 'ai.PNG'))
+            self.icon_algo = PhotoImage(file=os.path.join(self.icons_path, 'ai.PNG'))
             self.button_run_algo = Button(self.control_frame,
                                           padx=10, pady=10,
                                           bd=8,
@@ -340,16 +351,18 @@ class VideoPlayer(ttk.Frame):
             if self._play:
                 self.button_pause_video.config(relief='sunken')
                 self._play = False
+                self.log.info("Pause on")
             else:
                 self.button_pause_video.config(relief='raised')
                 self._play = True
+                self.log.info("Pause off")
         else:
             self.button_pause_video.config(relief='raised')
 
     def _button_view_off(self):
 
         if self.setup['play']:
-            self.button_live_video.config(relief='raised')
+            self.button_play_video.config(relief='raised')
         if self.setup['camera']:
             self.button_camera.config(bg='black', relief='raised')
         if self.setup['pause']:
@@ -360,7 +373,6 @@ class VideoPlayer(ttk.Frame):
             self.button_image_load.config(relief='raised')
         if self.setup['record']:
             self._record_view_state(False)
-
 
     def _record_view(self):
 
@@ -374,7 +386,7 @@ class VideoPlayer(ttk.Frame):
                     self._record_view_state(self._record)
 
                 except Exception as error:
-                    print(error)
+                    self.log.exception(error)
                     self._record = False
                     self._record_view_state(self._record)
 
@@ -398,9 +410,6 @@ class VideoPlayer(ttk.Frame):
             self.clock.stop()
             self.rec.config(text="")
             self.rec_timer.config(text="")
-
-
-
 
     def _update_progress(self, frame_pass: int = 0, frames_numbers: int = None):
 
@@ -440,6 +449,7 @@ class VideoPlayer(ttk.Frame):
         return setup
 
     def run_frames(self):
+        self.progressbar["maximum"] = self._frames_numbers
         frame_pass = 0
         try:
             while self._cap.isOpened():
@@ -462,44 +472,51 @@ class VideoPlayer(ttk.Frame):
                 # refresh image display
                 self.board.update()
         except Exception as error:
-            print(error)
+            self.log.exception(error)
         finally:
+            self.log.info("release video")
             self._cap.release()
             self._out.release()
+            self.record = False
             cv2.destroyAllWindows()
             self._button_view_off()
 
-    def load_movie(self):
+    def load_movie(self,movie_filename: str=''):
         if not self.play:
 
-            self.button_live_video.config(relief='sunken')
-            movie_filename = filedialog.askopenfilename(initialdir=self.__initial_dir_movie,
-                                                        title="Select the movie to play",
-                                                        filetypes=(("AVI files", "*.AVI"),
-                                                                   ("MP4 files", "*.MP4"),
-                                                                   ("all files", "*.*")))
+            self.button_play_video.config(relief='sunken')
+            if len(movie_filename) == 0:
+                movie_filename = filedialog.askopenfilename(initialdir=self.__initial_dir_movie,
+                                                            title="Select the movie to play",
+                                                            filetypes=(("AVI files", "*.AVI"),
+                                                                       ("MP4 files", "*.MP4"),
+                                                                       ("all files", "*.*")))
             if len(movie_filename) != 0:
                 self.__initial_dir_movie = os.path.dirname(os.path.abspath(movie_filename))
+                self.log.info('Load movie: ' + movie_filename)
                 try:
                     self.play_movie(movie_filename)
                 except Exception as error:
-                    self.log.exception("Exception:", error)
+                    self.log.exception(error)
 
                 finally:
-                    self.button_live_video.config(bg='black', relief='raised')
+                    self.button_play_video.config(bg='black', relief='raised')
             else:
-                self.button_live_video.config(bg='black', relief='raised')
+                self.log.info('Cancel load movie ')
+                self.button_play_video.config(bg='black', relief='raised')
 
     def play_movie(self, movie_filename: str):
 
         try:
             self._cap = cv2.VideoCapture(movie_filename)
             self._frames_numbers = int(self._cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            self.log.info('play movie: ' + movie_filename)
+            self.log.info('frame_number : ' + str(self._frames_numbers))
 
         except Exception as error:
-            print("Exception:", error)
+            self.log.exception(error)
 
-        self.progressbar["maximum"] = self._frames_numbers
+
         self._play = True
 
         self.run_frames()
@@ -509,6 +526,7 @@ class VideoPlayer(ttk.Frame):
         self._play = True
         self.camera = True
         self._frames_numbers = 1
+        self.log.info("Camera is on")
 
         if self._play:
             self.run_frames()
@@ -534,6 +552,7 @@ class VideoPlayer(ttk.Frame):
                 # in the case the record in on - stop the recording
                 self._out.release()
                 self.record = False
+                self.log.info("stop recording")
 
             cv2.destroyAllWindows()
             self._update_progress(0, 0)
@@ -541,22 +560,26 @@ class VideoPlayer(ttk.Frame):
     def camera_recording(self, file: str = file_date("output", ".avi")):
 
         if self.play:
-            self.log.info("camera recording to file : " + file)
+
             self._source = cv2.VideoWriter_fourcc(*'XVID')
             self._out = cv2.VideoWriter(file, self._source, self._frame_rate, self.frame.size, 0)
+            self.log.info("video recording properties : \n"
+                          "file name : " + file+'\n'
+                          "frame rate : "+str(self._frame_rate)+'\n'
+                          "frame size : "+str(self.frame.size)+'\n')
 
     def save_frame(self, frame):
 
         try:
 
             self._out.write(cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY))
-        except EXCEPTION as error:
+        except Exception as error:
             self.log.exception(error)
 
-    def load_image(self):
-
-        file_name = filedialog.askopenfilename(initialdir=self.__initial_dir, title="Select the RGB image",
-                                               filetypes=(("jpeg files", "*.jpg"), ("all files", "*.*")))
+    def load_image(self,file_name:str=""):
+        if len(file_name) == 0:
+            file_name = filedialog.askopenfilename(initialdir=self.__initial_dir, title="Select the RGB image",
+                                                   filetypes=(("jpeg files", "*.jpg"), ("all files", "*.*")))
 
         self.log.info("Load image file :" + file_name)
 
@@ -568,24 +591,26 @@ class VideoPlayer(ttk.Frame):
                 self.log.exception(error)
 
             self.resize_image_show(self._frame)
-    
+        else:
+            self.log.warning("Cancel loading file")
+
     def resize_image_show(self, frame: FrameImg):
 
         if Image.isImageType(frame.image):
-            self._size = resize_image_to_frame(frame.size, (self.canvas_image_width, self.canvas_image_height))
+            self._size_image = resize_image_to_frame(frame.size, (self.canvas_image_width, self.canvas_image_height))
             image_view = copy.copy(frame.image)
             self.show_image(image_view)
         elif isinstance(frame.image, np.ndarray):
             if frame.image.any():
-                self._size = resize_image_to_frame(frame.size, (self.canvas_image_width, self.canvas_image_height))
-                resize_image = cv2.resize(self.frame.image,  self._size, interpolation=cv2.INTER_AREA)
+                self._size_image = resize_image_to_frame(frame.size, (self.canvas_image_width, self.canvas_image_height))
+                resize_image = cv2.resize(self.frame.image,  self._size_image, interpolation=cv2.INTER_AREA)
                 image_show = self.matrix_to_pillow(resize_image)
                 self.show_image(image_show)
 
     def show_image(self, image):
 
         # resize image
-        image.thumbnail(self._size)
+        image.thumbnail(self._size_image)
         photo = ImageTk.PhotoImage(image=image)
         # The Label widget is a standard Tkinter widget used to display a text or image on the screen.
         self.board.config(image=photo)
@@ -613,6 +638,9 @@ def main():
     vid = VideoPlayer(image=True, play=True, camera=True, record=True, algo=True)
     vid.command = lambda frame: extract_image(frame)
     vid.image_size_camera = '0.02MP'
+    vid.update()
+    vid.hide()
+    vid.show()
     vid.mainloop()
 
 

@@ -8,7 +8,6 @@ class TestTrainer(TestCase):
         self.training = Trainer()
         self.training.update()
 
-
     def test__init__(self):
 
         pass
