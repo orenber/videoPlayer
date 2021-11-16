@@ -48,15 +48,17 @@ class VideoPlayer(ttk.Frame):
         self._record = False
         self._camera = False
         self._algo = False
-        self._frame = FrameImg(np.zeros(self.STD_DIMS.get('0.3MP'), float))
+        self._resolution = '0.9MP'
+        self._frame = FrameImg( np.zeros( self.STD_DIMS.get( self._resolution ), float ) )
 
         self._camera_port = 0
         self._cap = cv2.VideoCapture()
         self._source = 0
+        self._record_color = 0
 
         self._out = cv2.VideoWriter()
-        self._image_size_camera = self.STD_DIMS.get('0.3MP')
-        self._size_image = self.STD_DIMS.get('0.3MP')
+        self._image_size_camera = self.STD_DIMS.get( self._resolution )
+        self._size_image = self.STD_DIMS.get( self._resolution )
         self._command = []
         self._frame_rate = 24.0
 
@@ -516,7 +518,6 @@ class VideoPlayer(ttk.Frame):
         except Exception as error:
             self.log.exception(error)
 
-
         self._play = True
 
         self.run_frames()
@@ -562,7 +563,7 @@ class VideoPlayer(ttk.Frame):
         if self.play:
 
             self._source = cv2.VideoWriter_fourcc(*'XVID')
-            self._out = cv2.VideoWriter(file, self._source, self._frame_rate, self.frame.size, 0)
+            self._out = cv2.VideoWriter(file, self._source, self._frame_rate, self.frame.size, self._record_color)
             self.log.info("video recording properties : \n"
                           "file name : " + file+'\n'
                           "frame rate : "+str(self._frame_rate)+'\n'
