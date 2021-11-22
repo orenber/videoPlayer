@@ -21,13 +21,14 @@ class Factory(VideoPlayer):
 
         self.log = setup_logger( "Factory Camera" )
 
-        super().__init__( image=True, play=True, camera=True, record=True )
+        super().__init__(image=True, play=True, camera=True, record=True )
 
         self.algo_stack = []
         self.frame_take = 0
         self.frame_number = 0
+        self._camera_port = 1
         self.set_gray_image = True
-        self._resolution = '0.02MP'
+        self._resolution = '0.06MP'
 
         self._file_name_record = "record_video"
         self._output_path_record = full_file(['Resources', 'Record', self._file_name_record] )
@@ -64,7 +65,7 @@ class Factory(VideoPlayer):
         self.canvas_image.unbind( "<Configure>" )
 
         # control panel
-        matrix = {"row": [{"col": [0, 0]},{"col": [0, 0]}]}
+        matrix = {"row": [{"col": [0]}]}
         self.dynamic_panel = DynamicPanel( self.canvas_image, matrix )
 
         self.board.place_forget()
