@@ -24,7 +24,7 @@ class AEyeCamera(ttk.Frame):
         self.master.geometry("950x720+0+0")
 
         # Title bar Title
-        self.master.title("SurveillanceCamera")
+        self.master.title("AEye Camera")
         # Title Bar Icon
         self.icons_path = full_file( ["Icons","webcamera.ico" ])
         self.master.iconbitmap( self.icons_path)

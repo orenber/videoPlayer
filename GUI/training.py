@@ -468,8 +468,6 @@ class Trainer(VideoPlayer):
                 # draw rectangle around the faces
                 cv2.rectangle( self.frame.image, points_start, points_end, COLOR['blue'], 2 )
 
-
-
     def mask_detection(self, rgb_image: np.array):
 
         # detect faces in the frame and determine if they are wearing a
@@ -510,7 +508,6 @@ class Trainer(VideoPlayer):
     def camera_capture(self):
 
         super().camera_capture()
-
 
     def play_movie(self, movie_filename: str):
 
