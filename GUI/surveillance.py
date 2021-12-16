@@ -29,17 +29,17 @@ class Surveillance(VideoPlayer):
 
         self.log = setup_logger("Surveillance Camera")
 
-
-        super().__init__(image=True, play=True, camera=True, record=True)
+        super().__init__(parent,image=True, play=True, camera=True, record=True)
 
         self.algo_stack = []
         self.frame_take = 0
         self.frame_number = 0
         self.set_gray_image = True
+        self.trainer = Trainer
 
         self._file_name_record = "movement_detect"
         self._output_path_record = full_file(['Resources', 'Record', self._file_name_record])
-        self._resolution = '0.01MP'
+        self._resolution = '0.02MP'
         self.pri_frame = FrameImg(np.zeros(self.STD_DIMS.get(self._resolution), float))
         self.face = [{'detect': False, 'pos_label': (None, None), 'ROI': {'x': [None, None], 'y': [None, None]}}]
         self.faces_names = []
@@ -80,35 +80,31 @@ class Surveillance(VideoPlayer):
 
     def _build_widget(self, parent: ttk.Frame = None, setup: dict = dict):
 
-        self.hide()
+       # self.hide()
         self.log.info("start build widget")
+        if parent is None:
 
-        self.master.geometry("950x720+0+0")
-        self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
+            self.master.geometry( "950x720+0+0" )
+            self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
+            # Title bar Title
+            self.master.title( "SurveillanceCamera" )
+            # Title Bar Icon
+            self.icons_path = full_file( ["Icons", "webcamera.ico"] )
+            self.master.iconbitmap( self.icons_path )
+            # main panel
 
-        # Title bar Title
-        self.master.title("SurveillanceCamera")
-        # Title Bar Icon
-        self.icons_path = full_file( ["Icons","webcamera.ico" ])
-        self.master.iconbitmap( self.icons_path)
+            self.main_frame = Frame(self.master, relief='sunken',
+                                     width=1000,
+                                     height=720,
+                                     bg="gray24",
+                                     name="main_frame" )
+            self.main_frame.pack( side=TOP )
+            self.main_frame.place( relx=0, rely=0, relwidth=1, relheight=1 )
 
+        else:
+            self.main_frame = parent
 
-
-
-        # main panel
-
-        self.main_frame = Frame(width=1000,
-                                height=720,
-                                bg="gray24",
-                                relief="raised",
-                                name="main_frame")
-        self.main_frame.pack(side=TOP)
-        self.main_frame.place(relx=0, rely=0, relwidth=1, relheight=1)
-
-
-
-
-        super()._build_widget(self.main_frame, setup)
+        super()._build_widget(self.main_frame,setup)
 
         self.canvas_image.unbind("<Configure>")
 
@@ -186,7 +182,7 @@ class Surveillance(VideoPlayer):
         self.button_mask_detection.pack(side='left')
         button_mask_detection_tooltip = Pmw.Balloon(self.control_frame)
         button_mask_detection_tooltip.bind(self.button_mask_detection, "Mask detection")
-        self.show()
+        #self.show()
 
     def _focus_label(self):
 

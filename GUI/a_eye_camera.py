@@ -28,29 +28,27 @@ class AEyeCamera(ttk.Frame):
         # Title Bar Icon
         self.icons_path = full_file( ["Icons","webcamera.ico" ])
         self.master.iconbitmap( self.icons_path)
-
-
-
-
+        self.notebook = ttk.Notebook( self.master )
         self.main_frame = Frame(width=1000,
                                 height=720,
                                 bg="gray24",
                                 relief="raised",
                                 name="main_frame")
-        self.main_frame.pack(side=TOP)
-        self.main_frame.place(relx=0, rely=0, relwidth=1, relheight=1)
-        self.training_frame = Frame( bg="gray24",
+
+        self.training_frame = Frame(width=1000,
+                                     height=720,
+                                     bg="gray24",
                                      relief="raised",
                                      name="training_frame" )
-        self.training_frame.pack( side=RIGHT )
-        notebook = ttk.Notebook( self.master )
-        notebook.pack( fill=BOTH, expand=True )
-        notebook.add(self.main_frame, text="Surveillance Camera" )
+
+
         self.surveillance = Surveillance( self.main_frame )
-
-        notebook.add(self.training_frame, text="Training")
+        self.main_frame.pack( fill=BOTH, expand=True )
+        self.notebook.add( self.main_frame, text="Surveillance Camera" )
         self.trainer = Trainer( self.training_frame )
-
+        self.training_frame.pack( fill=BOTH, expand=True )
+        self.notebook.add( self.training_frame, text="Training" )
+        self.notebook.pack(fill=BOTH, expand=True)
 
 
 def main():

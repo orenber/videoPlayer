@@ -24,9 +24,7 @@ class Trainer(VideoPlayer):
     def __init__(self, parent: ttk.Frame = None, **kwargs):
         self.log = setup_logger('Trainer')
         self.setup = self.set_setup(kwargs)
-        super().__init__(play=True, camera=True)
-
-        ttk.Frame.__init__(self, parent)
+        super().__init__(parent, play=True, camera=True)
 
         self.recognizer = cv2.face.LBPHFaceRecognizer_create()
         self.path = os.path.dirname(cv2.__file__)
@@ -82,18 +80,22 @@ class Trainer(VideoPlayer):
         return setup
 
     def _build_widget(self, parent: ttk.Frame = None, setup: dict = dict):
-        self.hide()
+
         if parent == None:
 
-            self.master.geometry("470x700+0+0")
+            self.master.geometry( "950x720+0+0")
+            # create Main Frame
+            self._main_frame = Frame(self.master, relief='sunken',
+                                     width=1000,
+                                     height=720,
+                                     bg="gray24",
+                                     name="main_frame" )
+            self._main_frame.pack( side=TOP )
+            self._main_frame.place( relx=0, rely=0, relwidth=1, relheight=1 )
         else:
-            self.master = parent
+            self._main_frame = parent
 
         self._icons_path = full_file(["Icons"])
-
-        # create Main Frame
-        self._main_frame = Frame(self.master, bg="gray70")
-        self._main_frame.pack(fill=BOTH, expand=1)
 
         # control Frame
         self._frame_control = Frame(self._main_frame, bg="gray70", width=100)
@@ -109,7 +111,7 @@ class Trainer(VideoPlayer):
                                              text="Load Video",
                                              image=self.icon_play,
                                              command=lambda: self.load_movie() )
-            self.button_play_video.pack( side=TOP )
+            self.button_play_video.pack(side=TOP)
             button_camera_tooltip = Pmw.Balloon( self._frame_control )
             button_camera_tooltip.bind( self.button_play_video, "Load video and play" )
 
@@ -224,7 +226,7 @@ class Trainer(VideoPlayer):
         # Add that new frame to aWindow in The Canvas
         self._canvas.create_window((0, 0), window=self._frame_display, anchor="nw")
 
-        self.show()
+
 
     def algo_list(self, add: bool = False, algo=None):
 
