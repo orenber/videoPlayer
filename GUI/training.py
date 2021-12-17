@@ -7,6 +7,7 @@ from tkinter import ttk, filedialog
 from Utility.file_location import *
 from Utility.logger_setup import setup_logger
 from Utility.color_names import COLOR
+from Utility.display_widget import center_widget
 import cv2
 from PIL import Image
 import numpy as np
@@ -83,7 +84,7 @@ class Trainer(VideoPlayer):
 
         if parent == None:
 
-            self.master.geometry( "950x720+0+0")
+            self.master.geometry(center_widget(self.master,950,720))
             # create Main Frame
             self._main_frame = Frame(self.master, relief='sunken',
                                      width=1000,

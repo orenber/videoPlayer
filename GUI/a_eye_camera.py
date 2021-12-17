@@ -2,7 +2,7 @@ from tkinter import *
 from tkinter import ttk
 from Utility.file_location import *
 from Utility.logger_setup import setup_logger
-
+from Utility.display_widget import center_widget
 from GUI.splash_screen import Splash
 
 
@@ -21,7 +21,7 @@ class AEyeCamera(ttk.Frame):
         self.splash.splash_root.destroy()
         self.log.info("start build widget")
         self.master = Tk()
-        self.master.geometry("950x720+0+0")
+        self.master.geometry(center_widget(self.master,950,720))
 
         # Title bar Title
         self.master.title("AEye Camera")
@@ -40,7 +40,6 @@ class AEyeCamera(ttk.Frame):
                                      bg="gray24",
                                      relief="raised",
                                      name="training_frame" )
-
 
         self.surveillance = Surveillance( self.main_frame )
         self.main_frame.pack( fill=BOTH, expand=True )

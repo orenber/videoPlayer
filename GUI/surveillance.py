@@ -16,6 +16,7 @@ from Utility.file_location import *
 from Utility.text_to_spech import TextToSpeech
 from Utility.logger_setup import setup_logger
 from Utility.color_names import COLOR
+from Utility.display_widget import center_widget
 from skimage import morphology
 import Pmw
 
@@ -84,7 +85,7 @@ class Surveillance(VideoPlayer):
         self.log.info("start build widget")
         if parent is None:
 
-            self.master.geometry( "950x720+0+0" )
+            self.master.geometry(center_widget(self.master,950,720))
             self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
             # Title bar Title
             self.master.title( "SurveillanceCamera" )

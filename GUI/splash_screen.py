@@ -1,6 +1,6 @@
 from tkinter import *
 from Utility.file_location import *
-
+from Utility.display_widget import center_widget
 
 
 class Splash():
@@ -18,9 +18,11 @@ class Splash():
     def build_widget(self):
 
         self.splash_root.title(self._title)
-        self.splash_root.geometry("300x200+-1500+250")
+        # Get the current screen width and height
+
+        self.splash_root.geometry(center_widget(self.splash_root, 300, 200))
         self.splash_root.overrideredirect(True)
-        self.splash_root.iconbitmap( self._icon_image)
+        self.splash_root.iconbitmap(self._icon_image)
 
         self.splash_image = PhotoImage( file=os.path.join(full_file(["Icons","surveillance-camera.png"])))
         self.label = Label(self.splash_root,
