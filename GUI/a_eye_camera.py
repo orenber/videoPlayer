@@ -1,9 +1,10 @@
 from tkinter import *
-from tkinter import ttk
+from tkinter import ttk, messagebox
 from Utility.file_location import *
 from Utility.logger_setup import setup_logger
 from Utility.display_widget import center_widget
 from GUI.splash_screen import Splash
+from time import sleep
 
 
 class AEyeCamera(ttk.Frame):
@@ -14,13 +15,18 @@ class AEyeCamera(ttk.Frame):
         self._build_widget(parent)
 
     def _build_widget(self, parent: ttk.Frame = None, **kwargs: tuple):
+
+        self.log.info("start build widget")
         self.splash = Splash()
         self.update()
-        from GUI.surveillance import Surveillance, Trainer
+
+        from GUI.surveillance import Surveillance
+        from GUI.training import Trainer
 
         self.splash.splash_root.destroy()
-        self.log.info("start build widget")
+
         self.master = Tk()
+        self.master.protocol( "WM_DELETE_WINDOW", self.on_closing )
         self.master.geometry(center_widget(self.master,950,720))
 
         # Title bar Title
@@ -49,6 +55,10 @@ class AEyeCamera(ttk.Frame):
         self.notebook.add( self.training_frame, text="Training" )
         self.notebook.pack(fill=BOTH, expand=True)
 
+    def on_closing(self):
+        if messagebox.askokcancel("Quit", "Do you want to quit?"):
+           self.master.destroy()
+           self.log.info("close main application")
 
 def main():
     a_eye = AEyeCamera()

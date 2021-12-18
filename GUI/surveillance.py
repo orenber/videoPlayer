@@ -1,24 +1,23 @@
-import logging
 from GUI.videoPlayer import VideoPlayer
 from GUI.frameImg import FrameImg
 from GUI.dynamic_panel import DynamicPanel
-from GUI.training import Trainer
-
+from Algo.face_trainer import FaceTrainer
 
 import numpy as np
 import cv2
+from skimage import morphology
+
 from tkinter import *
 from tkinter import ttk
-
 from tkinter.simpledialog import askstring
+import Pmw
 
 from Utility.file_location import *
 from Utility.text_to_spech import TextToSpeech
 from Utility.logger_setup import setup_logger
-from Utility.color_names import COLOR
 from Utility.display_widget import center_widget
-from skimage import morphology
-import Pmw
+
+
 
 
 class Surveillance(VideoPlayer):
@@ -36,26 +35,18 @@ class Surveillance(VideoPlayer):
         self.frame_take = 0
         self.frame_number = 0
         self.set_gray_image = True
-        self.trainer = Trainer
+        self.trainer = FaceTrainer()
 
         self._file_name_record = "movement_detect"
         self._output_path_record = full_file(['Resources', 'Record', self._file_name_record])
         self._resolution = '0.02MP'
         self.pri_frame = FrameImg(np.zeros(self.STD_DIMS.get(self._resolution), float))
-        self.face = [{'detect': False, 'pos_label': (None, None), 'ROI': {'x': [None, None], 'y': [None, None]}}]
         self.faces_names = []
-        self._last_id = None
         self._event_count = 0
         self._threshold_event = 120
 
         # segment path
-        path = os.path.dirname(cv2.__file__)
-        face_frontal = os.path.join(path, 'data', 'haarcascade_frontalface_default.xml')
-        face_profile = os.path.join(path, 'data', "haarcascade_profileface.xml")
-
         # cascade classifier
-        self.face_cascade = cv2.CascadeClassifier(face_frontal)
-        self.profile_cascade = cv2.CascadeClassifier(face_profile)
         self.speak = TextToSpeech()
 
     def call_event_counter(self, trigger_id:int=123):
@@ -81,7 +72,7 @@ class Surveillance(VideoPlayer):
 
     def _build_widget(self, parent: ttk.Frame = None, setup: dict = dict):
 
-       # self.hide()
+        #self.hide()
         self.log.info("start build widget")
         if parent is None:
 
@@ -194,13 +185,13 @@ class Surveillance(VideoPlayer):
         if self.button_mask_detection.cget('relief') == 'raised':
 
             self.set_gray_image = False
-            self.algo_list(True, self.mask_detection)
+            self.algo_list(True, self.trainer.mask_detection)
             self.button_mask_detection.config(bg='white', relief='sunken')
             self.log.info("Mask detection is On")
 
         elif self.button_mask_detection.cget('relief') == 'sunken':
 
-            self.algo_list(False, self.mask_detection)
+            self.algo_list(False, self.trainer.mask_detection)
             self.set_gray_image = True
             self.button_mask_detection.config(bg='black', relief='raised')
             self.log.info("Mask detection is Off")
@@ -221,13 +212,13 @@ class Surveillance(VideoPlayer):
 
         if self.button_face_detection.cget('relief') == 'raised':
 
-            self.algo_list(True, self.face_detection)
+            self.algo_list(True, self.trainer.face_detection)
             self.button_face_detection.config(bg='white', relief='sunken')
             self.log.info("Face detection is on")
 
         elif self.button_face_detection.cget('relief') == 'sunken':
 
-            self.algo_list(False, self.face_detection)
+            self.algo_list(False, self.trainer.face_detection)
             self.button_face_detection.config(bg='black', relief='raised')
             self.log.info("Face detection is Off")
 
@@ -235,13 +226,13 @@ class Surveillance(VideoPlayer):
 
         if self.button_face_recognition.cget('relief') == 'raised':
             self.faces_names = self.trainer.load_labels()
-            self.algo_list(True, self.face_recognition)
+            self.algo_list(True, self.trainer.face_recognition)
             self.button_face_recognition.config(bg='white', relief='sunken')
             self.log.info("Face recognition is on")
 
         elif self.button_face_recognition.cget('relief') == 'sunken':
 
-            self.algo_list(False, self.face_recognition)
+            self.algo_list(False, self.trainer.face_recognition)
             self.button_face_recognition.config(bg='black', relief='raised')
             self.log.info("Face recognition is off")
 
@@ -327,7 +318,7 @@ class Surveillance(VideoPlayer):
                                 image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
 
                             for n in range(0, algo_nums):
-                                algo_list[n](image)
+                                algo_list[n](image, self.frame.image)
 
                         # self.face_detection(frame_gray)
                         # convert matrix image to pillow image object
@@ -345,7 +336,7 @@ class Surveillance(VideoPlayer):
             cv2.destroyAllWindows()
             self._button_view_off()
 
-    def movement_detection(self, gray_image: np.array):
+    def movement_detection(self, gray_image: np.ndarray, _):
 
         if self.frame_number == 1:
             self.pri_frame.image = gray_image
@@ -367,70 +358,6 @@ class Surveillance(VideoPlayer):
 
         # record if thar is movement
         self.record_movement(gray_image, image_clear)
-
-    def face_detection(self, gray_image: np.array):
-
-        # detect the faces
-        faces = self.face_cascade.detectMultiScale(gray_image, 1.1, 4)
-        self.face = [{'detect': False, 'pos_label': (None, None),
-                      'ROI': {'x': [None, None], 'y': [None, None]}} for _ in range(len(faces))]
-        # Draw the rectangle around each face
-        for count, (x, y, w, h) in enumerate(faces):
-
-            self.face[count] = {'detect': True, 'ROI': {'x': (x, x + w), 'y': (y, y + h)}, 'pos_label': (x + 6, y - 6)}
-            cv2.rectangle(self.frame.image, (x, y), (x+w, y+h), COLOR['blue'], 2)
-            cv2.putText(self.frame.image, 'Face', self.face[count]['pos_label'],
-                        cv2.FONT_HERSHEY_DUPLEX, 0.5, COLOR['green'], 1)
-
-    def face_recognition(self, gray_image: np.array):
-        # detect faces in the image
-        faces = self.face_cascade.detectMultiScale(gray_image, scaleFactor=1.5, minNeighbors=5)
-        # go over all the face and plot the rectangle around
-        for (x, y, w, h) in faces:
-
-            # detect ROI face
-            roi_gray = gray_image[y:y + h, x:x + w]
-
-            # recognizer deep learned model predict keras tensorflow pytorch scikit learn
-            id_, conf = self.trainer.recognizer.predict(roi_gray)
-            if conf >= self.trainer.confident:
-                name = self.faces_names[id_]
-
-                # take the roi corrdinet x and y
-                points_start = (x, y)
-                points_end = (x + w, y + h)
-                cv2.putText(self.frame.image, name, points_start,
-                            cv2.FONT_HERSHEY_SIMPLEX, 1, COLOR['white'], 2, cv2.LINE_AA)
-                # draw rectangle around the faces
-                cv2.rectangle(self.frame.image, points_start, points_end, COLOR['blue'], 2)
-                self.call_event_counter(id_)
-
-    def mask_detection(self, rgb_image: np.array):
-
-        # detect faces in the frame and determine if they are wearing a
-        # face mask or not
-        (locs, preds) = self.trainer.mask_detector.detect_and_predict_mask(rgb_image)
-
-        # loop over the detected face locations and their corresponding
-        # locations
-        for (box, pred) in zip(locs, preds):
-
-            # unpack the bounding box and predictions
-            (startX, startY, endX, endY) = box
-            (mask, withoutMask) = pred
-
-            # determine the class label and color we'll use to draw
-            # the bounding box and text
-            label = "Mask" if mask > withoutMask else "No Mask"
-            color = (0, 255, 0) if label == "Mask" else (0, 0, 255)
-
-            # include the probability in the label
-            label = "{}: {:.2f}%".format(label, max( mask, withoutMask ) * 100)
-
-            # display the label and bounding box rectangle on the output
-            # frame
-            cv2.putText(self.frame.image, label, (startX, startY - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2)
-            cv2.rectangle(self.frame.image, (startX, startY), (endX, endY), color, 2)
 
     def record_movement(self, frame: np.array, image_noise_movement: np.array):
 

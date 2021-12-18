@@ -8,6 +8,7 @@ import numpy as np
 from PIL import Image, ImageTk
 from Utility.image_procesing import resize_image_to_frame
 from Utility.file_location import *
+from Utility.display_widget import center_widget
 from Utility.clock import Stopper
 from GUI.frameImg import FrameImg
 
@@ -49,7 +50,7 @@ class VideoPlayer(ttk.Frame):
         self._camera = False
         self._algo = False
         self._resolution = '0.9MP'
-        self._frame = FrameImg( np.zeros( self.STD_DIMS.get( self._resolution ), float ) )
+        self._frame = FrameImg(np.zeros(self.STD_DIMS.get(self._resolution), float))
 
         self._camera_port = 0
         self._cap = cv2.VideoCapture()
@@ -57,8 +58,8 @@ class VideoPlayer(ttk.Frame):
         self._record_color = 0
 
         self._out = cv2.VideoWriter()
-        self._image_size_camera = self.STD_DIMS.get( self._resolution )
-        self._size_image = self.STD_DIMS.get( self._resolution )
+        self._image_size_camera = self.STD_DIMS.get(self._resolution)
+        self._size_image = self.STD_DIMS.get(self._resolution)
         self._command = []
         self._frame_rate = 24.0
 
@@ -189,7 +190,7 @@ class VideoPlayer(ttk.Frame):
 
         if parent is None:
 
-            self.master.geometry("700x500+0+0")
+            self.master.geometry(center_widget(self.master, 700, 500))
             self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
             self.main_panel = Frame(self.master, relief='sunken')
             self.main_panel.place(relx=0.1, rely=0.1, relwidth=0.8, relheight=0.8)
@@ -265,8 +266,8 @@ class VideoPlayer(ttk.Frame):
                                         width=self.icon_width,
                                         command=lambda: self._camera_view())
             self.button_camera.pack(side='left')
-            button_camera_tooltip = Pmw.Balloon( self.control_frame )
-            button_camera_tooltip.bind(self.button_camera, "Camera player" )
+            button_camera_tooltip = Pmw.Balloon(self.control_frame)
+            button_camera_tooltip.bind(self.button_camera, "Camera player")
 
         if setup['pause']:
             # pause video button button_live_video
@@ -278,12 +279,12 @@ class VideoPlayer(ttk.Frame):
                                              height=self.icon_height, width=self.icon_width,
                                              command=lambda: self._pause_view())
             self.button_pause_video.pack(side='left')
-            button_pause_video_tooltip = Pmw.Balloon( self.control_frame )
-            button_pause_video_tooltip.bind( self.button_pause_video, "Pause video player" )
+            button_pause_video_tooltip = Pmw.Balloon(self.control_frame)
+            button_pause_video_tooltip.bind(self.button_pause_video, "Pause video player")
 
         if setup['stop']:
             # stop video button button_live_video
-            self.icon_stop = PhotoImage(file=os.path.join(self.icons_path , 'stop.PNG'))
+            self.icon_stop = PhotoImage(file=os.path.join(self.icons_path, 'stop.PNG'))
             self.button_stop_video = Button(self.control_frame, padx=10, pady=10, bd=8, fg="white",
                                             font=('arial', 12, 'bold'),
                                             text="stop", bg='black', height=self.icon_height , width=self.icon_width,
@@ -483,7 +484,7 @@ class VideoPlayer(ttk.Frame):
             cv2.destroyAllWindows()
             self._button_view_off()
 
-    def load_movie(self,movie_filename: str=''):
+    def load_movie(self, movie_filename: str=''):
         if not self.play:
 
             self.button_play_video.config(relief='sunken')
@@ -577,7 +578,7 @@ class VideoPlayer(ttk.Frame):
         except Exception as error:
             self.log.exception(error)
 
-    def load_image(self,file_name:str=""):
+    def load_image(self, file_name: str=""):
         if len(file_name) == 0:
             file_name = filedialog.askopenfilename(initialdir=self.__initial_dir, title="Select the RGB image",
                                                    filetypes=(("jpeg files", "*.jpg"), ("all files", "*.*")))
@@ -603,7 +604,8 @@ class VideoPlayer(ttk.Frame):
             self.show_image(image_view)
         elif isinstance(frame.image, np.ndarray):
             if frame.image.any():
-                self._size_image = resize_image_to_frame(frame.size, (self.canvas_image_width, self.canvas_image_height))
+                self._size_image = resize_image_to_frame(frame.size, (self.canvas_image_width, self.canvas_image_height)
+                                                         )
                 resize_image = cv2.resize(self.frame.image,  self._size_image, interpolation=cv2.INTER_AREA)
                 image_show = self.matrix_to_pillow(resize_image)
                 self.show_image(image_show)
