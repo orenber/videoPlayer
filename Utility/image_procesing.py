@@ -1,3 +1,5 @@
+import cv2
+
 
 def resize_image_to_frame(image_size: tuple, frame_size: tuple) -> tuple:
     
@@ -31,3 +33,22 @@ def resize_image_to_frame(image_size: tuple, frame_size: tuple) -> tuple:
     new_image_size = (int(w), int(h))
 
     return new_image_size
+
+
+def test_camera_device(source)->bool:
+
+    cap = cv2.VideoCapture(source)
+
+    if cap is None or not cap.isOpened():
+        camera_device_exist = False
+        print('Warning: unable to open video source: ', source)
+    else:
+        camera_device_exist = True
+
+    return camera_device_exist
+
+
+
+
+
+

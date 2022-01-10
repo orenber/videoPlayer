@@ -18,15 +18,20 @@ from Utility.logger_setup import setup_logger
 class VideoPlayer(ttk.Frame):
 
     STD_DIMS = {
-                "0.02MP": (160, 120),
-                "0.06MP": (320, 180),
-                "0.08MP": (320, 240),
-                "0.1MP":  (424, 240),
-                "0.2MP":  (640, 360),
-                "0.3MP":  (640, 480),
-                "0.4MP":  (848, 480),
-                "0.5MP":  (960, 540),
-                "0.9MP":  (1280, 720)
+        "0.02MP": (160, 120),
+        "0.06MP": (320, 180),
+        "0.08MP": (320, 240),
+        "0.1MP":  (424, 240),
+        "0.2MP":  (640, 360),
+        "0.3MP":  (640, 480),
+        "0.4MP":  (848, 480),
+        "0.41MP": (640, 640),
+        "0.5MP":  (960, 540),
+        "0.9MP":  (1280, 720),
+        "1.3MP":  (1280, 1024),
+        "1.4MP":  (1600, 900),
+        "1.7MP":  (1680, 1050),
+        "2MP":    (1920, 1080)
     }
 
     def __init__(self, parent: ttk.Frame = None, **kwargs: tuple):
@@ -54,7 +59,7 @@ class VideoPlayer(ttk.Frame):
 
         self._camera_port = 0
         self._cap = cv2.VideoCapture()
-        self._source = 0
+        self._source = 1
         self._record_color = 0
 
         self._out = cv2.VideoWriter()
@@ -635,6 +640,16 @@ class VideoPlayer(ttk.Frame):
             self.stop_player()
             self.master.destroy()
             self.log.info("close main application")
+
+    # Release the video source when the object is destroyed
+    def __del__(self):
+        # stop thread
+        if self._play:
+            self._play = False
+
+        # relase stream
+        if self._cap.isOpened():
+            self._cap.release()
 
 
 def main():

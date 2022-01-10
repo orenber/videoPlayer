@@ -1,18 +1,31 @@
 from unittest import TestCase
+from Algo.face_trainer import FaceTrainer
+from Utility.file_location import full_file
 
 
 class TestFaceTrainer(TestCase):
+
+    def setUp(self):
+        self.face = FaceTrainer()
+
+
     def test_training(self):
-        self.fail()
+        self.assertEqual(self.face.training, False)
+        self.face.training = True
+        self.assertTrue(self.face.training)
 
     def test_confident(self):
-        self.fail()
+        self.assertEqual(self.face.confident, 45)
+        self.face.confident = 50
+        self.assertEqual(self.face.confident, 50)
 
     def test_reset_parameters(self):
-        self.fail()
+        self.face.reset_parameters()
+        self.assertEqual(self.face.y_labels,[])
 
     def test_collect_images(self):
-        self.fail()
+        folder  = full_file(["Resource","images","Faces","Test"])
+        self.face.collect_images(folder)
 
     def test_crop_faces(self):
         self.fail()

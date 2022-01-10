@@ -22,9 +22,9 @@ class FaceTrainer:
         self.log = setup_logger( 'Trainer' )
         self.recognizer = cv2.face.LBPHFaceRecognizer_create()
         self.path = os.path.dirname( cv2.__file__ )
-        self.face_frontal_path = os.path.join( self.path, 'data', 'haarcascade_frontalface_default.xml' )
+        self.face_frontal_path = os.path.join( self.path, 'data', 'haarcascade_frontalface_default.xml')
         self.face_cascade = cv2.CascadeClassifier( self.face_frontal_path )
-        self._path_images = full_file( ["Resources", "images", "faces"] )
+        self._path_images = full_file(["Resources", "images", "faces"])
 
         self.set_gray_image = True
 
@@ -79,9 +79,9 @@ class FaceTrainer:
         self.reset_parameters()
         self._path_images = images_dir
 
-        for root, dirs, files in os.walk( images_dir ):
+        for root, dirs, files in os.walk(images_dir):
             for file in files:
-                if file.endswith( "png" ) or file.endswith( "jpg" ):
+                if file.endswith( "png" ) or file.endswith("jpg"):
                     path = os.path.join( root, file )
                     label = os.path.basename( os.path.dirname( path ) ).replace( " ", "." ).lower()
 
@@ -101,8 +101,8 @@ class FaceTrainer:
 
                     self.collect_faces( image_array )
 
-        with open( "labels.pickle", 'wb' ) as f:
-            pickle.dump( self.label_ids, f )
+        with open("labels.pickle", 'wb') as f:
+            pickle.dump(self.label_ids, f)
 
         for label, image in zip( self.y_labels, self.x_train ):
             self.label_images[str( label )].append( image )
@@ -128,6 +128,9 @@ class FaceTrainer:
             self.recognizer.save( "trainner.yml" )
         except Exception as error:
             self.log.debug( error )
+
+
+
 
     def save_roi_faces(self, image: np.array, path: str = ''):
 
@@ -222,6 +225,8 @@ class FaceTrainer:
 
 def main():
     trainer = FaceTrainer()
+    lable = trainer.load_labels()
+    print(lable)
 
 
 if __name__ == "__main__":

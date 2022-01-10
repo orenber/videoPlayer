@@ -16,8 +16,9 @@ from Utility.file_location import *
 from Utility.text_to_spech import TextToSpeech
 from Utility.logger_setup import setup_logger
 from Utility.display_widget import center_widget
+from Utility.image_procesing import test_camera_device
 
-
+import threading
 
 
 class Surveillance(VideoPlayer):
@@ -29,11 +30,14 @@ class Surveillance(VideoPlayer):
 
         self.log = setup_logger("Surveillance Camera")
 
+        self.frame_rate_option = [24, 30, 40, 45]
+
         super().__init__(parent,image=True, play=True, camera=True, record=True)
 
         self.algo_stack = []
         self.frame_take = 0
         self.frame_number = 0
+
         self.set_gray_image = True
         self.trainer = FaceTrainer()
 
@@ -70,6 +74,31 @@ class Surveillance(VideoPlayer):
         # remember the last id
         self._last_id = trigger_id
 
+    def _show_menu(self, e):
+
+        self.menu_camera.post(e.x_root, e.y_root)
+
+    def _show_video_capture_device(self, camera_ports):
+        self.camera_port_num = IntVar(value=0)
+        for device in range(0,camera_ports,1):
+            exist = test_camera_device(device)
+            if exist:
+
+                self.menu_camera.add_checkbutton(label="Camera: " + str(device),
+                                          onvalue = device, variable=self.camera_port_num,
+                                          command=lambda: self.connect_camera_device(self.camera_port_num))
+                self.menu_camera.add_cascade(menu = self.menu_frame_rate,label="Frame Rate")
+
+                self.menu_camera.add_cascade(label="Resolution", menu=self.menu_res)
+                self.menu_camera.add_separator()
+
+
+    def connect_camera_device(self, cam):
+
+        self._camera_port = cam.get()
+        self.log.info("connect to camera port:" + str(self._camera_port))
+
+
     def _build_widget(self, parent: ttk.Frame = None, setup: dict = dict):
 
         #self.hide()
@@ -79,7 +108,7 @@ class Surveillance(VideoPlayer):
             self.master.geometry(center_widget(self.master,950,720))
             self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
             # Title bar Title
-            self.master.title( "SurveillanceCamera" )
+            self.master.title("SurveillanceCamera")
             # Title Bar Icon
             self.icons_path = full_file( ["Icons", "webcamera.ico"] )
             self.master.iconbitmap( self.icons_path )
@@ -107,6 +136,27 @@ class Surveillance(VideoPlayer):
         self.board.place_forget()
         self.board.destroy()
         self.board = self.dynamic_panel.current_label_image
+
+        self.menu_camera = Menu(self.board, tearoff=0)
+        self.menu_frame_rate = Menu(self.board, tearoff=0)
+        self.menu_res = Menu(self.board, tearoff=0)
+
+        self.frame_rate_value = StringVar()
+
+        for frame_rate in self.frame_rate_option:
+            self.menu_frame_rate.add_checkbutton(label=str(frame_rate), onvalue=frame_rate,
+                                            command=self.select_frame_rate, variable=self.frame_rate_value)
+
+            # resolution
+
+        self.resolution_value = StringVar()
+
+        for res, value in self.STD_DIMS.items():
+            self.menu_res.add_checkbutton( label=str( res ) + ': ' + str( value ), onvalue=str( res ),
+                                             command=self.select_resolution,
+                                             variable=self.resolution_value )
+
+        self._show_video_capture_device(5)
 
         self.dynamic_panel.command = lambda: self._focus_label()
         [can.bind("<Configure>", self._resize) for can in self.dynamic_panel.canvas_image]
@@ -176,9 +226,24 @@ class Surveillance(VideoPlayer):
         button_mask_detection_tooltip.bind(self.button_mask_detection, "Mask detection")
         #self.show()
 
+    def select_frame_rate(self):
+        self.frame_rate = int(self.frame_rate_value.get())
+        self.log.info("Frame rate selected :" + self.frame_rate_value.get())
+
+
+    def select_resolution(self):
+
+        self.resolution = self.resolution_value.get()
+        self.image_size_camera = self.resolution
+        self._size_image = self.STD_DIMS.get(self._resolution)
+        self.log.info("Resolution selected :" + self.resolution)
+
+
     def _focus_label(self):
 
         self.board = self.dynamic_panel.current_label_image
+        self.board.bind("<Button-3>", self._show_menu)
+        self.pack()
 
     def _button_mask_detection_view(self):
 
@@ -250,14 +315,6 @@ class Surveillance(VideoPlayer):
 
     def _pause_view(self):
         super()._pause_view()
-        # condition for crop ROI
-        if self.face[0]['detect']:
-            self.log.info("detect Face")
-
-            # if face detect and ther is labeling mode
-
-            # write on the image lable
-            self.board.bind("<Double-Button>", self.lable_image)
 
         # creat/open folder and insert image inside
 
@@ -380,10 +437,12 @@ class Surveillance(VideoPlayer):
 
     def save_frame(self, frame: np.array):
         try:
-
             self._out.write(frame)
         except Exception as error:
             self.log.error(error)
+
+
+
 
 
 def main():
