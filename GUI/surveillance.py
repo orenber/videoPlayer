@@ -43,11 +43,13 @@ class Surveillance(VideoPlayer):
 
         self._file_name_record = "movement_detect"
         self._output_path_record = full_file(['Resources', 'Record', self._file_name_record])
+        self._record_color = 1
         self._resolution = '0.02MP'
         self.pri_frame = FrameImg(np.zeros(self.STD_DIMS.get(self._resolution), float))
         self.faces_names = []
         self._event_count = 0
         self._threshold_event = 120
+
 
         # segment path
         # cascade classifier
@@ -364,6 +366,9 @@ class Surveillance(VideoPlayer):
 
                         self._update_progress(self.frame_number)
 
+                        if self._record:
+                            self.save_frame( image )
+
                         # take the image and sand it to the list of function to analyze process
                         algo_list = self.algo_stack
                         algo_nums = len(algo_list)
@@ -428,21 +433,12 @@ class Surveillance(VideoPlayer):
                 self.camera_recording(file_date(self._output_path_record, self._file_type_record))
                 self._record_view_state(True)
 
-            self.save_frame(frame)
+            self.save_frame(self.frame.image)
             self.frame_take -= 1
             cv2.imshow('record', frame)
 
         elif self.frame_take == 0:
             self._record_view_state(False)
-
-    def save_frame(self, frame: np.array):
-        try:
-            self._out.write(frame)
-        except Exception as error:
-            self.log.error(error)
-
-
-
 
 
 def main():

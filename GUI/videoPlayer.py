@@ -60,8 +60,8 @@ class VideoPlayer(ttk.Frame):
         self._camera_port = 0
         self._cap = cv2.VideoCapture()
         self._source = 1
-        self._record_color = 0
 
+        self._record_color = 1
         self._out = cv2.VideoWriter()
         self._image_size_camera = self.STD_DIMS.get(self._resolution)
         self._size_image = self.STD_DIMS.get(self._resolution)
@@ -157,6 +157,7 @@ class VideoPlayer(ttk.Frame):
 
         if self.play:
             self._record = record
+
         else:
             self._record = False
 
@@ -570,6 +571,7 @@ class VideoPlayer(ttk.Frame):
 
             self._source = cv2.VideoWriter_fourcc(*'XVID')
             self._out = cv2.VideoWriter(file, self._source, self._frame_rate, self.frame.size, self._record_color)
+
             self.log.info("video recording properties : \n"
                           "file name : " + file+'\n'
                           "frame rate : "+str(self._frame_rate)+'\n'
@@ -579,7 +581,10 @@ class VideoPlayer(ttk.Frame):
 
         try:
 
-            self._out.write(cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY))
+            if self._record_color:
+                self._out.write(frame)
+            else:
+                self._out.write(frame,cv2.cvtColor(cv2.COLOR_BGR2GRAY))
         except Exception as error:
             self.log.exception(error)
 
